@@ -99,7 +99,7 @@ export interface DiagnosticProfile {
   completedAt: string;
   score: number;
   totalQuestions: number;
-  levelLabel: 'Inicial' | 'Intermedio' | 'Avanzado';
+  levelLabel: 'Inicial' | 'Principiante' | 'Explorador' | 'Intermedio' | 'Avanzado' | 'Experto';
   recommendedCourseIndex: number;
   recommendedCourseTitle: string;
   weakAreas: string[];
@@ -339,6 +339,7 @@ export interface LearningUnit {
   title: string;
   description: string;
   moduleBadge: string;
+  difficultyTier?: string;
   icon?: string;
   progressPercentage: number;
   nodes: LearningNode[];

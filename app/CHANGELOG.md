@@ -6,6 +6,30 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 <!-- CHANGELOG_ENTRIES_START -->
 
+## [v0.16.0] - 2026-11-23
+
+- **Resumen**: 15 cursos secuenciales (75 lecciones), diagnostico de 10 preguntas, mapa limpio y podios poblados en Firestore
+- **Plan de Desarrollo**: [docs/plans/PLAN_v0.16.0.md](./docs/plans/PLAN_v0.16.0.md)
+- **Archivos impactados**:
+  - `M README.md`
+  - `M docs/DOCUMENTO_PROYECTO_TI_SURILEARN.md`
+  - `M src/__tests__/curriculum.spec.ts`
+  - `M src/__tests__/gamificationEngine.spec.ts`
+  - `M src/components/common/DiagnosticModal.vue`
+  - `M src/components/learn/CourseWindingPath.vue`
+  - `M src/composables/useFirestore.ts`
+  - `M src/data/curriculum.ts`
+  - `M src/stores/useGamificationStore.ts`
+  - `M src/stores/useUserStore.ts`
+  - `M src/types/gamification.ts`
+  - `M src/utils/gamificationEngine.ts`
+  - `M src/views/LeaderboardView.vue`
+  - `M src/views/LearnView.vue`
+  - `M src/views/RegisterOnboardingView.vue`
+  - `?? docs/plans/PLAN_v0.16.0.md`
+  - `?? src/data/curriculumExpansion.ts`
+
+
 ## [v0.15.0] - 2026-11-23
 
 - **Resumen**: Ruta continua estilo Duolingo con todos los cursos, separadores y camino curvo SVG

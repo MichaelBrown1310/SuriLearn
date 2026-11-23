@@ -3,9 +3,9 @@ import { ref, computed } from 'vue';
 import { useUserStore } from '../../stores/useUserStore';
 import { evaluateDiagnosticAnswers } from '../../utils/gamificationEngine';
 import { DiagnosticProfile } from '../../types/gamification';
-import { getSuriImage } from '../../utils/suriAssets';
+import SuriMascotAnimated from './SuriMascotAnimated.vue';
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean;
 }>();
 
@@ -15,12 +15,22 @@ const emit = defineEmits<{
 }>();
 
 const userStore = useUserStore();
-const suriIdeaImg = getSuriImage('idea');
-const suriShieldImg = getSuriImage('shield');
+
+type DiagnosticArea =
+  | 'basics_phishing'
+  | 'social_eng'
+  | 'passwords_mfa'
+  | 'mobile_malware'
+  | 'firewall_ports'
+  | 'network_vpn'
+  | 'ai_bec'
+  | 'soc_ransomware'
+  | 'owasp_devsecops'
+  | 'forensic_ciso';
 
 interface DiagnosticQuestion {
   id: string;
-  area: 'phishing' | 'crypto_firewall' | 'network_vpn' | 'soc_ransomware';
+  area: DiagnosticArea;
   badge: string;
   prompt: string;
   options: Array<{ id: string; text: string; isCorrect: boolean }>;
@@ -29,9 +39,10 @@ interface DiagnosticQuestion {
 const QUESTIONS: DiagnosticQuestion[] = [
   {
     id: 'dq_1',
-    area: 'phishing',
-    badge: '1 · Phishing & DNS',
-    prompt: 'Recibes un enlace: https://pagos.banco-nacional.com.validar-acceso.xyz/login. ¿Qué dominio controla realmente la página?',
+    area: 'basics_phishing',
+    badge: '1 / 10 · Phishing & Dominios',
+    prompt:
+      'Recibes un enlace: https://pagos.banco-nacional.com.validar-acceso.xyz/login. ¿Qué dominio controla realmente la página?',
     options: [
       { id: 'a', text: 'banco-nacional.com', isCorrect: false },
       { id: 'b', text: 'validar-acceso.xyz (el dominio raíz antes de /login)', isCorrect: true },
@@ -40,40 +51,151 @@ const QUESTIONS: DiagnosticQuestion[] = [
   },
   {
     id: 'dq_2',
-    area: 'crypto_firewall',
-    badge: '2 · Identidad y Claves',
-    prompt: 'Según NIST SP 800-63B, ¿qué credencial ofrece mayor resistencia para proteger tu correo o cuenta corporativa?',
+    area: 'social_eng',
+    badge: '2 / 10 · Adjuntos e Ingeniería Social',
+    prompt:
+      'Llega un correo urgente de supuesta facturación con el archivo adjunto "Factura_2026.pdf.exe". ¿Cómo debes actuar?',
     options: [
-      { id: 'a', text: 'Admin2026! cambiada cada 30 días', isCorrect: false },
-      { id: 'b', text: 'Frase larga inesperada (ej. VolcanOrbita$74Cobalto) + MFA', isCorrect: true },
-      { id: 'c', text: 'Misma contraseña con letras sustituidas (P@ssw0rd)', isCorrect: false },
+      {
+        id: 'a',
+        text: 'Es un programa ejecutable (.exe) disfrazado de PDF: no abrir y reportar',
+        isCorrect: true,
+      },
+      { id: 'b', text: 'Abrirlo rápido porque empieza con "Factura" y tiene .pdf', isCorrect: false },
+      { id: 'c', text: 'Reenviarlo al grupo del equipo para preguntar si alguien lo conoce', isCorrect: false },
     ],
   },
   {
     id: 'dq_3',
-    area: 'network_vpn',
-    badge: '3 · Redes y Wi-Fi',
-    prompt: 'Necesitas aprobar una transferencia o entrar al ERP desde el Wi-Fi abierto de un aeropuerto. ¿Cuál es la acción segura?',
+    area: 'passwords_mfa',
+    badge: '3 / 10 · Contraseñas y MFA',
+    prompt:
+      'Según NIST SP 800-63B, ¿qué credencial ofrece mayor resistencia para proteger tu correo o cuenta corporativa?',
     options: [
-      { id: 'a', text: 'Conectarte al Wi-Fi gratis "Aeropuerto_VIP_5G" sin VPN', isCorrect: false },
-      { id: 'b', text: 'Activar túnel VPN cifrado o usar datos móviles antes de iniciar sesión', isCorrect: true },
-      { id: 'c', text: 'Navegar en modo incógnito del navegador', isCorrect: false },
+      { id: 'a', text: 'Admin2026! cambiada cada 30 días', isCorrect: false },
+      {
+        id: 'b',
+        text: 'Frase larga inesperada (ej. VolcanOrbita$74Cobalto) + MFA',
+        isCorrect: true,
+      },
+      { id: 'c', text: 'Misma contraseña con letras sustituidas (P@ssw0rd)', isCorrect: false },
     ],
   },
   {
     id: 'dq_4',
-    area: 'soc_ransomware',
-    badge: '4 · Respuesta a Incidentes',
-    prompt: 'Un archivo .pdf.exe comienza a renombrar documentos compartidos en tu equipo. ¿Cuál debe ser tu PRIMER paso?',
+    area: 'mobile_malware',
+    badge: '4 / 10 · Seguridad Móvil',
+    prompt:
+      'Una app gratuita de "Linterna" solicita permisos para leer tus SMS, Contactos y Servicio de Accesibilidad. ¿Qué decides?',
     options: [
-      { id: 'a', text: 'Desconectar el equipo de la red / Wi-Fi inmediatamente y alertar a TI/SOC', isCorrect: true },
-      { id: 'b', text: 'Reiniciar la computadora varias veces para detener el proceso', isCorrect: false },
-      { id: 'c', text: 'Abrir los backups en la misma carpeta compartida para verificarlos', isCorrect: false },
+      { id: 'a', text: 'Aceptar todo para poder probar la app', isCorrect: false },
+      {
+        id: 'b',
+        text: 'Denegar e desinstalar: pide permisos críticos ajenos a su función',
+        isCorrect: true,
+      },
+      { id: 'c', text: 'Permitir solo SMS porque es un permiso ligero', isCorrect: false },
+    ],
+  },
+  {
+    id: 'dq_5',
+    area: 'firewall_ports',
+    badge: '5 / 10 · Firewall y Puertos',
+    prompt:
+      '¿Qué recomendación de Firewall protege mejor los puertos administrativos críticos SSH (:22), RDP (:3389) y SMB (:445)?',
+    options: [
+      {
+        id: 'a',
+        text: 'Bloquear su exposición pública en Internet y permitirlos solo detrás de VPN',
+        isCorrect: true,
+      },
+      { id: 'b', text: 'Dejarlos abiertos en 0.0.0.0/0 para trabajar desde cualquier café', isCorrect: false },
+      { id: 'c', text: 'Desactivar el Firewall interno para reducir latencia', isCorrect: false },
+    ],
+  },
+  {
+    id: 'dq_6',
+    area: 'network_vpn',
+    badge: '6 / 10 · Redes y Wi-Fi',
+    prompt:
+      'Necesitas aprobar una transferencia o entrar al ERP desde el Wi-Fi abierto de un aeropuerto. ¿Cuál es la acción segura?',
+    options: [
+      { id: 'a', text: 'Conectarte al Wi-Fi gratis "Aeropuerto_VIP_5G" sin VPN', isCorrect: false },
+      {
+        id: 'b',
+        text: 'Activar túnel VPN cifrado o usar datos móviles antes de iniciar sesión',
+        isCorrect: true,
+      },
+      { id: 'c', text: 'Navegar en modo incógnito del navegador', isCorrect: false },
+    ],
+  },
+  {
+    id: 'dq_7',
+    area: 'ai_bec',
+    badge: '7 / 10 · Fraude BEC y Deepfakes IA',
+    prompt:
+      'Recibes por WhatsApp una nota de voz que suena exactamente como la Directora pidiendo un giro confidencial inmediato. ¿Qué haces?',
+    options: [
+      { id: 'a', text: 'Transferir de inmediato porque reconociste su voz', isCorrect: false },
+      {
+        id: 'b',
+        text: 'Verificar fuera de banda (llamada interna / palabra clave) ante posible Deepfake/BEC',
+        isCorrect: true,
+      },
+      { id: 'c', text: 'Responder al mismo chat pidiendo la cuenta bancaria', isCorrect: false },
+    ],
+  },
+  {
+    id: 'dq_8',
+    area: 'soc_ransomware',
+    badge: '8 / 10 · Respuesta a Incidentes SOC',
+    prompt:
+      'Detectas un ataque de Ransomware cifrando carpetas compartidas de la oficina. ¿Cuál es el PRIMER paso del protocolo NIST?',
+    options: [
+      {
+        id: 'a',
+        text: 'Aislar el equipo de la red/VLAN inmediatamente antes de purgar EDR y restaurar Backup 3-2-1',
+        isCorrect: true,
+      },
+      { id: 'b', text: 'Conectar un disco duro externo con backups al equipo infectado', isCorrect: false },
+      { id: 'c', text: 'Pagar el rescate para recuperar las carpetas más rápido', isCorrect: false },
+    ],
+  },
+  {
+    id: 'dq_9',
+    area: 'owasp_devsecops',
+    badge: '9 / 10 · Seguridad Web OWASP',
+    prompt:
+      '¿Qué práctica de código detiene de raíz la Inyección SQL (OWASP A03) en consultas a bases de datos?',
+    options: [
+      { id: 'a', text: 'Ocultar el formulario de login detrás de un botón en JavaScript', isCorrect: false },
+      {
+        id: 'b',
+        text: 'Usar Consultas Parametrizadas (Prepared Statements con ? o $1)',
+        isCorrect: true,
+      },
+      { id: 'c', text: 'Concatenar las variables con comillas simples y validar solo en HTML', isCorrect: false },
+    ],
+  },
+  {
+    id: 'dq_10',
+    area: 'forensic_ciso',
+    badge: '10 / 10 · Forense RAM y Threat Hunting',
+    prompt:
+      'En memoria RAM observas que "winword.exe" lanzó "powershell.exe -enc ..." con conexión saliente a una IP extranjera :4444. ¿Qué indica?',
+    options: [
+      { id: 'a', text: 'Actualización rutinaria de formato de Word', isCorrect: false },
+      {
+        id: 'b',
+        text: 'Indicador de Compromiso (IoC): macro maliciosa ejecutando payload y canal C2',
+        isCorrect: true,
+      },
+      { id: 'c', text: 'Tráfico DNS corporativo saludable', isCorrect: false },
     ],
   },
 ];
 
-const stepIndex = ref<number>(-1); // -1 = profile select, 0..3 = questions, 4 = summary
+const stepIndex = ref<number>(-1); // -1 = profile select, 0..9 = questions, 10 = summary
 const profileType = ref<'individual' | 'employee' | 'tech'>('individual');
 const selectedAnswers = ref<Record<string, boolean>>({});
 const diagnosticResult = ref<DiagnosticProfile | null>(null);
@@ -142,7 +264,7 @@ function resetAndClose() {
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-primary text-[22px] icon-filled">tune</span>
             <h3 class="text-sm font-black uppercase tracking-wider text-on-surface">
-              Diagnóstico Adaptativo
+              Diagnóstico de Nivelación (10 Preguntas)
             </h3>
           </div>
           <button
@@ -158,15 +280,15 @@ function resetAndClose() {
         <!-- Step -1: Select Role Context -->
         <template v-if="stepIndex === -1">
           <div class="flex items-center gap-3.5 bg-surface-container-low p-3.5 rounded-2xl border border-outline-variant/30">
-            <img :src="suriIdeaImg" alt="Suri evaluando ruta" class="w-14 h-14 object-contain shrink-0" />
+            <SuriMascotAnimated pose="idea" size="sm" :show-shadow="false" />
             <p class="text-xs text-on-surface-variant leading-relaxed font-medium">
-              Responde <strong class="text-on-surface">4 preguntas rápidas</strong> y adaptaré tu punto de partida según tu rol y áreas a reforzar.
+              Responde <strong class="text-on-surface">10 preguntas progresivas</strong> (de lo básico a SOC/Forense) para ubicarte en el curso exacto de los <strong class="text-primary">15 cursos secuenciales</strong>.
             </p>
           </div>
 
           <div class="flex flex-col gap-2">
             <span class="text-[11px] font-black uppercase tracking-wider text-on-surface-variant">
-              1. ¿Cuál es tu enfoque principal?
+              ¿Cuál es tu enfoque principal?
             </span>
 
             <button
@@ -214,12 +336,12 @@ function resetAndClose() {
             class="w-full h-12 rounded-2xl font-black text-xs uppercase tracking-wider btn-tactile-primary flex items-center justify-center gap-1.5"
             @click="startQuiz"
           >
-            <span>Comenzar Evaluación (4 Preguntas)</span>
+            <span>Comenzar Evaluación (10 Preguntas)</span>
             <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
           </button>
         </template>
 
-        <!-- Steps 0..3: Interactive Diagnostic Questions -->
+        <!-- Steps 0..9: Interactive Diagnostic Questions -->
         <template v-else-if="currentQuestion">
           <div class="flex items-center justify-between text-[11px] font-black text-primary uppercase">
             <span>{{ currentQuestion.badge }}</span>
@@ -250,28 +372,31 @@ function resetAndClose() {
           </div>
         </template>
 
-        <!-- Step 4: Personalized Result -->
+        <!-- Step 10: Personalized Placement Result -->
         <template v-else-if="diagnosticResult">
           <div class="flex flex-col items-center text-center gap-2">
-            <img :src="suriShieldImg" alt="Diagnóstico completado" class="w-20 h-20 object-contain" />
+            <SuriMascotAnimated pose="victory" size="md" :show-shadow="false" />
             <span class="px-3 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-black uppercase">
               Nivel {{ diagnosticResult.levelLabel }} · {{ diagnosticResult.score }}/{{ diagnosticResult.totalQuestions }} Aciertos
             </span>
             <h4 class="text-base font-black text-on-surface mt-1">
-              Ruta Recomendada Lista
+              Punto de Inicio Asignado
             </h4>
           </div>
 
           <div class="bg-surface-container-low rounded-2xl p-4 border border-outline-variant/30 flex flex-col gap-2">
             <span class="text-[10px] font-black uppercase tracking-wider text-primary">
-              Curso Sugerido Para Ti
+              Ubicación en la Escalera de 15 Cursos
             </span>
             <p class="text-sm font-black text-on-surface leading-snug">
               {{ diagnosticResult.recommendedCourseTitle }}
             </p>
+            <p class="text-[11px] text-on-surface-variant leading-relaxed">
+              Tu nivel inicial te ubica en el <strong class="text-on-surface">Curso {{ diagnosticResult.recommendedCourseIndex + 1 }}</strong> (los cursos anteriores quedan acreditados para repaso; desde aquí el avance es estrictamente secuencial).
+            </p>
             <div v-if="diagnosticResult.weakAreas.length > 0" class="pt-2 border-t border-outline-variant/25">
               <span class="text-[10px] font-bold uppercase text-on-surface-variant block mb-1">
-                Áreas prioritarias a reforzar:
+                Áreas a reforzar ({{ diagnosticResult.weakAreas.length }}):
               </span>
               <div class="flex flex-wrap gap-1.5">
                 <span
@@ -284,7 +409,7 @@ function resetAndClose() {
               </div>
             </div>
             <p v-else class="text-[11px] font-bold text-shield-green">
-              ¡Excelente base! Puedes comenzar directamente por simuladores tácticos avanzados.
+              ¡Dominio sobresaliente! Comienzas directo en los retos avanzados de ciberseguridad.
             </p>
           </div>
 
@@ -294,7 +419,7 @@ function resetAndClose() {
             class="w-full h-12 rounded-2xl font-black text-xs uppercase tracking-wider btn-tactile-primary flex items-center justify-center gap-1.5"
             @click="goToRecommendedCourse"
           >
-            <span>Ir al Curso Recomendado</span>
+            <span>Ir al Curso {{ diagnosticResult.recommendedCourseIndex + 1 }}</span>
             <span class="material-symbols-outlined text-[18px]">rocket_launch</span>
           </button>
         </template>

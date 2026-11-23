@@ -6,6 +6,21 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 <!-- CHANGELOG_ENTRIES_START -->
 
+## [v0.16.0] - 2026-11-23
+
+- **Resumen**: 15 cursos secuenciales (75 lecciones), diagnóstico inicial de 10 preguntas, mapa limpio sin selector superior y podios poblados en Firestore
+- **Plan de Desarrollo**: [docs/plans/PLAN_v0.16.0.md](./app/docs/plans/PLAN_v0.16.0.md)
+- **Archivos impactados**:
+  - `M README.md`, `CHANGELOG.md`, `app/README.md`, `app/docs/DOCUMENTO_PROYECTO_TI_SURILEARN.md`, `app/CHANGELOG.md`, `app/package.json`
+  - `A app/docs/plans/PLAN_v0.16.0.md`
+  - `A app/src/data/curriculumExpansion.ts` (`46` nuevas lecciones y manuales teóricos completos)
+  - `M app/src/data/curriculum.ts` (`15` cursos × `5` lecciones = `75` lecciones + `15` cofres; bloqueo secuencial estricto y acreditación por `placementCourseIndex`)
+  - `M app/src/utils/gamificationEngine.ts`, `app/src/types/gamification.ts`, `app/src/components/common/DiagnosticModal.vue`, `app/src/views/RegisterOnboardingView.vue` (cuestionario inicial de `10` preguntas progresivas y redirección automática `/tabs/learn?diagnostic=1`)
+  - `M app/src/stores/useGamificationStore.ts`, `app/src/stores/useUserStore.ts`, `app/src/composables/useFirestore.ts`
+  - `M app/src/views/LearnView.vue`, `app/src/components/learn/CourseWindingPath.vue` (eliminación del selector superior de cursos, badges de dificultad y candados por curso)
+  - `M app/src/views/LeaderboardView.vue` (selector de 5 divisiones `Bronce` → `Supremo` + `25` cuentas seed pobladas en Firestore `/users`, total `29`)
+  - `M app/src/__tests__/curriculum.spec.ts`, `app/src/__tests__/gamificationEngine.spec.ts` (`4` archivos, `20/20` pruebas Vitest)
+
 ## [v0.15.0] - 2026-11-23
 
 - **Resumen**: Ruta continua estilo Duolingo con los 8 cursos en una sola página, separadores por curso y camino curvo SVG dinámico

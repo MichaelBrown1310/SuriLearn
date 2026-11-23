@@ -136,6 +136,12 @@ export const useGamificationStore = defineStore('gamification', () => {
     }, 3200);
   }
 
+  function getPlacementCourseIndex(): number {
+    return userStore.profile.diagnosticProfile?.completed
+      ? (userStore.profile.diagnosticProfile.recommendedCourseIndex ?? 0)
+      : 0;
+  }
+
   async function loadGamificationData(uid?: string) {
     const userId = uid || userStore.profile.uid;
     if (!userId) return;
@@ -166,7 +172,8 @@ export const useGamificationStore = defineStore('gamification', () => {
         firestore.getLearningUnits(
           gamState.completedLessons || [],
           claimed,
-          gamState.lessonStars || {}
+          gamState.lessonStars || {},
+          getPlacementCourseIndex()
         ),
         firestore.getLeaderboard(
           gamState.currentLeague || userStore.profile.currentLeague || 'Bronce',
@@ -308,7 +315,8 @@ export const useGamificationStore = defineStore('gamification', () => {
       units.value = await firestore.getLearningUnits(
         updatedState.completedLessons || [],
         claimed,
-        updatedState.lessonStars || {}
+        updatedState.lessonStars || {},
+        getPlacementCourseIndex()
       );
 
       if (!result.passed) {
@@ -352,7 +360,8 @@ export const useGamificationStore = defineStore('gamification', () => {
     units.value = await firestore.getLearningUnits(
       state.value.completedLessons || [],
       claimed,
-      state.value.lessonStars || {}
+      state.value.lessonStars || {},
+      getPlacementCourseIndex()
     );
   }
 

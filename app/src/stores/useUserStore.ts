@@ -271,6 +271,7 @@ export const useUserStore = defineStore('user', () => {
       await firestore.saveUserProfile(profile.value.uid, { diagnosticProfile: diag });
     }
     const gamStore = useGamificationStore();
+    await gamStore.refreshLearningUnits();
     gamStore.showToast(`Ruta adaptativa guardada · ${diag.recommendedCourseTitle}`, true);
   }
 

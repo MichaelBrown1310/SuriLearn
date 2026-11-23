@@ -918,9 +918,15 @@ export function useFirestore() {
   async function getLearningUnits(
     completedLessons: string[] = [],
     claimedRewards: string[] = [],
-    lessonStars: Record<string, number> = {}
+    lessonStars: Record<string, number> = {},
+    placementCourseIndex = 0
   ): Promise<LearningUnit[]> {
-    return buildAllLearningUnits(completedLessons, claimedRewards, lessonStars);
+    return buildAllLearningUnits(
+      completedLessons,
+      claimedRewards,
+      lessonStars,
+      placementCourseIndex
+    );
   }
 
   /**

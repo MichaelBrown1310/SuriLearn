@@ -1,6 +1,6 @@
 # 🛡️ SuriLearn — Plataforma Gamificada de Ciberseguridad (B2C + PYMES B2B)
 
-> **Versión Actual:** `v0.15.0` (Pre-1.0 · Ruta Continua Estilo Duolingo + 2 Zonas Arcade & Paleta SuriLearn)  
+> **Versión Actual:** `v0.16.0` (Pre-1.0 · 15 Cursos Secuenciales × 5 Lecciones, Diagnóstico de 10 Preguntas, Mapa Limpio y Podios Firestore)  
 > **Propuesta de Valor:** *Una plataforma de aprendizaje de ciberseguridad gamificada que transforma la capacitación tradicional en una experiencia interactiva, progresiva y personalizada, dirigida tanto a usuarios individuales como a organizaciones que buscan fortalecer las competencias de seguridad de sus empleados.*
 
 ---
@@ -13,7 +13,7 @@ Este monorepo reúne los **3 pilares completos del proyecto**:
 
 | Carpeta | Contenido | Tecnología / Entregables |
 |---|---|---|
-| [`app/`](./app/) | **Aplicación Web Progresiva PWA (`v0.15.0`)** | Vue 3, TypeScript (`strict: true`), Pinia, Tailwind CSS (WCAG 2.1 AA), Chart.js, Vitest (`19/19`), Firebase Auth/Firestore, Stripe Checkout + Cloud Functions v2 |
+| [`app/`](./app/) | **Aplicación Web Progresiva PWA (`v0.16.0`)** | Vue 3, TypeScript (`strict: true`), Pinia, Tailwind CSS (WCAG 2.1 AA), Chart.js, Vitest (`20/20`), Firebase Auth/Firestore, Stripe Checkout + Cloud Functions v2 |
 | [`promo-video/`](./promo-video/) | **Video Promocional Animado (1080p @ 30fps)** | Remotion (`4.0.539`), React 19, Tailwind CSS v4, escenas actualizadas a `v0.12.0` + renders `.mp4` / `.png` |
 | [`docs-negocio/`](./docs-negocio/) | **Emprendimiento, Validación y Modelado** | Business Model Canvas, Estudio Estadístico ($n=50$), Análisis Financiero, Buyer Personas, Mapa de Empatía, Diagramas UML/BPMN/ER y Mockups HD |
 
@@ -53,19 +53,16 @@ flowchart LR
 
 ---
 
-## 🎮 Currículo y Suite de 19 Motores Interactivos
+## 🎮 Currículo Secuencial de 15 Cursos (75 Lecciones) y 19 Motores Interactivos
 
-La plataforma incluye **8 cursos completos (`29 lecciones` + `8 cofres`)** con un **Sistema Teórico Dual** (**Códice del Curso** en `UnitTheoryModal.vue` + **Briefing Pre-Misión** en `LessonTheoryBriefing.vue`) y **19 motores de juego desacoplados**:
+La plataforma incluye **15 cursos secuenciales (`75 lecciones` + `15 cofres` = `90` nodos)** ordenados de fácil a maestro con un **Sistema Teórico Dual** (**Códice del Curso** en `UnitTheoryModal.vue` + **Briefing Pre-Misión** en `LessonTheoryBriefing.vue`) y **19 motores de juego desacoplados**:
 
-### Cursos Disponibles
-1. **Curso 1 (`unit_01`) — Anatomía del Phishing e Ingeniería Social** *(5 lecciones)*: Cabeceras SMTP (SPF/DKIM), typosquatting DNS, fraude del CEO (BEC), adjuntos `.pdf.exe`/`.xlsm` y triaje contrarreloj.
-2. **Curso 2 (`unit_02`) — Criptografía, Identidad y Bastión Firewall** *(4 lecciones)*: Entropía NIST SP 800-63B, auditoría de permisos móviles y videojuego arcade de firewall en vivo.
-3. **Curso 3 (`unit_03`) — Redes Seguras, Wi-Fi Público y Laberinto VPN** *(3 lecciones)*: Sniffers Man-in-the-Middle, redes Evil Twin, túneles VPN AES-256 y llaves MFA.
-4. **Curso 4 (`unit_04`) — Respuesta a Incidentes SOC, Ransomware e IA** *(3 lecciones)*: Consola SOC en tiempo real (1. Aislar VLAN → 2. Purgar EDR → 3. Backup 3-2-1) y defensa contra Deepfakes de voz.
-5. **Curso 5 (`unit_05`) — Seguridad Web OWASP & Blindaje DevSecOps** *(3 lecciones)*: Parcheo en vivo contra SQL Injection, XSS, IDOR, Command Injection y JWT `none`.
-6. **Curso 6 (`unit_06`) — Forense Digital, Threat Hunting & Anti-IA** *(3 lecciones)*: Caza de procesos maliciosos en memoria RAM (PID/PPID, sockets C2) y dictamen de causa raíz (IoC).
-7. **Curso 7 (`unit_07`) — Zona Arcade Centinela (Juegos Clásicos)** *(4 lecciones)*: Mecánicas retro entretenidas aplicadas a ciberseguridad (Ahorcado técnico, Culebrita Firewall, Memorama Amenaza↔Defensa y Atrapa al Hacker).
-8. **Curso 8 (`unit_08`) — Zona Arcade Pro — Acción & Ingenio** *(4 lecciones)*: Sopa de Letras Centinela (`8×8`), Buscaminas de Malware (`6×6`), Rompe-Malware Arcade (`60fps`) e Invasores del Spam (`60fps`).
+### Escalera Progresiva de 15 Cursos (5 Lecciones por Curso)
+- **Nivel 1 · Principiante (`Cursos 1–3`)**: Vocabulario base (Ahorcado, Sopa de Letras, Memorama), Phishing e Ingeniería Social, Contraseñas NIST, MFA y Permisos Móviles.
+- **Nivel 2 · Explorador (`Cursos 4–6`)**: Reflejos Arcade contra Malware (Culebrita, Topos, Breakout, Buscaminas, Invasores), Defensa Perimetral y Bastión Firewall, Redes Seguras y Laberinto VPN.
+- **Nivel 3 · Intermedio (`Cursos 7–9`)**: Fraude BEC y Deepfakes IA, Respuesta a Incidentes SOC y Ransomware (protocolo NIST), Seguridad Cloud / SaaS y Prevención DLP.
+- **Nivel 4 · Avanzado (`Cursos 10–12`)**: OWASP Top 10 (Inyecciones SQL, XSS, IDOR), Zero Trust y Blindaje de APIs (SSRF/JWT), Forense Digital y Threat Hunting en RAM.
+- **Nivel 5 · Maestro (`Cursos 13–15`)**: Defensa APT y Cadena de Suministro, Gobierno CISO / ISO 27001 / Continuidad y Desafío Maestro Centinela integrado.
 
 ### 19 Motores de Minijuegos y Videojuegos (`app/src/components/games/`)
 - **6 Minijuegos Core**: `InboxThreatScanner`, `UrlInspector`, `PasswordVaultBuilder`, `SocialEngineeringChat`, `PermissionGatekeeper`, `RapidTriageRadar`.
@@ -77,11 +74,11 @@ La plataforma incluye **8 cursos completos (`29 lecciones` + `8 cofres`)** con u
 
 ## ⚙️ Funcionalidades Principales
 
-- 🎯 **Personalización Adaptativa (`v0.12.0`)**: Diagnóstico inicial de 4 preguntas (`DiagnosticModal.vue`) que detecta perfil y brechas para recomendar curso, **Centro de Errores** real (`/lesson/error-review`) con repaso dirigido de fallos previos, selector editable de Meta Diaria (`3 / 5 / 10 min`) y seguimiento diario real.
+- 🎯 **Diagnóstico Inicial de 10 Preguntas y Progresión Secuencial (`v0.16.0`)**: Evaluación progresiva automática tras registrarse (`DiagnosticModal.vue`, `/tabs/learn?diagnostic=1`) que ubica al usuario en el curso acorde a su nivel (`Cursos 1, 4, 7, 10 o 13`), acredita los módulos previos para repaso y mantiene bloqueo secuencial hacia adelante, junto con **Centro de Errores** real (`/lesson/error-review`) y selector editable de Meta Diaria (`3 / 5 / 10 min`).
 - ❤️ **Gamificación y Economía**: 5 vidas con regeneración pasiva cada 4h, **Modo Refuerzo** a 0 vidas, aprobación mínima (`≥60%`) con `1–3` estrellas persistentes, cofres atómicos (`runTransaction`), rachas diarias con multiplicadores `x1.0`–`x2.0` y consumo real de *Congelador de Racha*, boosts `2X XP` persistidos, medallas dinámicas, notificaciones `ToastNotification.vue` y **Dark Sentinel WCAG 2.1 AA**.
-- 🏆 **Ligas en Tiempo Real**: Ranking global con promoción automática por XP (`Bronce → Plata → Oro → Diamante → Supremo`), cuenta regresiva semanal real y **Liga Privada Empresarial** sincronizados con `onSnapshot`.
+- 🏆 **Ligas Pobladas en 5 Divisiones en Tiempo Real (`v0.16.0`)**: Ranking global real en Firestore con cuentas activas en todos los podios (`Bronce → Plata → Oro → Diamante → Supremo`, `29` usuarios en `/users`), pestañas de exploración por división en `LeaderboardView.vue`, cuenta regresiva semanal real y **Liga Privada Empresarial** sincronizados con `onSnapshot`.
 - 🏢 **Panel Corporativo PYME (B2B + RBAC)**: Creación de organizaciones (`micro_pyme` 10, `growth_pyme` 30, `enterprise` 100), código transaccional (`runTransaction`), aislamiento RBAC entre Administradores CISO y Colaboradores, analítica semanal real (`activeDates`) + **Exportar CSV**, detección `"En Riesgo"` y suspensión preventiva en tiempo real (`onSnapshot`).
-- 📱 **PWA, Ruta Continua y Calidad (`v0.15.0`)**: Instalable (`manifest.webmanifest` + Service Worker `sw.js`), ruta continua estilo Duolingo con los **8 cursos (`29` lecciones) en una sola página** y camino curvo SVG dinámico (`CourseWindingPath.vue` + `pathGeometry.ts`), lazy-loading de rutas y `manualChunks` (`71.99 kB` de entrada), mascota **Suri reactiva con 11 poses** (`SuriMascotAnimated.vue`), paleta oficial en los 19 motores, manejo global de errores y **19 pruebas unitarias Vitest** automatizadas.
+- 📱 **PWA, Mapa Limpio y Calidad (`v0.16.0`)**: Instalable (`manifest.webmanifest` + Service Worker `sw.js`), ruta continua estilo Duolingo con los **15 cursos (`75` lecciones) en una sola página** sin selector superior de saltos, camino curvo SVG dinámico (`CourseWindingPath.vue` + `pathGeometry.ts`), lazy-loading de rutas (`64.35 kB` de entrada), mascota **Suri reactiva con 11 poses** (`SuriMascotAnimated.vue`), paleta oficial en los 19 motores, manejo global de errores y **20 pruebas unitarias Vitest** automatizadas.
 - 🔒 **Endurecimiento P0 (`v0.11.0`)**: Autenticación dual (**Email/Contraseña** + **Google OAuth**), guards `requiresAuth` / `guestOnly`, reglas **Zero Trust** en [`app/firestore.rules`](./app/firestore.rules), y secrets/verificación de Stripe exclusivamente server-side (`vite.config.ts` / [`app/functions/`](./app/functions/)).
 
 ---
@@ -124,11 +121,11 @@ npm run dev            # Abre Remotion Studio
 ```text
 SuriLearn/
 ├── README.md                  # Documentación principal del ecosistema SuriLearn
-├── CHANGELOG.md               # Historial cronológico de versiones (v0.1.0 -> v0.15.0)
+├── CHANGELOG.md               # Historial cronológico de versiones (v0.1.0 -> v0.16.0)
 ├── .gitignore                 # Exclusiones de secretos (.env), node_modules, dist y temporales
 ├── app/                       # PWA Vue 3 + TypeScript + Vitest + Firebase + Stripe + Cloud Functions
 │   ├── README.md              # Documentación técnica de la aplicación
-│   ├── docs/                  # SRS, Informe Técnico, Design System y Planes v0.1.0 - v0.15.0
+│   ├── docs/                  # SRS, Informe Técnico, Design System y Planes v0.1.0 - v0.16.0
 │   ├── functions/             # Cloud Functions v2 para Stripe B2C/B2B y Webhooks
 │   ├── prototypes/            # Prototipos HTML/PNG de Stitch UI
 │   ├── src/                   # Código fuente (vistas, minijuegos, stores, composables)

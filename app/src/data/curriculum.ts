@@ -10,45 +10,104 @@
 
 import { LearningUnit, LearningNode, UnitTheoryGuide } from '../types/gamification';
 import { Exercise } from '../types/exercises';
+import { COURSE_TITLES_15 } from '../utils/gamificationEngine';
+import {
+  EXTRA_EXERCISES_MAP,
+  EXTRA_LESSON_NODES,
+  EXTRA_THEORY_GUIDES,
+} from './curriculumExpansion';
 
 export const LESSON_SEQUENCE = [
-  // Curso 1: Phishing e Ingeniería Social
+  // Curso 1: Fundamentos Digitales y Vocabulario Base (Nivel 1 · Principiante)
+  'arcade-hangman-1',
+  'arcade-wordsearch-1',
+  'arcade-memory-1',
   'inbox-scanner-1',
   'url-inspector-1',
+  // Curso 2: Phishing e Ingeniería Social (Nivel 1 · Principiante)
   'chat-urgency-1',
   'attachment-phish-1',
+  'phish-memory-2',
+  'phish-hangman-2',
   'rapid-triage-1',
-  // Curso 2: Identidad, Criptografía y Firewall Arcade
+  // Curso 3: Contraseñas, MFA y Permisos Móviles (Nivel 1 · Principiante)
   'password-builder-1',
   'permission-swipe-1',
+  'pwd-wordsearch-3',
+  'pwd-builder-2',
+  'permission-swipe-2',
+  // Curso 4: Reflejos Arcade contra Malware (Nivel 2 · Explorador)
+  'arcade-snake-1',
+  'arcade-whack-1',
+  'arcade-breakout-1',
+  'arcade-minesweeper-1',
+  'arcade-invaders-1',
+  // Curso 5: Defensa Perimetral y Bastión Firewall (Nivel 2 · Explorador)
   'firewall-arcade-1',
+  'fw-whack-5',
+  'fw-snake-5',
+  'fw-breakout-5',
   'firewall-arcade-2',
-  // Curso 3: Redes, Wi-Fi Público y Laberinto VPN
+  // Curso 6: Redes Seguras, Wi-Fi y Laberinto VPN (Nivel 2 · Explorador)
   'network-maze-1',
-  'network-maze-2',
   'url-inspector-2',
-  // Curso 4: Respuesta a Incidentes SOC, Ransomware e IA
-  'incident-soc-1',
+  'net-memory-6',
+  'net-minesweeper-6',
+  'network-maze-2',
+  // Curso 7: Fraude BEC, Vishing y Deepfakes IA (Nivel 3 · Defensor)
   'chat-deepfake-1',
+  'bec-inbox-7',
+  'bec-chat-7',
+  'bec-triage-7',
+  'bec-hangman-7',
+  // Curso 8: Respuesta a Incidentes SOC y Ransomware (Nivel 3 · Defensor)
+  'incident-soc-1',
+  'soc-memory-8',
+  'soc-whack-8',
+  'soc-invaders-8',
   'incident-soc-2',
-  // Curso 5: Seguridad Web OWASP & Blindaje DevSecOps
+  // Curso 9: Seguridad Cloud, SaaS y DLP (Nivel 3 · Defensor)
+  'cloud-url-9',
+  'cloud-perm-9',
+  'cloud-pwd-9',
+  'cloud-minesweeper-9',
+  'cloud-triage-9',
+  // Curso 10: OWASP Top 10: Inyecciones y XSS (Nivel 4 · Especialista)
   'code-patcher-1',
   'owasp-url-5',
+  'owasp-wordsearch-10',
+  'owasp-breakout-10',
   'code-patcher-2',
-  // Curso 6: Forense Digital, Caza de Amenazas (Threat Hunting) & Anti-IA
+  // Curso 11: Zero Trust y Blindaje de APIs (Nivel 4 · Especialista)
+  'zt-url-11',
+  'zt-firewall-11',
+  'zt-maze-11',
+  'zt-patcher-11',
+  'zt-memory-11',
+  // Curso 12: Forense Digital y Threat Hunting RAM (Nivel 4 · Especialista)
   'forensic-hunt-1',
+  'forensic-minesweeper-12',
   'forensic-hunt-2',
+  'forensic-invaders-12',
   'forensic-boss-6',
-  // Curso 7: Zona Arcade Centinela (Juegos Clásicos)
-  'arcade-hangman-1',
-  'arcade-snake-1',
-  'arcade-memory-1',
-  'arcade-whack-1',
-  // Curso 8: Zona Arcade Pro (Acción & Ingenio)
-  'arcade-wordsearch-1',
-  'arcade-minesweeper-1',
-  'arcade-breakout-1',
-  'arcade-invaders-1',
+  // Curso 13: Defensa APT y Cadena de Suministro (Nivel 5 · Experto)
+  'apt-inbox-13',
+  'apt-patcher-13',
+  'apt-soc-13',
+  'apt-forensic-13',
+  'apt-snake-13',
+  // Curso 14: Gobierno CISO, ISO 27001 y Continuidad (Nivel 5 · Experto)
+  'ciso-memory-14',
+  'ciso-chat-14',
+  'ciso-triage-14',
+  'ciso-whack-14',
+  'ciso-hangman-14',
+  // Curso 15: Desafío Maestro Centinela (Nivel 5 · Maestro)
+  'master-firewall-15',
+  'master-maze-15',
+  'master-patcher-15',
+  'master-forensic-15',
+  'master-soc-15',
 ] as const;
 
 export type LessonId = (typeof LESSON_SEQUENCE)[number];
@@ -1582,7 +1641,22 @@ const UNIT_8_NODES: LearningNode[] = [
   },
 ];
 
-export const ALL_BASE_NODES: LearningNode[] = [
+interface CourseBlueprint {
+  id: string;
+  unitNumber: number;
+  title: string;
+  description: string;
+  moduleBadge: string;
+  difficultyTier: string;
+  icon: string;
+  lessonIds: readonly string[];
+  chestId: string;
+  chestTitle: string;
+  chestBits: number;
+  theoryGuide: UnitTheoryGuide;
+}
+
+const LEGACY_LESSON_NODE_POOL: LearningNode[] = [
   ...UNIT_1_NODES,
   ...UNIT_2_NODES,
   ...UNIT_3_NODES,
@@ -1591,10 +1665,271 @@ export const ALL_BASE_NODES: LearningNode[] = [
   ...UNIT_6_NODES,
   ...UNIT_7_NODES,
   ...UNIT_8_NODES,
+  ...EXTRA_LESSON_NODES,
+].filter((n) => n.type === 'lesson');
+
+const NODE_BY_ID_MAP = new Map<string, LearningNode>(
+  LEGACY_LESSON_NODE_POOL.map((n) => [n.id, n])
+);
+
+const COURSE_BLUEPRINTS_15: CourseBlueprint[] = [
+  {
+    id: 'unit_01',
+    unitNumber: 1,
+    title: COURSE_TITLES_15[0],
+    description: 'Vocabulario clave con juegos clásicos, anatomía inicial de URLs y detección de correos sospechosos.',
+    moduleBadge: 'Módulo 1 · Fundamentos Digitales',
+    difficultyTier: 'Nivel 1 · Principiante',
+    icon: 'school',
+    lessonIds: ['arcade-hangman-1', 'arcade-wordsearch-1', 'arcade-memory-1', 'inbox-scanner-1', 'url-inspector-1'],
+    chestId: 'chest_01',
+    chestTitle: 'Cofre Inicial',
+    chestBits: 50,
+    theoryGuide: EXTRA_THEORY_GUIDES.unit_01,
+  },
+  {
+    id: 'unit_02',
+    unitNumber: 2,
+    title: COURSE_TITLES_15[1],
+    description: 'Mensajes de urgencia, adjuntos .pdf.exe peligrosos, tácticas smishing/spoofing y radar contrarreloj.',
+    moduleBadge: 'Módulo 2 · Phishing e Ing. Social',
+    difficultyTier: 'Nivel 1 · Principiante',
+    icon: 'phishing',
+    lessonIds: ['chat-urgency-1', 'attachment-phish-1', 'phish-memory-2', 'phish-hangman-2', 'rapid-triage-1'],
+    chestId: 'chest_02',
+    chestTitle: 'Cofre Anti-Phishing',
+    chestBits: 60,
+    theoryGuide: UNIT_THEORY_GUIDES.unit_01,
+  },
+  {
+    id: 'unit_03',
+    unitNumber: 3,
+    title: COURSE_TITLES_15[2],
+    description: 'Entropía NIST SP 800-63B, bóvedas cifradas, tokens MFA y auditoría de permisos en dispositivos móviles.',
+    moduleBadge: 'Módulo 3 · Contraseñas y MFA',
+    difficultyTier: 'Nivel 1 · Principiante',
+    icon: 'password',
+    lessonIds: ['password-builder-1', 'permission-swipe-1', 'pwd-wordsearch-3', 'pwd-builder-2', 'permission-swipe-2'],
+    chestId: 'chest_03',
+    chestTitle: 'Cofre Bóveda Segura',
+    chestBits: 75,
+    theoryGuide: EXTRA_THEORY_GUIDES.unit_03,
+  },
+  {
+    id: 'unit_04',
+    unitNumber: 4,
+    title: COURSE_TITLES_15[3],
+    description: 'Culebrita Firewall, Atrapa al Hacker, Rompe-Malware, Buscaminas e Invasores para entrenar reflejos.',
+    moduleBadge: 'Módulo 4 · Reflejos Arcade',
+    difficultyTier: 'Nivel 2 · Explorador',
+    icon: 'sports_esports',
+    lessonIds: ['arcade-snake-1', 'arcade-whack-1', 'arcade-breakout-1', 'arcade-minesweeper-1', 'arcade-invaders-1'],
+    chestId: 'chest_04',
+    chestTitle: 'Cofre Zona Arcade',
+    chestBits: 90,
+    theoryGuide: EXTRA_THEORY_GUIDES.unit_04,
+  },
+  {
+    id: 'unit_05',
+    unitNumber: 5,
+    title: COURSE_TITLES_15[4],
+    description: 'Filtrado de paquetes en vivo, cierre de puertos SSH/RDP/SMB, reglas ACL y defensa anti-DDoS.',
+    moduleBadge: 'Módulo 5 · Firewall Perimetral',
+    difficultyTier: 'Nivel 2 · Explorador',
+    icon: 'shield',
+    lessonIds: ['firewall-arcade-1', 'fw-whack-5', 'fw-snake-5', 'fw-breakout-5', 'firewall-arcade-2'],
+    chestId: 'chest_05',
+    chestTitle: 'Cofre Bastión Firewall',
+    chestBits: 100,
+    theoryGuide: UNIT_THEORY_GUIDES.unit_02,
+  },
+  {
+    id: 'unit_06',
+    unitNumber: 6,
+    title: COURSE_TITLES_15[5],
+    description: 'Laberinto táctico 2.5D con VPN + MFA, sniffers MitM, redes Evil Twin y auditoría de nodos Wi-Fi.',
+    moduleBadge: 'Módulo 6 · Redes y Laberinto VPN',
+    difficultyTier: 'Nivel 2 · Explorador',
+    icon: 'vpn_lock',
+    lessonIds: ['network-maze-1', 'url-inspector-2', 'net-memory-6', 'net-minesweeper-6', 'network-maze-2'],
+    chestId: 'chest_06',
+    chestTitle: 'Cofre Red Blindada',
+    chestBits: 120,
+    theoryGuide: UNIT_THEORY_GUIDES.unit_03,
+  },
+  {
+    id: 'unit_07',
+    unitNumber: 7,
+    title: COURSE_TITLES_15[6],
+    description: 'Clonación de voz IA (Deepfake), fraude bancario de proveedores (BEC), vishing y verificación cruzada.',
+    moduleBadge: 'Módulo 7 · BEC y Deepfakes IA',
+    difficultyTier: 'Nivel 3 · Defensor',
+    icon: 'record_voice_over',
+    lessonIds: ['chat-deepfake-1', 'bec-inbox-7', 'bec-chat-7', 'bec-triage-7', 'bec-hangman-7'],
+    chestId: 'chest_07',
+    chestTitle: 'Cofre Anti-Fraude IA',
+    chestBits: 135,
+    theoryGuide: EXTRA_THEORY_GUIDES.unit_07,
+  },
+  {
+    id: 'unit_08',
+    unitNumber: 8,
+    title: COURSE_TITLES_15[7],
+    description: 'Consola SOC en vivo bajo protocolo NIST 800-61: aislar VLAN, revocar IAM, purgar EDR y Backup 3-2-1.',
+    moduleBadge: 'Módulo 8 · Consola SOC y Ransomware',
+    difficultyTier: 'Nivel 3 · Defensor',
+    icon: 'emergency',
+    lessonIds: ['incident-soc-1', 'soc-memory-8', 'soc-whack-8', 'soc-invaders-8', 'incident-soc-2'],
+    chestId: 'chest_08',
+    chestTitle: 'Cofre Respuesta SOC',
+    chestBits: 150,
+    theoryGuide: UNIT_THEORY_GUIDES.unit_04,
+  },
+  {
+    id: 'unit_09',
+    unitNumber: 9,
+    title: COURSE_TITLES_15[8],
+    description: 'Consent phishing OAuth, permisos SaaS excesivos, claves de nube, buckets expuestos y políticas DLP.',
+    moduleBadge: 'Módulo 9 · Cloud, SaaS y DLP',
+    difficultyTier: 'Nivel 3 · Defensor',
+    icon: 'cloud_done',
+    lessonIds: ['cloud-url-9', 'cloud-perm-9', 'cloud-pwd-9', 'cloud-minesweeper-9', 'cloud-triage-9'],
+    chestId: 'chest_09',
+    chestTitle: 'Cofre Nube Segura',
+    chestBits: 175,
+    theoryGuide: EXTRA_THEORY_GUIDES.unit_09,
+  },
+  {
+    id: 'unit_10',
+    unitNumber: 10,
+    title: COURSE_TITLES_15[9],
+    description: 'Parcheo en vivo contra Inyección SQL, XSS, IDOR, CSRF y RCE siguiendo el estándar OWASP Top 10.',
+    moduleBadge: 'Módulo 10 · OWASP y DevSecOps',
+    difficultyTier: 'Nivel 4 · Especialista',
+    icon: 'terminal',
+    lessonIds: ['code-patcher-1', 'owasp-url-5', 'owasp-wordsearch-10', 'owasp-breakout-10', 'code-patcher-2'],
+    chestId: 'chest_10',
+    chestTitle: 'Cofre DevSecOps',
+    chestBits: 200,
+    theoryGuide: UNIT_THEORY_GUIDES.unit_05,
+  },
+  {
+    id: 'unit_11',
+    unitNumber: 11,
+    title: COURSE_TITLES_15[10],
+    description: 'Prevención SSRF, Gateways API JWT RS256, microsegmentación mTLS y validación estricta BOLA/RBAC.',
+    moduleBadge: 'Módulo 11 · Zero Trust y APIs',
+    difficultyTier: 'Nivel 4 · Especialista',
+    icon: 'api',
+    lessonIds: ['zt-url-11', 'zt-firewall-11', 'zt-maze-11', 'zt-patcher-11', 'zt-memory-11'],
+    chestId: 'chest_11',
+    chestTitle: 'Cofre Zero Trust',
+    chestBits: 220,
+    theoryGuide: EXTRA_THEORY_GUIDES.unit_11,
+  },
+  {
+    id: 'unit_12',
+    unitNumber: 12,
+    title: COURSE_TITLES_15[11],
+    description: 'Caza de procesos maliciosos en RAM, volcado de artefactos, corte de beacons C2 y dictamen de causa raíz.',
+    moduleBadge: 'Módulo 12 · CSI Forense RAM',
+    difficultyTier: 'Nivel 4 · Especialista',
+    icon: 'biotech',
+    lessonIds: ['forensic-hunt-1', 'forensic-minesweeper-12', 'forensic-hunt-2', 'forensic-invaders-12', 'forensic-boss-6'],
+    chestId: 'chest_12',
+    chestTitle: 'Cofre Threat Hunter',
+    chestBits: 250,
+    theoryGuide: UNIT_THEORY_GUIDES.unit_06,
+  },
+  {
+    id: 'unit_13',
+    unitNumber: 13,
+    title: COURSE_TITLES_15[12],
+    description: 'Spear phishing a repositorios, blindaje de pipelines CI/CD, paquetes troyanizados y contención APT.',
+    moduleBadge: 'Módulo 13 · APT y Cadena Suministro',
+    difficultyTier: 'Nivel 5 · Experto',
+    icon: 'hub',
+    lessonIds: ['apt-inbox-13', 'apt-patcher-13', 'apt-soc-13', 'apt-forensic-13', 'apt-snake-13'],
+    chestId: 'chest_13',
+    chestTitle: 'Cofre Supply Chain',
+    chestBits: 280,
+    theoryGuide: EXTRA_THEORY_GUIDES.unit_13,
+  },
+  {
+    id: 'unit_14',
+    unitNumber: 14,
+    title: COURSE_TITLES_15[13],
+    description: 'Métricas RPO/RTO, gestión de crisis ejecutiva, riesgo de proveedores TPRM y controles ISO/IEC 27001.',
+    moduleBadge: 'Módulo 14 · Gobierno CISO e ISO',
+    difficultyTier: 'Nivel 5 · Experto',
+    icon: 'account_balance',
+    lessonIds: ['ciso-memory-14', 'ciso-chat-14', 'ciso-triage-14', 'ciso-whack-14', 'ciso-hangman-14'],
+    chestId: 'chest_14',
+    chestTitle: 'Cofre Ejecutivo CISO',
+    chestBits: 300,
+    theoryGuide: EXTRA_THEORY_GUIDES.unit_14,
+  },
+  {
+    id: 'unit_15',
+    unitNumber: 15,
+    title: COURSE_TITLES_15[14],
+    description: 'Integración máxima: Muralla Firewall Boss, Laberinto Zero Trust, Hotfix RCE, CSI Nación-Estado y SOC Total.',
+    moduleBadge: 'Módulo 15 · Desafío Maestro',
+    difficultyTier: 'Nivel 5 · Maestro',
+    icon: 'workspace_premium',
+    lessonIds: ['master-firewall-15', 'master-maze-15', 'master-patcher-15', 'master-forensic-15', 'master-soc-15'],
+    chestId: 'chest_15',
+    chestTitle: 'Cofre Leyenda Suprema',
+    chestBits: 500,
+    theoryGuide: EXTRA_THEORY_GUIDES.unit_15,
+  },
 ];
 
+const LANES_BY_ORDER: Array<'left' | 'center' | 'right'> = ['left', 'center', 'right', 'center', 'left'];
+
+const UNIT_NODE_GROUPS: Record<string, LearningNode[]> = {};
+export const ALL_BASE_NODES: LearningNode[] = [];
+
+for (const bp of COURSE_BLUEPRINTS_15) {
+  const unitNodes: LearningNode[] = bp.lessonIds.map((lessonId, idx) => {
+    const template = NODE_BY_ID_MAP.get(lessonId);
+    if (!template) {
+      throw new Error(`[curriculum] Missing LearningNode definition for ${lessonId}`);
+    }
+    return {
+      ...template,
+      unitId: bp.id,
+      order: idx + 1,
+      status: 'locked' as const,
+      stars: 0,
+      lanePosition: LANES_BY_ORDER[idx % LANES_BY_ORDER.length],
+    };
+  });
+
+  const chestNode: LearningNode = {
+    id: bp.chestId,
+    unitId: bp.id,
+    order: bp.lessonIds.length + 1,
+    title: bp.chestTitle,
+    subtitle: `Recompensa de Curso ${bp.unitNumber} (+${bp.chestBits} Bits)`,
+    type: 'reward_chest',
+    status: 'locked',
+    stars: 0,
+    icon: 'inventory_2',
+    lanePosition: 'center',
+    expReward: 0,
+    estimatedMinutes: 1,
+    isClaimed: false,
+    bitsReward: bp.chestBits,
+  };
+
+  const fullGroup = [...unitNodes, chestNode];
+  UNIT_NODE_GROUPS[bp.id] = fullGroup;
+  ALL_BASE_NODES.push(...fullGroup);
+}
+
 // Keep MODULE_1_BASE_NODES export for backward compatibility
-export const MODULE_1_BASE_NODES = UNIT_1_NODES;
+export const MODULE_1_BASE_NODES = UNIT_NODE_GROUPS['unit_01'] || UNIT_1_NODES;
 
 // ==========================================
 // 3. EXERCISE DEFINITIONS FOR ALL 4 COURSES
@@ -3682,6 +4017,7 @@ export const LESSON_EXERCISES_MAP: Record<string, Exercise[]> = {
       },
     },
   ],
+  ...EXTRA_EXERCISES_MAP,
 };
 
 // Legacy aliases for backward compatibility
@@ -3717,24 +4053,38 @@ export function getNextLessonId(currentLessonId: string): string | null {
 }
 
 /**
- * Helper to compute dynamic statuses for a unit's nodes.
- * Note: Every unit unlocks its first lesson by default (and also unlocks ALL video game nodes
- * so students and professors can immediately test any course or video game!).
+ * Helper to compute dynamic statuses for a unit's nodes under strict sequential progression.
+ * Every lesson and course requires completing the prior step unless accredited by diagnostic placement.
  */
 function buildDynamicUnitNodes(
   baseNodes: LearningNode[],
   completedSet: Set<string>,
   claimedSet: Set<string>,
-  lessonStars: Record<string, number> = {}
-): { nodes: LearningNode[]; progressPercentage: number } {
+  lessonStars: Record<string, number> = {},
+  isUnitUnlocked = true,
+  isAccreditedByDiagnostic = false
+): { nodes: LearningNode[]; progressPercentage: number; isUnitCompleted: boolean } {
   const dynamicNodes: LearningNode[] = baseNodes.map((baseNode, index) => {
     if (baseNode.type === 'reward_chest') {
       const isClaimed =
         claimedSet.has(baseNode.id) ||
         (baseNode.id === 'chest_01' && claimedSet.has('unit_1_completion_chest'));
 
+      if (!isUnitUnlocked) {
+        return {
+          ...baseNode,
+          status: 'locked' as const,
+          isClaimed,
+          stars: 0,
+        };
+      }
+
       const prevLessonNode = baseNodes[index - 1];
-      const isPrevCompleted = prevLessonNode ? completedSet.has(prevLessonNode.id) : true;
+      const isPrevCompleted = isAccreditedByDiagnostic
+        ? true
+        : prevLessonNode
+          ? completedSet.has(prevLessonNode.id)
+          : true;
 
       if (isClaimed) {
         return {
@@ -3764,7 +4114,7 @@ function buildDynamicUnitNodes(
 
     // Lesson Node
     const isCompleted = completedSet.has(baseNode.id);
-    if (isCompleted) {
+    if (isCompleted || isAccreditedByDiagnostic) {
       const savedStars = lessonStars[baseNode.id];
       const stars = typeof savedStars === 'number' ? Math.max(1, Math.min(3, savedStars)) : 3;
       return {
@@ -3774,8 +4124,15 @@ function buildDynamicUnitNodes(
       };
     }
 
-    // First node of each unit OR interactive video game nodes are active/accessible so the professor/user can test any course and game immediately
-    if (index === 0 || baseNode.isVideoGame) {
+    if (!isUnitUnlocked) {
+      return {
+        ...baseNode,
+        status: 'locked' as const,
+        stars: 0,
+      };
+    }
+
+    if (index === 0) {
       return {
         ...baseNode,
         status: 'active' as const,
@@ -3807,126 +4164,68 @@ function buildDynamicUnitNodes(
     };
   });
 
-  const totalLessons = baseNodes.filter((n) => n.type === 'lesson').length;
-  const completedLessonsCount = dynamicNodes.filter(
-    (n) => n.type === 'lesson' && n.status === 'completed'
-  ).length;
+  const lessonNodes = dynamicNodes.filter((n) => n.type === 'lesson');
+  const totalLessons = lessonNodes.length;
+  const completedLessonsCount = lessonNodes.filter((n) => n.status === 'completed').length;
   const progressPercentage =
     totalLessons > 0 ? Math.round((completedLessonsCount / totalLessons) * 100) : 0;
+  const isUnitCompleted = totalLessons > 0 && completedLessonsCount === totalLessons;
 
-  return { nodes: dynamicNodes, progressPercentage };
+  return { nodes: dynamicNodes, progressPercentage, isUnitCompleted };
 }
 
 /**
- * Builds all 6 complete LearningUnits with theory guides, briefings, and dynamic statuses
+ * Builds all 15 sequential LearningUnits (Principiante -> Maestro),
+ * accrediting courses prior to `placementCourseIndex` as completed for review.
  */
 export function buildAllLearningUnits(
   completedLessons: string[] = [],
   claimedRewards: string[] = [],
-  lessonStars: Record<string, number> = {}
+  lessonStars: Record<string, number> = {},
+  placementCourseIndex = 0
 ): LearningUnit[] {
   const completedSet = new Set(completedLessons.map(normalizeLegacyLessonId));
   const claimedSet = new Set(claimedRewards);
+  const clampedPlacementIdx = Math.max(
+    0,
+    Math.min(COURSE_BLUEPRINTS_15.length - 1, Math.floor(placementCourseIndex || 0))
+  );
 
-  const u1 = buildDynamicUnitNodes(UNIT_1_NODES, completedSet, claimedSet, lessonStars);
-  const u2 = buildDynamicUnitNodes(UNIT_2_NODES, completedSet, claimedSet, lessonStars);
-  const u3 = buildDynamicUnitNodes(UNIT_3_NODES, completedSet, claimedSet, lessonStars);
-  const u4 = buildDynamicUnitNodes(UNIT_4_NODES, completedSet, claimedSet, lessonStars);
-  const u5 = buildDynamicUnitNodes(UNIT_5_NODES, completedSet, claimedSet, lessonStars);
-  const u6 = buildDynamicUnitNodes(UNIT_6_NODES, completedSet, claimedSet, lessonStars);
-  const u7 = buildDynamicUnitNodes(UNIT_7_NODES, completedSet, claimedSet, lessonStars);
-  const u8 = buildDynamicUnitNodes(UNIT_8_NODES, completedSet, claimedSet, lessonStars);
+  const units: LearningUnit[] = [];
+  let prevUnitCompleted = true;
 
-  return [
-    {
-      id: 'unit_01',
-      unitNumber: 1,
-      title: 'Curso 1: Anatomía del Phishing e Ingeniería Social',
-      description: 'Cabeceras SPF/DKIM, disección DNS, fraude del CEO (BEC), ejecutables .pdf.exe y radar contrarreloj.',
-      moduleBadge: 'Módulo 1 · Fundamentos y Phishing',
-      icon: 'phishing',
-      progressPercentage: u1.progressPercentage,
-      nodes: u1.nodes,
-      theoryGuide: UNIT_THEORY_GUIDES.unit_01,
-    },
-    {
-      id: 'unit_02',
-      unitNumber: 2,
-      title: 'Curso 2: Criptografía, Identidad y Bastión Firewall',
-      description: 'Entropía NIST SP 800-63B, privilegio mínimo móvil y videojuego arcade de defensa de paquetes en vivo.',
-      moduleBadge: 'Módulo 2 · Criptografía y Firewall Arcade',
-      icon: 'shield',
-      progressPercentage: u2.progressPercentage,
-      nodes: u2.nodes,
-      theoryGuide: UNIT_THEORY_GUIDES.unit_02,
-    },
-    {
-      id: 'unit_03',
-      unitNumber: 3,
-      title: 'Curso 3: Redes Seguras, Wi-Fi Público y Laberinto VPN',
-      description: 'Defensa ante Sniffers Man-in-the-Middle, redes Evil Twin y videojuego 2D de infiltración con túnel VPN + MFA.',
-      moduleBadge: 'Módulo 3 · Redes y Laberinto Táctico 2D',
-      icon: 'vpn_lock',
-      progressPercentage: u3.progressPercentage,
-      nodes: u3.nodes,
-      theoryGuide: UNIT_THEORY_GUIDES.unit_03,
-    },
-    {
-      id: 'unit_04',
-      unitNumber: 4,
-      title: 'Curso 4: Respuesta a Incidentes SOC, Ransomware e IA',
-      description: 'Consola SOC en vivo contra Ransomware (Aislar, Purgar, Backup 3-2-1) y detección de Deepfakes de voz con IA.',
-      moduleBadge: 'Módulo 4 · Consola SOC y Defensa IA',
-      icon: 'emergency',
-      progressPercentage: u4.progressPercentage,
-      nodes: u4.nodes,
-      theoryGuide: UNIT_THEORY_GUIDES.unit_04,
-    },
-    {
-      id: 'unit_05',
-      unitNumber: 5,
-      title: 'Curso 5: Seguridad Web OWASP & Blindaje DevSecOps',
-      description: 'Prevención de Inyección SQL (SQLi), XSS, IDOR y videojuego interactivo de parcheo de código en vivo.',
-      moduleBadge: 'Módulo 5 · OWASP Top 10 y DevSecOps',
-      icon: 'terminal',
-      progressPercentage: u5.progressPercentage,
-      nodes: u5.nodes,
-      theoryGuide: UNIT_THEORY_GUIDES.unit_05,
-    },
-    {
-      id: 'unit_06',
-      unitNumber: 6,
-      title: 'Curso 6: Forense Digital, Threat Hunting & Anti-IA',
-      description: 'Laboratorio CSI Cyber de caza de troyanos en memoria RAM, bloqueo de servidores C2 y dictamen de causa raíz (IoC).',
-      moduleBadge: 'Módulo 6 · CSI Forense y Threat Hunting',
-      icon: 'biotech',
-      progressPercentage: u6.progressPercentage,
-      nodes: u6.nodes,
-      theoryGuide: UNIT_THEORY_GUIDES.unit_06,
-    },
-    {
-      id: 'unit_07',
-      unitNumber: 7,
-      title: 'Curso 7: Zona Arcade Centinela (Juegos Clásicos)',
-      description: 'Ahorcado Centinela, Culebrita Firewall, Memorama Amenaza↔Defensa y Atrapa al Hacker en vivo.',
-      moduleBadge: 'Módulo 7 · Zona Arcade Clásica',
-      icon: 'sports_esports',
-      progressPercentage: u7.progressPercentage,
-      nodes: u7.nodes,
-      theoryGuide: UNIT_THEORY_GUIDES.unit_07,
-    },
-    {
-      id: 'unit_08',
-      unitNumber: 8,
-      title: 'Curso 8: Zona Arcade Pro — Acción & Ingenio',
-      description: 'Sopa de Letras Centinela, Buscaminas de Malware, Rompe-Malware Arcade e Invasores del Spam.',
-      moduleBadge: 'Módulo 8 · Arcade Acción & Ingenio',
-      icon: 'rocket_launch',
-      progressPercentage: u8.progressPercentage,
-      nodes: u8.nodes,
-      theoryGuide: UNIT_THEORY_GUIDES.unit_08,
-    },
-  ];
+  for (let uIdx = 0; uIdx < COURSE_BLUEPRINTS_15.length; uIdx++) {
+    const bp = COURSE_BLUEPRINTS_15[uIdx];
+    const baseNodes = UNIT_NODE_GROUPS[bp.id] || [];
+    const isAccreditedByDiagnostic = uIdx < clampedPlacementIdx;
+    const isUnitUnlocked = uIdx === 0 || uIdx <= clampedPlacementIdx || prevUnitCompleted;
+
+    const { nodes, progressPercentage, isUnitCompleted } = buildDynamicUnitNodes(
+      baseNodes,
+      completedSet,
+      claimedSet,
+      lessonStars,
+      isUnitUnlocked,
+      isAccreditedByDiagnostic
+    );
+
+    units.push({
+      id: bp.id,
+      unitNumber: bp.unitNumber,
+      title: bp.title,
+      description: bp.description,
+      moduleBadge: bp.moduleBadge,
+      difficultyTier: bp.difficultyTier,
+      icon: bp.icon,
+      progressPercentage,
+      nodes,
+      theoryGuide: bp.theoryGuide,
+    });
+
+    prevUnitCompleted = isUnitCompleted;
+  }
+
+  return units;
 }
 
 /**

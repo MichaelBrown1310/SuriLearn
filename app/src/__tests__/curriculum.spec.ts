@@ -8,11 +8,38 @@ import {
 import { SURI_IMAGES } from '../utils/suriAssets';
 import type { SuriPose } from '../types/exercises';
 
-describe('Curriculum & Minigame Integrity (8 Courses / 29 Lessons / 19 Engines)', () => {
-  it('exposes exactly 8 courses and 29 sequenced lessons', () => {
+describe('Curriculum & Minigame Integrity (15 Sequential Courses / 75 Lessons / 19 Engines)', () => {
+  it('exposes exactly 15 sequential courses with 5 lessons + 1 chest each (75 lessons)', () => {
     const units = buildAllLearningUnits([], []);
-    expect(units).toHaveLength(8);
-    expect(LESSON_SEQUENCE).toHaveLength(29);
+    expect(units).toHaveLength(15);
+    expect(LESSON_SEQUENCE).toHaveLength(75);
+    for (const unit of units) {
+      expect(unit.nodes.filter((n) => n.type === 'lesson')).toHaveLength(5);
+      expect(unit.nodes.filter((n) => n.type === 'reward_chest')).toHaveLength(1);
+    }
+  });
+
+  it('enforces strict sequential progression across courses and honors diagnostic placement', () => {
+    const initialUnits = buildAllLearningUnits([], [], {}, 0);
+    expect(initialUnits[0].nodes[0].status).toBe('active');
+    expect(initialUnits[0].nodes[1].status).toBe('locked');
+    expect(initialUnits[1].nodes[0].status).toBe('locked');
+    expect(initialUnits[14].nodes[0].status).toBe('locked');
+
+    const unit1Lessons = initialUnits[0].nodes
+      .filter((n) => n.type === 'lesson')
+      .map((n) => n.id);
+    const afterCourse1 = buildAllLearningUnits(unit1Lessons, [], {}, 0);
+    expect(afterCourse1[0].progressPercentage).toBe(100);
+    expect(afterCourse1[1].nodes[0].status).toBe('active');
+    expect(afterCourse1[2].nodes[0].status).toBe('locked');
+
+    const midPlaced = buildAllLearningUnits([], [], {}, 6);
+    expect(midPlaced[0].progressPercentage).toBe(100);
+    expect(midPlaced[5].progressPercentage).toBe(100);
+    expect(midPlaced[6].nodes[0].status).toBe('active');
+    expect(midPlaced[6].nodes[1].status).toBe('locked');
+    expect(midPlaced[7].nodes[0].status).toBe('locked');
   });
 
   it('validates exercises in every lesson without broken structural links', () => {
@@ -126,10 +153,14 @@ describe('Curriculum & Minigame Integrity (8 Courses / 29 Lessons / 19 Engines)'
   });
 
   it('preserves stored stars on completed nodes and resolves Error Review Hub exercises', () => {
-    const units = buildAllLearningUnits(['inbox-scanner-1'], [], { 'inbox-scanner-1': 2 });
-    const firstLesson = units[0].nodes.find((n) => n.id === 'inbox-scanner-1');
-    expect(firstLesson?.status).toBe('completed');
-    expect(firstLesson?.stars).toBe(2);
+    const units = buildAllLearningUnits(
+      ['arcade-hangman-1', 'arcade-wordsearch-1', 'arcade-memory-1', 'inbox-scanner-1'],
+      [],
+      { 'inbox-scanner-1': 2 }
+    );
+    const fourthLesson = units[0].nodes.find((n) => n.id === 'inbox-scanner-1');
+    expect(fourthLesson?.status).toBe('completed');
+    expect(fourthLesson?.stars).toBe(2);
 
     const firstId = LESSON_EXERCISES_MAP['inbox-scanner-1'][0].id;
     const secondId = LESSON_EXERCISES_MAP['url-inspector-1'][0].id;

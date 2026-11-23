@@ -24,7 +24,7 @@ function getRedirectTarget(): string {
   if (typeof redirect === 'string' && redirect.startsWith('/')) {
     return redirect;
   }
-  return '/tabs/learn';
+  return '/tabs/learn?diagnostic=1';
 }
 
 async function handleGoogleAuth() {

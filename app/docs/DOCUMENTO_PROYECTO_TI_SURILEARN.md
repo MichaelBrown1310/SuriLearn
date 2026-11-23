@@ -906,7 +906,7 @@ Sprint 1: Cimientos y Auth          Sprint 3: Vidas y Economía        Sprint 5:
 
 ---
 
-## ANEXO DE ACTUALIZACIÓN EVOLUTIVA (`v0.9.0` → `v0.15.0`)
+## ANEXO DE ACTUALIZACIÓN EVOLUTIVA (`v0.9.0` → `v0.16.0`)
 
 Con posterioridad a la línea base inicial de 1 módulo y 6 minijuegos del SRS, el sistema evolucionó manteniendo la compatibilidad total con los requerimientos originales:
 
@@ -938,3 +938,8 @@ Con posterioridad a la línea base inicial de 1 módulo y 6 minijuegos del SRS, 
 7. **Ruta Continua Estilo Duolingo y Camino Curvo SVG Dinámico (`v0.15.0`)**:
    - **Geometría Curva Pura (`src/utils/pathGeometry.ts`)**: Funciones `getDuolingoNodeOffsetPercent()` y `buildCurvySvgPath()` validadas por `src/__tests__/pathGeometry.spec.ts` (`4` archivos, `19/19` pruebas Vitest).
    - **Trazado Continuo por Detrás de Nodos (`CourseWindingPath.vue` + `LearnView.vue`)**: Renderizado vertical de los `8` cursos (`29` lecciones y `8` cofres) en una sola página con separadores por curso, encabezados y Manual Teórico individuales, medición por `ResizeObserver` centrada en cada círculo opaco (`z-0` detrás de `z-10`), flujo animado en tramos completados y barra superior de salto rápido sincronizada con `IntersectionObserver`.
+8. **15 Cursos Secuenciales (75 Lecciones), Diagnóstico de 10 Preguntas, Mapa Limpio y Podios en Firestore (`v0.16.0`)**:
+   - **Escalera Curricular de 15 Cursos (`src/data/curriculumExpansion.ts` + `curriculum.ts`)**: Expansión de `8` a `15` cursos progresivos (`5` lecciones + `1` cofre cada uno = `75` lecciones y `90` nodos totales), ordenados estrictamente desde `Nivel 1 · Principiante` hasta `Nivel 5 · Maestro`.
+   - **Mapa Limpio y Bloqueo Secuencial Estricto**: Eliminación del selector superior de cursos en `LearnView.vue` y de las excepciones de acceso libre; el avance exige superar cada lección y curso previo (mostrando insignia `🔒 Bloqueado · Completa el Curso X` en `CourseWindingPath.vue`).
+   - **Cuestionario Inicial de 10 Preguntas (`DiagnosticModal.vue` + `evaluateDiagnosticAnswers`)**: Evaluación progresiva automática post-registro (`/tabs/learn?diagnostic=1`) que ubica y acredita al usuario en el curso acorde a su nivel (`Cursos 1, 4, 7, 10 o 13`, con salvaguarda si falla Q1 y Q2).
+   - **25 Cuentas Seed en Firestore y Selector de Ligas (`LeaderboardView.vue`)**: Poblado de `5` competidores por división en las `5` ligas (`Bronce`, `Plata`, `Oro`, `Diamante`, `Supremo`; `29` usuarios totales en `/users`) junto con pestañas para inspeccionar todos los podios globales (`20/20` pruebas Vitest).

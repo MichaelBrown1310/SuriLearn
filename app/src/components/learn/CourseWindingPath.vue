@@ -40,7 +40,12 @@ const progressPathD = ref<string>('');
 let resizeObserver: ResizeObserver | null = null;
 let rafMeasureId: number | null = null;
 
-const isArcadeUnit = computed(() => props.unit.unitNumber === 7 || props.unit.unitNumber === 8);
+const isArcadeUnit = computed(() => props.unit.unitNumber === 4);
+const isMasterUnit = computed(() => props.unit.unitNumber === 15);
+const isUnitLocked = computed(() => {
+  const lessons = props.unit.nodes.filter((n) => n.type === 'lesson');
+  return lessons.length > 0 && lessons.every((n) => n.status === 'locked');
+});
 
 const companionPose = computed<SuriPose>(() => {
   const poses: SuriPose[] = [
@@ -204,6 +209,13 @@ onUnmounted(() => {
             </div>
 
             <span
+              v-if="unit.difficultyTier"
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant border border-outline-variant/40 text-[10px] font-extrabold tracking-wide"
+            >
+              {{ unit.difficultyTier }}
+            </span>
+
+            <span
               v-if="isRecommended"
               class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E1A653] text-[#291800] text-[10px] font-black uppercase tracking-wider shadow-2xs"
             >
@@ -211,11 +223,19 @@ onUnmounted(() => {
             </span>
 
             <span
-              v-if="isArcadeUnit"
+              v-if="isArcadeUnit || isMasterUnit"
               class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
-              :class="unit.unitNumber === 8 ? 'bg-primary text-[#291800]' : 'bg-tertiary text-white'"
+              :class="isMasterUnit ? 'bg-primary text-[#291800]' : 'bg-tertiary text-white'"
             >
-              {{ unit.unitNumber === 8 ? '¡Nuevos!' : '¡Clásicos!' }}
+              {{ isMasterUnit ? 'Desafío Final' : 'Zona Arcade' }}
+            </span>
+
+            <span
+              v-if="unit.unitNumber > 1 && isUnitLocked"
+              class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant border border-outline-variant/40 text-[10px] font-bold"
+            >
+              <span class="material-symbols-outlined text-[12px]">lock</span>
+              <span>Bloqueado · Completa el Curso {{ unit.unitNumber - 1 }}</span>
             </span>
           </div>
 

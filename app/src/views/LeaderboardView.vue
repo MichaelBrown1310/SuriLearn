@@ -21,6 +21,10 @@ const suriIdleFallback = suriImg;
 // Scope toggle: 'global' (Division ranking) or 'company' (Private Organization ranking)
 const activeScope = ref<'global' | 'company'>('global');
 
+type LeagueDivision = 'Bronce' | 'Plata' | 'Oro' | 'Diamante' | 'Supremo';
+const LEAGUE_DIVISIONS: LeagueDivision[] = ['Bronce', 'Plata', 'Oro', 'Diamante', 'Supremo'];
+const selectedLeague = ref<LeagueDivision | null>(null);
+
 // Reactive states
 const rawGlobalLeaderboard = ref<LeagueLeaderboardEntry[]>([]);
 const rawCompanyLeaderboard = ref<LeagueLeaderboardEntry[]>([]);
@@ -51,8 +55,34 @@ const currentLeagueTitle = computed(() => {
   return gamificationStore.state.currentLeague || userStore.profile.currentLeague || currentLeagueTier.value.name;
 });
 
+const viewedLeague = computed<LeagueDivision>(() => {
+  const candidate = selectedLeague.value || currentLeagueTitle.value;
+  return LEAGUE_DIVISIONS.includes(candidate as LeagueDivision)
+    ? (candidate as LeagueDivision)
+    : 'Bronce';
+});
+
+const isViewingOwnLeague = computed(() => {
+  return activeScope.value === 'company' || viewedLeague.value === currentLeagueTitle.value;
+});
+
+const viewedDivisionRoman = computed(() => {
+  const romans: Record<LeagueDivision, string> = {
+    Bronce: 'Div. I',
+    Plata: 'Div. II',
+    Oro: 'Div. III',
+    Diamante: 'Div. IV',
+    Supremo: 'Div. V',
+  };
+  return romans[viewedLeague.value] || currentLeagueTier.value.divisionRoman;
+});
+
 const nextLeagueTitle = computed(() => {
-  return currentLeagueTier.value.nextLeagueName;
+  const idx = LEAGUE_DIVISIONS.indexOf(viewedLeague.value);
+  if (idx >= 0 && idx < LEAGUE_DIVISIONS.length - 1) {
+    return `Liga ${LEAGUE_DIVISIONS[idx + 1]}`;
+  }
+  return 'Élite Suprema';
 });
 
 const weeklyCountdown = computed(() => getWeeklyCountdownLabel());
@@ -93,8 +123,8 @@ function sortAndRank(poolRaw: LeagueLeaderboardEntry[]): LeagueLeaderboardEntry[
   const myUid = currentUserId.value;
   let pool = [...poolRaw];
 
-  // If the logged-in user is not yet returned in the query pool, inject their real profile
-  if (myUid && !pool.some((e) => e.userId === myUid)) {
+  // Inject current user only when viewing their own league or company tournament
+  if (myUid && isViewingOwnLeague.value && !pool.some((e) => e.userId === myUid)) {
     pool.push({
       id: `lb_${myUid}`,
       userId: myUid,
@@ -189,12 +219,12 @@ const xpToPromotion = computed(() => {
 });
 
 async function loadData() {
-  const userLeague = currentLeagueTitle.value;
+  const targetLeague = viewedLeague.value;
   const myUid = currentUserId.value;
   const orgId = userStore.profile.organizationId;
 
   try {
-    const globalData = await firestore.getLeaderboard(userLeague, myUid);
+    const globalData = await firestore.getLeaderboard(targetLeague, myUid);
     rawGlobalLeaderboard.value = globalData;
 
     if (orgId) {
@@ -218,14 +248,14 @@ async function handleRefresh() {
 }
 
 function setupSubscriptions() {
-  const userLeague = currentLeagueTitle.value;
+  const targetLeague = viewedLeague.value;
   const myUid = currentUserId.value;
   const orgId = userStore.profile.organizationId;
 
   // Global subscription
   if (unsubscribeGlobal) unsubscribeGlobal();
   unsubscribeGlobal = firestore.subscribeToLeaderboard(
-    userLeague,
+    targetLeague,
     myUid,
     (updatedEntries) => {
       rawGlobalLeaderboard.value = updatedEntries;
@@ -245,6 +275,24 @@ function setupSubscriptions() {
     );
   }
 }
+
+function selectLeagueDivision(div: LeagueDivision) {
+  if (viewedLeague.value === div) return;
+  selectedLeague.value = div;
+  isLoading.value = true;
+  loadData();
+  setupSubscriptions();
+}
+
+watch(
+  () => currentLeagueTitle.value,
+  () => {
+    if (!selectedLeague.value) {
+      loadData();
+      setupSubscriptions();
+    }
+  }
+);
 
 watch(
   () => userStore.profile.organizationId,
@@ -317,6 +365,34 @@ onUnmounted(() => {
         </button>
       </div>
 
+      <!-- Selector de Divisiones Globales (Bronce -> Supremo) -->
+      <div
+        v-if="activeScope === 'global'"
+        class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar"
+      >
+        <button
+          v-for="div in LEAGUE_DIVISIONS"
+          :key="div"
+          type="button"
+          @click="selectLeagueDivision(div)"
+          class="px-3 py-1.5 rounded-xl text-[11px] font-black border shrink-0 transition-all flex items-center gap-1.5"
+          :class="
+            viewedLeague === div
+              ? 'bg-primary text-[#291800] border-primary shadow-xs'
+              : 'bg-surface-container-lowest text-on-surface-variant border-outline-variant/40 hover:border-primary/40 hover:text-on-surface'
+          "
+        >
+          <span>{{ div }}</span>
+          <span
+            v-if="div === currentLeagueTitle"
+            class="text-[9px] px-1.5 py-0.2 rounded-full uppercase"
+            :class="viewedLeague === div ? 'bg-[#291800]/15 text-[#291800]' : 'bg-primary/15 text-primary'"
+          >
+            Tu liga
+          </span>
+        </button>
+      </div>
+
       <!-- State: User selected 'company' scope but doesn't have an organization -->
       <div
         v-if="activeScope === 'company' && !hasCompany"
@@ -355,7 +431,7 @@ onUnmounted(() => {
               </div>
               <div class="flex flex-col min-w-0">
                 <span class="text-base font-extrabold text-on-surface truncate">
-                  {{ activeScope === 'company' ? `Liga Privada · ${companyName}` : `Liga ${currentLeagueTitle}` }}
+                  {{ activeScope === 'company' ? `Liga Privada · ${companyName}` : `Liga ${viewedLeague}` }}
                 </span>
                 <div class="flex items-center gap-1.5 text-on-surface-variant text-xs">
                   <span class="material-symbols-outlined text-[14px]">
@@ -385,7 +461,7 @@ onUnmounted(() => {
                 {{ activeScope === 'company' ? 'verified' : 'workspace_premium' }}
               </span>
               <span class="text-[11px] font-bold text-on-surface">
-                {{ activeScope === 'company' ? 'Interna' : currentLeagueTier.divisionRoman }}
+                {{ activeScope === 'company' ? 'Interna' : viewedDivisionRoman }}
               </span>
             </div>
           </div>
@@ -775,7 +851,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Current User Sticky Rank Bar ("Tú") -->
-        <div class="sticky bottom-18 mt-2 z-30 pointer-events-auto">
+        <div v-if="isViewingOwnLeague" class="sticky bottom-18 mt-2 z-30 pointer-events-auto">
           <div
             class="rounded-2xl p-3 shadow-lg border-2 flex items-center justify-between backdrop-blur-md"
             :class="[

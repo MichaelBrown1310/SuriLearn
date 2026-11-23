@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useGamificationStore } from '../stores/useGamificationStore';
 import { useUserStore } from '../stores/useUserStore';
 import { useFirestore, getLocalDateString, normalizeLocalDateString } from '../composables/useFirestore';
@@ -23,6 +23,7 @@ import { getSuriImage } from '../utils/suriAssets';
 import { buildAllLearningUnits } from '../data/curriculum';
 
 const router = useRouter();
+const route = useRoute();
 const gamificationStore = useGamificationStore();
 const userStore = useUserStore();
 const firestore = useFirestore();
@@ -245,9 +246,29 @@ function setupSectionObserver() {
   }
 }
 
+watch(
+  () => route.query.diagnostic,
+  (val) => {
+    if (val === '1' && !userStore.profile.diagnosticProfile?.completed) {
+      isDiagnosticModalOpen.value = true;
+    }
+  }
+);
+
+watch(
+  () => allUnits.value.length,
+  () => {
+    nextTick().then(() => setupSectionObserver());
+  }
+);
+
 onMounted(async () => {
-  if (gamificationStore.units.length < 8) {
+  if (gamificationStore.units.length < 15) {
     await gamificationStore.loadGamificationData();
+  }
+
+  if (route.query.diagnostic === '1' && !userStore.profile.diagnosticProfile?.completed) {
+    isDiagnosticModalOpen.value = true;
   }
 
   await nextTick();
@@ -297,13 +318,17 @@ function isChestClaimed(node: LearningNode): boolean {
 
 const allUnits = computed<LearningUnit[]>(() => {
   const claimed = userStore.profile.claimedRewards || gamificationStore.state.claimedRewards || [];
+  const placementIndex = diagnosticProfile.value?.completed
+    ? (diagnosticProfile.value.recommendedCourseIndex ?? 0)
+    : 0;
   const baseList =
-    gamificationStore.units.length >= 8
+    gamificationStore.units.length >= 15
       ? gamificationStore.units
       : buildAllLearningUnits(
           gamificationStore.state.completedLessons || [],
           claimed,
-          gamificationStore.state.lessonStars || {}
+          gamificationStore.state.lessonStars || {},
+          placementIndex
         );
 
   return baseList.map((u) => ({
@@ -350,6 +375,17 @@ const globalActiveLesson = computed<LearningNode | undefined>(() => {
   return allUnits.value[0]?.nodes.find((n) => n.type === 'lesson');
 });
 
+const globalActiveUnit = computed<LearningUnit>(() => {
+  const targetId = globalActiveLesson.value?.id;
+  if (targetId) {
+    const matched = allUnits.value.find((u) => u.nodes.some((n) => n.id === targetId));
+    if (matched) return matched;
+  }
+  return currentUnit.value;
+});
+
+const bottomActionLesson = computed(() => globalActiveLesson.value || activeLesson.value);
+
 function openTheoryForUnit(unit: LearningUnit) {
   theoryModalUnit.value = unit;
   isTheoryModalOpen.value = true;
@@ -375,7 +411,10 @@ function scrollToUnit(idx: number) {
 
 async function handleNodeClick(node: LearningNode) {
   if (node.status === 'locked') {
-    gamificationStore.showToast('Supera la lección anterior para desbloquear este nodo.', false);
+    gamificationStore.showToast(
+      'Completa la lección o curso anterior para desbloquear este paso secuencial.',
+      false
+    );
     return;
   }
 
@@ -420,7 +459,7 @@ function handleStartFromTheoryModal(lessonId: string) {
 }
 
 function startCurrentLesson() {
-  const next = activeLesson.value || globalActiveLesson.value;
+  const next = bottomActionLesson.value;
   if (next) {
     handleNodeClick(next);
   }
@@ -483,7 +522,7 @@ async function claimDailyQuest() {
     <main class="view-master-container flex-1 w-full pb-12 flex flex-col gap-6">
       <!-- Layout de 2 Columnas para Pantallas >= 992px -->
       <div class="flex flex-col lg:flex-row gap-8 items-start w-full">
-        <!-- Columna Principal (65% en >= 992px): Diagnóstico Adaptativo + Selector de 6 Cursos + Árbol de lecciones -->
+        <!-- Columna Principal (65% en >= 992px): Diagnóstico Inicial + Meta Diaria + Caminito Secuencial de 15 Cursos -->
         <div class="w-full lg:w-[65%] flex flex-col gap-5">
           <!-- Adaptive Diagnostic / Personalized Route Banner -->
           <div
@@ -534,7 +573,7 @@ async function claimDailyQuest() {
                   Personaliza Tu Entrenamiento
                 </span>
                 <p class="text-xs font-extrabold text-on-surface leading-snug">
-                  Haz el diagnóstico rápido de 4 preguntas para descubrir qué curso priorizar.
+                  Completa el diagnóstico inicial de 10 preguntas para ubicar tu nivel y desbloquear tu ruta ideal.
                 </p>
               </div>
             </div>
@@ -552,81 +591,6 @@ async function claimDailyQuest() {
                 @click="diagnosticDismissed = true"
               >
                 Luego
-              </button>
-            </div>
-          </div>
-
-          <!-- Barra de Salto Rápido a los 8 Cursos / Módulos -->
-          <div class="w-full bg-surface-container-lowest p-3 rounded-3xl border border-outline-variant/40 shadow-xs">
-            <div class="flex flex-wrap items-center justify-between gap-1 px-1 mb-2.5">
-              <span class="text-[11px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-[16px] icon-filled">hub</span>
-                <span>8 Cursos Continuos · Incluye 2 Zonas Arcade</span>
-              </span>
-              <span class="text-[10px] font-bold text-on-surface-variant">
-                Salta rápido a un curso o baja por todo el caminito
-              </span>
-            </div>
-
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-              <button
-                v-for="(u, idx) in allUnits"
-                :key="u.id"
-                type="button"
-                class="p-2.5 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-1 relative"
-                :class="
-                  selectedUnitIndex === idx
-                    ? 'bg-primary text-white border-primary shadow-[0_3px_0_#b87b2e]'
-                    : u.unitNumber === 7 || u.unitNumber === 8
-                      ? 'bg-tertiary/10 text-on-surface border-tertiary/40 hover:border-tertiary'
-                      : 'bg-surface-container-low text-on-surface border-outline-variant/40 hover:border-primary/50'
-                "
-                @click="scrollToUnit(idx)"
-              >
-                <div class="flex items-center justify-between w-full">
-                  <span class="text-[10px] font-black uppercase tracking-wider opacity-90">
-                    Curso {{ u.unitNumber }}
-                  </span>
-                  <span
-                    v-if="u.unitNumber === 7 || u.unitNumber === 8"
-                    class="text-[9px] font-black px-1.5 py-0.2 rounded-full uppercase"
-                    :class="
-                      selectedUnitIndex === idx
-                        ? 'bg-white/25 text-white'
-                        : u.unitNumber === 8
-                          ? 'bg-primary text-[#291800]'
-                          : 'bg-tertiary text-white'
-                    "
-                  >
-                    {{ u.unitNumber === 8 ? '¡Nuevos!' : '¡Clásicos!' }}
-                  </span>
-                  <span v-else class="material-symbols-outlined text-[16px] icon-filled">
-                    {{ u.icon || 'shield' }}
-                  </span>
-                </div>
-                <span class="text-xs font-extrabold leading-tight line-clamp-2">
-                  {{
-                    u.unitNumber === 1
-                      ? 'Phishing & Ing. Social'
-                      : u.unitNumber === 2
-                        ? 'Criptografía & Firewall'
-                        : u.unitNumber === 3
-                          ? 'Redes & Laberinto VPN'
-                          : u.unitNumber === 4
-                            ? 'Consola SOC & IA'
-                            : u.unitNumber === 5
-                              ? 'DevSecOps & Parcheo'
-                              : u.unitNumber === 6
-                                ? 'Forense & Threat Hunting'
-                                : u.unitNumber === 7
-                                  ? 'Zona Arcade 🎮'
-                                  : 'Arcade Acción 🕹️'
-                  }}
-                </span>
-                <div class="flex items-center justify-between text-[10px] font-black mt-0.5 opacity-90">
-                  <span>Progreso</span>
-                  <span>{{ u.progressPercentage }}%</span>
-                </div>
               </button>
             </div>
           </div>
@@ -679,7 +643,7 @@ async function claimDailyQuest() {
             </div>
           </div>
 
-          <!-- Ruta Continua Estilo Duolingo: Todos los 8 Cursos uno debajo del otro -->
+          <!-- Ruta Continua Estilo Duolingo: Todos los 15 Cursos Secuenciales uno debajo del otro -->
           <div class="w-full flex flex-col gap-6">
             <section
               v-for="(unit, uIdx) in allUnits"
@@ -701,18 +665,18 @@ async function claimDailyQuest() {
           </div>
 
           <!-- Bottom Action Card for Next Challenge -->
-          <div v-if="activeLesson" class="w-full mt-2">
+          <div v-if="bottomActionLesson" class="w-full mt-2">
             <div class="bg-surface-container-lowest rounded-2xl p-4 shadow-md border border-outline-variant/30 flex items-center justify-between gap-4">
               <div class="flex items-center gap-3.5 min-w-0">
                 <div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary shrink-0 shadow-xs">
-                  <span class="material-symbols-outlined text-[26px]">{{ activeLesson.icon || 'security' }}</span>
+                  <span class="material-symbols-outlined text-[26px]">{{ bottomActionLesson.icon || 'security' }}</span>
                 </div>
                 <div class="min-w-0">
                   <span class="text-[10px] font-black uppercase tracking-wider text-primary">
-                    Siguiente desafío · {{ currentUnit.moduleBadge }}
+                    Siguiente desafío · {{ globalActiveUnit.moduleBadge }}
                   </span>
-                  <h3 class="text-sm font-black text-on-surface truncate">{{ activeLesson.title }}</h3>
-                  <p class="text-xs text-on-surface-variant truncate">{{ activeLesson.subtitle }}</p>
+                  <h3 class="text-sm font-black text-on-surface truncate">{{ bottomActionLesson.title }}</h3>
+                  <p class="text-xs text-on-surface-variant truncate">{{ bottomActionLesson.subtitle }}</p>
                 </div>
               </div>
               <button

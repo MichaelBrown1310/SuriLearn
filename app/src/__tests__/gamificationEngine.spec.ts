@@ -114,30 +114,56 @@ describe('Gamification Engine & Business Rules (RN-01 a RN-08)', () => {
     expect(veteranBadges.every((b) => b.isUnlocked)).toBe(true);
   });
 
-  it('evaluates adaptive diagnostic and recommends course matching weak areas', () => {
-    const weakNet = evaluateDiagnosticAnswers(
-      [
-        { area: 'phishing', isCorrect: true },
-        { area: 'crypto_firewall', isCorrect: true },
-        { area: 'network_vpn', isCorrect: false },
-        { area: 'soc_ransomware', isCorrect: true },
-      ],
+  it('evaluates 10-question adaptive diagnostic tiers and Q1+Q2 safeguard', () => {
+    const areas = [
+      'basics_phishing',
+      'social_eng',
+      'passwords_mfa',
+      'mobile_malware',
+      'firewall_ports',
+      'network_vpn',
+      'ai_bec',
+      'soc_ransomware',
+      'owasp_devsecops',
+      'forensic_ciso',
+    ];
+    const makeAnswers = (correctIndices: number[]) =>
+      areas.map((area, idx) => ({ area, isCorrect: correctIndices.includes(idx) }));
+
+    const lowScore = evaluateDiagnosticAnswers(makeAnswers([0]), 'individual');
+    expect(lowScore.levelLabel).toBe('Principiante');
+    expect(lowScore.recommendedCourseIndex).toBe(0);
+
+    const explorerScore = evaluateDiagnosticAnswers(makeAnswers([0, 1, 2, 3]), 'individual');
+    expect(explorerScore.levelLabel).toBe('Explorador');
+    expect(explorerScore.recommendedCourseIndex).toBe(3);
+
+    const midScore = evaluateDiagnosticAnswers(makeAnswers([0, 1, 2, 3, 4, 5]), 'employee');
+    expect(midScore.levelLabel).toBe('Intermedio');
+    expect(midScore.recommendedCourseIndex).toBe(6);
+
+    const advScore = evaluateDiagnosticAnswers(
+      makeAnswers([0, 1, 2, 3, 4, 5, 6, 7]),
       'employee'
     );
-    expect(weakNet.recommendedCourseIndex).toBe(2);
-    expect(weakNet.weakAreas).toContain('Redes y Wi-Fi Seguro');
+    expect(advScore.levelLabel).toBe('Avanzado');
+    expect(advScore.recommendedCourseIndex).toBe(9);
+    expect(advScore.weakAreas).toContain('OWASP Top 10 y DevSecOps');
+    expect(advScore.weakAreas).toContain('Forense RAM y Threat Hunting');
 
-    const perfectTech = evaluateDiagnosticAnswers(
-      [
-        { area: 'phishing', isCorrect: true },
-        { area: 'crypto_firewall', isCorrect: true },
-        { area: 'network_vpn', isCorrect: true },
-        { area: 'soc_ransomware', isCorrect: true },
-      ],
+    const expertScore = evaluateDiagnosticAnswers(
+      makeAnswers([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
       'tech'
     );
-    expect(perfectTech.levelLabel).toBe('Avanzado');
-    expect(perfectTech.recommendedCourseIndex).toBe(4);
+    expect(expertScore.levelLabel).toBe('Experto');
+    expect(expertScore.recommendedCourseIndex).toBe(12);
+
+    const missedBasics = evaluateDiagnosticAnswers(
+      makeAnswers([2, 3, 4, 5, 6, 7, 8, 9]),
+      'tech'
+    );
+    expect(missedBasics.recommendedCourseIndex).toBeLessThanOrEqual(1);
+    expect(missedBasics.levelLabel).toBe('Principiante');
   });
 
   it('computes real weekly team activity from member activeDates and weekly countdown', () => {

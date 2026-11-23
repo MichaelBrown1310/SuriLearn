@@ -303,40 +303,42 @@ export function getWeeklyCountdownLabel(now: Date = new Date()): string {
   return `Termina en ${days}d ${hours}h ${minutes}m`;
 }
 
+export const COURSE_TITLES_15: string[] = [
+  'Curso 1: Fundamentos Digitales y Vocabulario Base',
+  'Curso 2: Phishing e Ingeniería Social',
+  'Curso 3: Contraseñas, MFA y Permisos Móviles',
+  'Curso 4: Reflejos Arcade contra Malware',
+  'Curso 5: Defensa Perimetral y Bastión Firewall',
+  'Curso 6: Redes Seguras, Wi-Fi y Laberinto VPN',
+  'Curso 7: Fraude BEC, Vishing y Deepfakes IA',
+  'Curso 8: Respuesta a Incidentes SOC y Ransomware',
+  'Curso 9: Seguridad Cloud, SaaS y DLP',
+  'Curso 10: OWASP Top 10: Inyecciones y XSS',
+  'Curso 11: Zero Trust y Blindaje de APIs',
+  'Curso 12: Forense Digital y Threat Hunting RAM',
+  'Curso 13: Defensa APT y Cadena de Suministro',
+  'Curso 14: Gobierno CISO, ISO 27001 y Continuidad',
+  'Curso 15: Desafío Maestro Centinela',
+];
+
 const DIAGNOSTIC_COURSE_MAP: Record<
   string,
-  { index: number; title: string; label: string }
+  { index: number; label: string }
 > = {
-  phishing: {
-    index: 0,
-    title: 'Curso 1: Anatomía del Phishing e Ingeniería Social',
-    label: 'Phishing y Enlaces',
-  },
-  crypto_firewall: {
-    index: 1,
-    title: 'Curso 2: Criptografía, Identidad y Bastión Firewall',
-    label: 'Contraseñas y Firewall',
-  },
-  network_vpn: {
-    index: 2,
-    title: 'Curso 3: Redes Seguras, Wi-Fi Público y Laberinto VPN',
-    label: 'Redes y Wi-Fi Seguro',
-  },
-  soc_ransomware: {
-    index: 3,
-    title: 'Curso 4: Respuesta a Incidentes SOC, Ransomware e IA',
-    label: 'Respuesta SOC y Ransomware',
-  },
-  devsecops: {
-    index: 4,
-    title: 'Curso 5: Seguridad Web OWASP & Blindaje DevSecOps',
-    label: 'Seguridad Web y OWASP',
-  },
-  forensic: {
-    index: 5,
-    title: 'Curso 6: Forense Digital, Threat Hunting & Anti-IA',
-    label: 'Forense y Threat Hunting',
-  },
+  basics_phishing: { index: 0, label: 'Phishing y Dominios Web' },
+  phishing: { index: 0, label: 'Phishing y Dominios Web' },
+  social_eng: { index: 1, label: 'Ingeniería Social y Adjuntos' },
+  passwords_mfa: { index: 2, label: 'Contraseñas y MFA' },
+  mobile_malware: { index: 3, label: 'Permisos Móviles y Malware' },
+  firewall_ports: { index: 4, label: 'Puertos y Firewall' },
+  crypto_firewall: { index: 4, label: 'Contraseñas y Firewall' },
+  network_vpn: { index: 5, label: 'Redes Seguras y VPN' },
+  ai_bec: { index: 6, label: 'Fraude BEC y Deepfakes IA' },
+  soc_ransomware: { index: 7, label: 'Respuesta SOC y Ransomware' },
+  owasp_devsecops: { index: 9, label: 'OWASP Top 10 y DevSecOps' },
+  devsecops: { index: 9, label: 'OWASP Top 10 y DevSecOps' },
+  forensic_ciso: { index: 11, label: 'Forense RAM y Threat Hunting' },
+  forensic: { index: 11, label: 'Forense RAM y Threat Hunting' },
 };
 
 export function evaluateDiagnosticAnswers(
@@ -350,25 +352,36 @@ export function evaluateDiagnosticAnswers(
     .map((a) => DIAGNOSTIC_COURSE_MAP[a.area]?.label || a.area);
   const weakAreas = Array.from(new Set(weakAreasRaw));
 
+  const ratio = score / totalQuestions;
+  let levelLabel: DiagnosticProfile['levelLabel'] = 'Principiante';
   let recommendedCourseIndex = 0;
-  const firstWrong = answers.find((a) => !a.isCorrect);
 
-  if (firstWrong && DIAGNOSTIC_COURSE_MAP[firstWrong.area]) {
-    recommendedCourseIndex = DIAGNOSTIC_COURSE_MAP[firstWrong.area].index;
-  } else if (score === totalQuestions) {
-    recommendedCourseIndex = profileType === 'tech' ? 4 : profileType === 'employee' ? 3 : 2;
-  } else if (profileType === 'employee' && !firstWrong) {
-    recommendedCourseIndex = 2;
+  if (ratio < 0.3) {
+    levelLabel = 'Principiante';
+    recommendedCourseIndex = 0;
+  } else if (ratio < 0.5) {
+    levelLabel = 'Explorador';
+    recommendedCourseIndex = 3;
+  } else if (ratio < 0.7) {
+    levelLabel = 'Intermedio';
+    recommendedCourseIndex = 6;
+  } else if (ratio < 0.9) {
+    levelLabel = 'Avanzado';
+    recommendedCourseIndex = 9;
+  } else {
+    levelLabel = 'Experto';
+    recommendedCourseIndex = 12;
   }
 
-  const matchedEntry =
-    Object.values(DIAGNOSTIC_COURSE_MAP).find((c) => c.index === recommendedCourseIndex) ||
-    DIAGNOSTIC_COURSE_MAP.phishing;
+  // Pedagogical safeguard: if 10+ questions and first 2 phishing fundamentals failed, cap placement at Curso 2
+  if (totalQuestions >= 10 && answers[0]?.isCorrect === false && answers[1]?.isCorrect === false) {
+    recommendedCourseIndex = Math.min(recommendedCourseIndex, 1);
+    if (recommendedCourseIndex <= 1 && (levelLabel === 'Intermedio' || levelLabel === 'Avanzado' || levelLabel === 'Experto')) {
+      levelLabel = 'Principiante';
+    }
+  }
 
-  let levelLabel: DiagnosticProfile['levelLabel'] = 'Inicial';
-  const ratio = score / totalQuestions;
-  if (ratio >= 0.85) levelLabel = 'Avanzado';
-  else if (ratio >= 0.5) levelLabel = 'Intermedio';
+  const clampedIndex = Math.max(0, Math.min(COURSE_TITLES_15.length - 1, recommendedCourseIndex));
 
   return {
     completed: true,
@@ -376,8 +389,8 @@ export function evaluateDiagnosticAnswers(
     score,
     totalQuestions,
     levelLabel,
-    recommendedCourseIndex: matchedEntry.index,
-    recommendedCourseTitle: matchedEntry.title,
+    recommendedCourseIndex: clampedIndex,
+    recommendedCourseTitle: COURSE_TITLES_15[clampedIndex] || COURSE_TITLES_15[0],
     weakAreas,
     profileType,
   };
