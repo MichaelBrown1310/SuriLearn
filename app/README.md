@@ -1,13 +1,13 @@
 # 🛡️ SuriLearn — Aplicación Web Gamificada de Ciberseguridad (PWA)
 
-> **Versión Actual:** `v0.14.0` (Pre-1.0 · P0 + P1 + P2 + 2 Zonas Arcade & Paleta SuriLearn Homologada)  
+> **Versión Actual:** `v0.15.0` (Pre-1.0 · Ruta Continua Estilo Duolingo + 2 Zonas Arcade & Paleta SuriLearn)  
 > **Metáfora del Sistema:** *"La Madriguera Digital y el Centinela Suri"*
 
 **SuriLearn** es una aplicación web progresiva (**PWA / SPA** con Vue 3 + TypeScript + Pinia + Tailwind CSS + Firebase + Stripe) que transforma la capacitación tradicional en ciberseguridad en micro-entrenamientos diarios interactivos de **3 a 5 minutos**, dirigida tanto a **usuarios individuales (B2C)** como a **PYMES (B2B)**.
 
 ---
 
-## ✨ Características Principales (`v0.14.0`)
+## ✨ Características Principales (`v0.15.0`)
 
 ### 1. Currículo Completo de 8 Cursos (29 Lecciones) y Sistema Teórico Dual
 Cada curso integra un **Códice / Manual Teórico** (`UnitTheoryModal.vue`) y un **Briefing Pre-Misión** (`LessonTheoryBriefing.vue`) antes de pasar a la práctica:
@@ -50,6 +50,7 @@ app/ (stitch_surilearn_gamified_app/)
 │   ├── components/
 │   │   ├── common/             # HeaderHud, BottomTabBar, ToastNotification, DiagnosticModal, SuriMascotAnimated y modales Suri
 │   │   ├── games/              # 19 Minijuegos y videojuegos interactivos
+│   │   ├── learn/              # CourseWindingPath.vue (ruta continua estilo Duolingo con camino curvo SVG)
 │   │   ├── navigation/         # SidebarNav responsivo
 │   │   └── organization/       # AdminAnalytics (Chart.js + CSV) y MemberDetailModal
 │   ├── composables/            # useFirestore (caché TTL + ACID) y useTheme (Dark Sentinel)
@@ -59,10 +60,10 @@ app/ (stitch_surilearn_gamified_app/)
 │   ├── services/stripeService.ts # Cliente seguro hacia /api/* (sin llaves secretas)
 │   ├── stores/                 # Pinia: useUserStore y useGamificationStore
 │   ├── types/                  # Contratos TypeScript estrictos
-│   ├── utils/                  # Motor puro gamificationEngine.ts, authErrors.ts y suriAssets.ts
-│   └── views/                  # 10 Vistas principales
+│   ├── utils/                  # gamificationEngine.ts, pathGeometry.ts, authErrors.ts y suriAssets.ts
+│   └── views/                  # 10 Vistas principales (LearnView con flujo continuo de 8 cursos)
 ├── public/                     # manifest.webmanifest, sw.js e iconos oficiales de Suri
-├── docs/                       # SRS, Informe Técnico, Design System y Planes v0.1.0 - v0.14.0
+├── docs/                       # SRS, Informe Técnico, Design System y Planes v0.1.0 - v0.15.0
 ├── prototypes/                 # Prototipos originales Stitch UI
 ├── Suri/                       # Poses oficiales transparentes de Suri
 ├── firestore.rules             # Reglas Zero Trust validadas

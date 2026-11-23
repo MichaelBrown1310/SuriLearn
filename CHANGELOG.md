@@ -6,6 +6,17 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 <!-- CHANGELOG_ENTRIES_START -->
 
+## [v0.15.0] - 2026-11-23
+
+- **Resumen**: Ruta continua estilo Duolingo con los 8 cursos en una sola página, separadores por curso y camino curvo SVG dinámico
+- **Plan de Desarrollo**: [docs/plans/PLAN_v0.15.0.md](./app/docs/plans/PLAN_v0.15.0.md)
+- **Archivos impactados**:
+  - `M README.md`, `CHANGELOG.md`, `app/README.md`, `app/docs/DOCUMENTO_PROYECTO_TI_SURILEARN.md`, `app/CHANGELOG.md`, `app/package.json`
+  - `A app/docs/plans/PLAN_v0.15.0.md`
+  - `A app/src/utils/pathGeometry.ts`, `app/src/__tests__/pathGeometry.spec.ts` (`4` archivos, `19/19` pruebas Vitest)
+  - `A app/src/components/learn/CourseWindingPath.vue` (separadores por curso, encabezados y SVG curvo por detrás de círculos opacos)
+  - `M app/src/views/LearnView.vue` (flujo vertical continuo de 8 cursos y barra de salto rápido con `IntersectionObserver`)
+
 ## [v0.14.0] - 2026-11-23
 
 - **Resumen**: Paleta oficial SuriLearn en juegos previos, mejoras jugables (60fps/swipe/inicio-pausa) y 4 nuevos juegos clásicos (Curso 8)

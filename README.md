@@ -1,6 +1,6 @@
 # 🛡️ SuriLearn — Plataforma Gamificada de Ciberseguridad (B2C + PYMES B2B)
 
-> **Versión Actual:** `v0.14.0` (Pre-1.0 · P0 + P1 + P2 + 2 Zonas Arcade & Paleta SuriLearn Homologada)  
+> **Versión Actual:** `v0.15.0` (Pre-1.0 · Ruta Continua Estilo Duolingo + 2 Zonas Arcade & Paleta SuriLearn)  
 > **Propuesta de Valor:** *Una plataforma de aprendizaje de ciberseguridad gamificada que transforma la capacitación tradicional en una experiencia interactiva, progresiva y personalizada, dirigida tanto a usuarios individuales como a organizaciones que buscan fortalecer las competencias de seguridad de sus empleados.*
 
 ---
@@ -13,7 +13,7 @@ Este monorepo reúne los **3 pilares completos del proyecto**:
 
 | Carpeta | Contenido | Tecnología / Entregables |
 |---|---|---|
-| [`app/`](./app/) | **Aplicación Web Progresiva PWA (`v0.14.0`)** | Vue 3, TypeScript (`strict: true`), Pinia, Tailwind CSS (WCAG 2.1 AA), Chart.js, Vitest (`16/16`), Firebase Auth/Firestore, Stripe Checkout + Cloud Functions v2 |
+| [`app/`](./app/) | **Aplicación Web Progresiva PWA (`v0.15.0`)** | Vue 3, TypeScript (`strict: true`), Pinia, Tailwind CSS (WCAG 2.1 AA), Chart.js, Vitest (`19/19`), Firebase Auth/Firestore, Stripe Checkout + Cloud Functions v2 |
 | [`promo-video/`](./promo-video/) | **Video Promocional Animado (1080p @ 30fps)** | Remotion (`4.0.539`), React 19, Tailwind CSS v4, escenas actualizadas a `v0.12.0` + renders `.mp4` / `.png` |
 | [`docs-negocio/`](./docs-negocio/) | **Emprendimiento, Validación y Modelado** | Business Model Canvas, Estudio Estadístico ($n=50$), Análisis Financiero, Buyer Personas, Mapa de Empatía, Diagramas UML/BPMN/ER y Mockups HD |
 
@@ -81,7 +81,7 @@ La plataforma incluye **8 cursos completos (`29 lecciones` + `8 cofres`)** con u
 - ❤️ **Gamificación y Economía**: 5 vidas con regeneración pasiva cada 4h, **Modo Refuerzo** a 0 vidas, aprobación mínima (`≥60%`) con `1–3` estrellas persistentes, cofres atómicos (`runTransaction`), rachas diarias con multiplicadores `x1.0`–`x2.0` y consumo real de *Congelador de Racha*, boosts `2X XP` persistidos, medallas dinámicas, notificaciones `ToastNotification.vue` y **Dark Sentinel WCAG 2.1 AA**.
 - 🏆 **Ligas en Tiempo Real**: Ranking global con promoción automática por XP (`Bronce → Plata → Oro → Diamante → Supremo`), cuenta regresiva semanal real y **Liga Privada Empresarial** sincronizados con `onSnapshot`.
 - 🏢 **Panel Corporativo PYME (B2B + RBAC)**: Creación de organizaciones (`micro_pyme` 10, `growth_pyme` 30, `enterprise` 100), código transaccional (`runTransaction`), aislamiento RBAC entre Administradores CISO y Colaboradores, analítica semanal real (`activeDates`) + **Exportar CSV**, detección `"En Riesgo"` y suspensión preventiva en tiempo real (`onSnapshot`).
-- 📱 **PWA, Mascota Animada y Calidad (`v0.14.0`)**: Instalable (`manifest.webmanifest` + Service Worker `sw.js`), lazy-loading completo de rutas y `manualChunks` (`71.96 kB` de entrada), mascota **Suri reactiva con 11 poses y animaciones continuas** (`SuriMascotAnimated.vue`), paleta oficial unificada en los 19 motores, manejo global de errores y **16 pruebas unitarias Vitest** automatizadas.
+- 📱 **PWA, Ruta Continua y Calidad (`v0.15.0`)**: Instalable (`manifest.webmanifest` + Service Worker `sw.js`), ruta continua estilo Duolingo con los **8 cursos (`29` lecciones) en una sola página** y camino curvo SVG dinámico (`CourseWindingPath.vue` + `pathGeometry.ts`), lazy-loading de rutas y `manualChunks` (`71.99 kB` de entrada), mascota **Suri reactiva con 11 poses** (`SuriMascotAnimated.vue`), paleta oficial en los 19 motores, manejo global de errores y **19 pruebas unitarias Vitest** automatizadas.
 - 🔒 **Endurecimiento P0 (`v0.11.0`)**: Autenticación dual (**Email/Contraseña** + **Google OAuth**), guards `requiresAuth` / `guestOnly`, reglas **Zero Trust** en [`app/firestore.rules`](./app/firestore.rules), y secrets/verificación de Stripe exclusivamente server-side (`vite.config.ts` / [`app/functions/`](./app/functions/)).
 
 ---
@@ -124,11 +124,11 @@ npm run dev            # Abre Remotion Studio
 ```text
 SuriLearn/
 ├── README.md                  # Documentación principal del ecosistema SuriLearn
-├── CHANGELOG.md               # Historial cronológico de versiones (v0.1.0 -> v0.14.0)
+├── CHANGELOG.md               # Historial cronológico de versiones (v0.1.0 -> v0.15.0)
 ├── .gitignore                 # Exclusiones de secretos (.env), node_modules, dist y temporales
 ├── app/                       # PWA Vue 3 + TypeScript + Vitest + Firebase + Stripe + Cloud Functions
 │   ├── README.md              # Documentación técnica de la aplicación
-│   ├── docs/                  # SRS, Informe Técnico, Design System y Planes v0.1.0 - v0.14.0
+│   ├── docs/                  # SRS, Informe Técnico, Design System y Planes v0.1.0 - v0.15.0
 │   ├── functions/             # Cloud Functions v2 para Stripe B2C/B2B y Webhooks
 │   ├── prototypes/            # Prototipos HTML/PNG de Stitch UI
 │   ├── src/                   # Código fuente (vistas, minijuegos, stores, composables)

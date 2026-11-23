@@ -906,7 +906,7 @@ Sprint 1: Cimientos y Auth          Sprint 3: Vidas y Economía        Sprint 5:
 
 ---
 
-## ANEXO DE ACTUALIZACIÓN EVOLUTIVA (`v0.9.0` → `v0.14.0`)
+## ANEXO DE ACTUALIZACIÓN EVOLUTIVA (`v0.9.0` → `v0.15.0`)
 
 Con posterioridad a la línea base inicial de 1 módulo y 6 minijuegos del SRS, el sistema evolucionó manteniendo la compatibilidad total con los requerimientos originales:
 
@@ -935,3 +935,6 @@ Con posterioridad a la línea base inicial de 1 módulo y 6 minijuegos del SRS, 
 6. **Paleta SuriLearn Homologada en Juegos Previos y Zona Arcade Pro (`Curso 8` — `v0.14.0`)**:
    - **Remodelación Visual y Jugable de Juegos Anteriores**: `FirewallDefenseGame.vue` migrado a motor `60fps` (`requestAnimationFrame`), overlay de inicio/pausa, bonus de puntería (`+50` pts), alerta en zona de peligro y paleta cálida SuriLearn sin spoilers; `NetworkMazeGame.vue` renovado como *Madriguera Digital 2.5D* con rastro visitado, neutralización visual de Sniffers con VPN, contador de pasos, volteo direccional y soporte *swipe*; además de homologación de paleta cálida SuriLearn y `<SuriMascotAnimated>` en `IncidentCommandGame.vue`, `CodePatcherGame.vue`, `ForensicInvestigatorGame.vue` y `CyberSnakeGame.vue` (`0` tokens fuera de paleta).
    - **4 Nuevos Juegos Clásicos (`Curso 8`: `unit_08` — `8` Cursos / `29` Lecciones / `19` Motores)**: `CyberWordSearchGame.vue` (Sopa de Letras `8×8`), `CyberMinesweeperGame.vue` (Buscaminas de Malware `6×6` con primer clic seguro), `CyberBreakoutGame.vue` (Rompe-Malware Canvas `60fps`) y `CyberInvadersGame.vue` (Invasores del Spam Canvas `60fps`), validados geométricamente en `curriculum.spec.ts` (`16/16` pruebas).
+7. **Ruta Continua Estilo Duolingo y Camino Curvo SVG Dinámico (`v0.15.0`)**:
+   - **Geometría Curva Pura (`src/utils/pathGeometry.ts`)**: Funciones `getDuolingoNodeOffsetPercent()` y `buildCurvySvgPath()` validadas por `src/__tests__/pathGeometry.spec.ts` (`4` archivos, `19/19` pruebas Vitest).
+   - **Trazado Continuo por Detrás de Nodos (`CourseWindingPath.vue` + `LearnView.vue`)**: Renderizado vertical de los `8` cursos (`29` lecciones y `8` cofres) en una sola página con separadores por curso, encabezados y Manual Teórico individuales, medición por `ResizeObserver` centrada en cada círculo opaco (`z-0` detrás de `z-10`), flujo animado en tramos completados y barra superior de salto rápido sincronizada con `IntersectionObserver`.

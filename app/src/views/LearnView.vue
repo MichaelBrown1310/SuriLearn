@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGamificationStore } from '../stores/useGamificationStore';
 import { useUserStore } from '../stores/useUserStore';
@@ -11,6 +11,7 @@ import SuspendedAccountModal from '../components/common/SuspendedAccountModal.vu
 import UnitTheoryModal from '../components/common/UnitTheoryModal.vue';
 import DiagnosticModal from '../components/common/DiagnosticModal.vue';
 import SuriMascotAnimated from '../components/common/SuriMascotAnimated.vue';
+import CourseWindingPath from '../components/learn/CourseWindingPath.vue';
 import {
   LearningNode,
   LearningUnit,
@@ -29,6 +30,7 @@ const suriImg = getSuriImage('idle');
 const isOutOfHeartsModalOpen = ref<boolean>(false);
 const isSuspendedModalOpen = ref<boolean>(false);
 const isTheoryModalOpen = ref<boolean>(false);
+const theoryModalUnit = ref<LearningUnit | null>(null);
 const isDiagnosticModalOpen = ref<boolean>(false);
 const diagnosticDismissed = ref<boolean>(false);
 const isClaimingChest = ref<boolean>(false);
@@ -39,6 +41,9 @@ const selectedUnitIndex = ref<number>(0);
 const rawWeeklyLeaderboard = ref<LeagueLeaderboardEntry[]>([]);
 const isLoadingLeaderboard = ref<boolean>(true);
 let unsubscribeLeaderboard: (() => void) | null = null;
+let sectionObserver: IntersectionObserver | null = null;
+let scrollUnlockTimer: ReturnType<typeof setTimeout> | null = null;
+let isProgrammaticScroll = false;
 
 const currentUserId = computed(() => userStore.profile.uid || auth.currentUser?.uid || '');
 const currentUserDisplayName = computed(() => userStore.profile.displayName || auth.currentUser?.displayName || 'Centinela');
@@ -211,10 +216,42 @@ const weekDays = computed(() => {
   });
 });
 
+function setupSectionObserver() {
+  if (sectionObserver) {
+    sectionObserver.disconnect();
+    sectionObserver = null;
+  }
+  if (typeof IntersectionObserver === 'undefined') return;
+
+  sectionObserver = new IntersectionObserver(
+    (entries) => {
+      if (isProgrammaticScroll) return;
+      const visible = entries
+        .filter((e) => e.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      const unitId = visible.target.id.replace('course-section-', '');
+      const idx = allUnits.value.findIndex((u) => u.id === unitId);
+      if (idx >= 0) {
+        selectedUnitIndex.value = idx;
+      }
+    },
+    { rootMargin: '-25% 0px -55% 0px', threshold: [0.05, 0.25] }
+  );
+
+  for (const u of allUnits.value) {
+    const el = document.getElementById(`course-section-${u.id}`);
+    if (el) sectionObserver.observe(el);
+  }
+}
+
 onMounted(async () => {
   if (gamificationStore.units.length < 8) {
     await gamificationStore.loadGamificationData();
   }
+
+  await nextTick();
+  setupSectionObserver();
 
   const league = gamificationStore.state.currentLeague || userStore.profile.currentLeague || 'Bronce';
   const myUid = currentUserId.value;
@@ -238,6 +275,14 @@ onUnmounted(() => {
   if (unsubscribeLeaderboard) {
     unsubscribeLeaderboard();
     unsubscribeLeaderboard = null;
+  }
+  if (sectionObserver) {
+    sectionObserver.disconnect();
+    sectionObserver = null;
+  }
+  if (scrollUnlockTimer) {
+    clearTimeout(scrollUnlockTimer);
+    scrollUnlockTimer = null;
   }
 });
 
@@ -293,6 +338,41 @@ const activeLesson = computed(() => {
   return nodes.find((n) => n.type === 'lesson');
 });
 
+const globalActiveLesson = computed<LearningNode | undefined>(() => {
+  for (const unit of allUnits.value) {
+    const active = unit.nodes.find((n) => n.type === 'lesson' && n.status === 'active');
+    if (active) return active;
+  }
+  for (const unit of allUnits.value) {
+    const incomplete = unit.nodes.find((n) => n.type === 'lesson' && n.status !== 'completed');
+    if (incomplete) return incomplete;
+  }
+  return allUnits.value[0]?.nodes.find((n) => n.type === 'lesson');
+});
+
+function openTheoryForUnit(unit: LearningUnit) {
+  theoryModalUnit.value = unit;
+  isTheoryModalOpen.value = true;
+}
+
+function scrollToUnit(idx: number) {
+  if (idx < 0 || idx >= allUnits.value.length) return;
+  selectedUnitIndex.value = idx;
+  const targetUnit = allUnits.value[idx];
+  isProgrammaticScroll = true;
+  if (scrollUnlockTimer) clearTimeout(scrollUnlockTimer);
+  scrollUnlockTimer = setTimeout(() => {
+    isProgrammaticScroll = false;
+  }, 750);
+
+  nextTick(() => {
+    document.getElementById(`course-section-${targetUnit.id}`)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  });
+}
+
 async function handleNodeClick(node: LearningNode) {
   if (node.status === 'locked') {
     gamificationStore.showToast('Supera la lección anterior para desbloquear este nodo.', false);
@@ -340,8 +420,9 @@ function handleStartFromTheoryModal(lessonId: string) {
 }
 
 function startCurrentLesson() {
-  if (activeLesson.value) {
-    handleNodeClick(activeLesson.value);
+  const next = activeLesson.value || globalActiveLesson.value;
+  if (next) {
+    handleNodeClick(next);
   }
 }
 
@@ -360,9 +441,7 @@ const dailyQuestRewardId = computed(() => `daily_mission_${todayDateStr}`);
 const diagnosticProfile = computed(() => userStore.profile.diagnosticProfile);
 
 function handleDiagnosticCourseSelected(courseIndex: number) {
-  if (courseIndex >= 0 && courseIndex < allUnits.value.length) {
-    selectedUnitIndex.value = courseIndex;
-  }
+  scrollToUnit(courseIndex);
 }
 
 function handleOutOfHeartsReinforce() {
@@ -428,7 +507,7 @@ async function claimDailyQuest() {
               <button
                 type="button"
                 class="px-3 py-1.5 rounded-xl bg-primary/15 text-primary text-xs font-black hover:bg-primary/25 transition-colors"
-                @click="selectedUnitIndex = diagnosticProfile.recommendedCourseIndex"
+                @click="scrollToUnit(diagnosticProfile.recommendedCourseIndex)"
               >
                 Ir al curso
               </button>
@@ -477,15 +556,15 @@ async function claimDailyQuest() {
             </div>
           </div>
 
-          <!-- Selector Rápido de los 8 Cursos / Módulos -->
+          <!-- Barra de Salto Rápido a los 8 Cursos / Módulos -->
           <div class="w-full bg-surface-container-lowest p-3 rounded-3xl border border-outline-variant/40 shadow-xs">
             <div class="flex flex-wrap items-center justify-between gap-1 px-1 mb-2.5">
               <span class="text-[11px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-[16px] icon-filled">hub</span>
-                <span>8 Cursos · Incluye 2 Zonas Arcade</span>
+                <span>8 Cursos Continuos · Incluye 2 Zonas Arcade</span>
               </span>
               <span class="text-[10px] font-bold text-on-surface-variant">
-                Selecciona un módulo para explorar su teoría y videojuegos
+                Salta rápido a un curso o baja por todo el caminito
               </span>
             </div>
 
@@ -502,7 +581,7 @@ async function claimDailyQuest() {
                       ? 'bg-tertiary/10 text-on-surface border-tertiary/40 hover:border-tertiary'
                       : 'bg-surface-container-low text-on-surface border-outline-variant/40 hover:border-primary/50'
                 "
-                @click="selectedUnitIndex = idx"
+                @click="scrollToUnit(idx)"
               >
                 <div class="flex items-center justify-between w-full">
                   <span class="text-[10px] font-black uppercase tracking-wider opacity-90">
@@ -552,59 +631,7 @@ async function claimDailyQuest() {
             </div>
           </div>
 
-          <!-- Unit Banner con Botón de Manual Teórico del Curso -->
-          <div class="w-full">
-            <div class="relative overflow-hidden bg-surface-container-high rounded-3xl p-5 lg:p-6 shadow-xs border border-outline-variant/30">
-              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
-                <div class="flex-1 min-w-0">
-                  <div class="inline-flex items-center gap-1.5 bg-primary/15 text-primary px-3 py-0.5 rounded-full mb-2">
-                    <span class="material-symbols-outlined text-[15px] icon-filled">{{ currentUnit.icon || 'shield' }}</span>
-                    <span class="text-[10px] font-black uppercase tracking-wider">{{ currentUnit.moduleBadge }}</span>
-                  </div>
-                  <h2 class="text-base lg:text-lg font-black text-on-surface">
-                    {{ currentUnit.title }}
-                  </h2>
-                  <p class="text-xs text-on-surface-variant mt-1 leading-snug">
-                    {{ currentUnit.description }}
-                  </p>
-                </div>
-
-                <!-- Botón Destacado para Abrir el Códice / Manual Teórico del Curso -->
-                <button
-                  type="button"
-                  class="px-4 py-2.5 rounded-2xl bg-surface-container-lowest text-primary font-black text-xs shadow-sm border-2 border-primary/40 hover:bg-primary hover:text-white active:scale-95 transition-all shrink-0 flex items-center gap-2"
-                  title="Abrir Códice y Teoría Completa del Curso"
-                  @click="isTheoryModalOpen = true"
-                >
-                  <span class="material-symbols-outlined text-[20px] icon-filled">menu_book</span>
-                  <div class="text-left leading-tight">
-                    <span class="block">Manual Teórico</span>
-                    <span class="text-[10px] opacity-80 font-bold">
-                      {{ currentUnit.theoryGuide?.estimatedStudyMinutes || 15 }} min lectura
-                    </span>
-                  </div>
-                </button>
-              </div>
-
-              <!-- Unit Progress Meter -->
-              <div class="mt-4 relative z-10">
-                <div class="flex justify-between items-center text-on-surface-variant text-xs mb-1.5 font-bold">
-                  <span>Progreso del Curso {{ currentUnit.unitNumber }}</span>
-                  <span class="text-primary font-black">{{ currentUnit.progressPercentage }}%</span>
-                </div>
-                <div class="w-full h-3 bg-surface-container rounded-full overflow-hidden p-0.5 shadow-inner">
-                  <div
-                    class="h-full bg-primary rounded-full relative overflow-hidden transition-all duration-700"
-                    :style="{ width: `${currentUnit.progressPercentage}%` }"
-                  >
-                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Daily Quest Chip Banner (Tied to Real Daily Goal) -->
+          <!-- Daily Quest Chip Banner (Encima del Caminito Continuo) -->
           <div class="w-full">
             <div class="bg-surface-container-lowest rounded-2xl p-3.5 shadow-xs flex items-center justify-between gap-3 border border-outline-variant/30">
               <div class="flex items-center gap-3 min-w-0">
@@ -652,227 +679,25 @@ async function claimDailyQuest() {
             </div>
           </div>
 
-          <!-- Main Zig-Zag Path Canvas: Centrado y holgado -->
-          <div class="relative w-full py-4 flex flex-col items-center min-h-[620px]">
-            <!-- SVG Sinusoidal Connecting Thread with Cyber Currents -->
-            <svg
-              class="absolute top-8 left-1/2 -translate-x-1/2 w-80 h-[620px] pointer-events-none z-0"
-              fill="none"
-              viewBox="0 0 280 650"
+          <!-- Ruta Continua Estilo Duolingo: Todos los 8 Cursos uno debajo del otro -->
+          <div class="w-full flex flex-col gap-6">
+            <section
+              v-for="(unit, uIdx) in allUnits"
+              :id="`course-section-${unit.id}`"
+              :key="unit.id"
+              class="w-full scroll-mt-20"
             >
-              <path
-                d="M 75 55 C 75 110, 140 115, 140 170 C 140 225, 205 230, 205 285 C 205 340, 140 345, 140 400 C 140 455, 75 460, 75 515 C 75 570, 140 575, 140 610"
-                stroke="var(--color-outline-variant, #d4c4b2)"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="12"
-              ></path>
-              <path
-                d="M 75 55 C 75 110, 140 115, 140 170 C 140 225, 205 230, 205 285"
-                stroke="#e1a653"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="12"
-              ></path>
-              <path
-                d="M 75 55 C 75 110, 140 115, 140 170 C 140 225, 205 230, 205 285"
-                stroke="#ffffff"
-                stroke-dasharray="6 12"
-                stroke-linecap="round"
-                stroke-width="4"
-              ></path>
-            </svg>
-
-            <!-- Dynamic Nodes List -->
-            <div
-              v-for="node in currentUnit.nodes"
-              :key="node.id"
-              class="relative z-10 w-full flex flex-col mb-8"
-              :class="{
-                'items-start pl-8 sm:pl-16': node.lanePosition === 'left',
-                'items-center': node.lanePosition === 'center',
-                'items-end pr-8 sm:pr-16': node.lanePosition === 'right',
-              }"
-            >
-              <!-- Case A: Reward Chest -->
-              <template v-if="node.type === 'reward_chest'">
-                <!-- Claimed Chest -->
-                <div
-                  v-if="isChestClaimed(node)"
-                  class="relative flex flex-col items-center opacity-60 select-none cursor-default"
-                  title="Cofre de unidad ya reclamado"
-                >
-                  <button
-                    type="button"
-                    class="relative w-[64px] h-[64px] rounded-2xl bg-surface-container flex items-center justify-center shadow-inner border border-outline-variant/30 cursor-not-allowed"
-                    disabled
-                  >
-                    <span class="material-symbols-outlined text-[28px] text-on-surface-variant">lock_open</span>
-                  </button>
-                  <span class="mt-2 text-xs font-bold text-on-surface-variant bg-surface-container-low px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <span class="material-symbols-outlined text-[12px] text-shield-green icon-filled">check_circle</span>
-                    <span>Reclamado</span>
-                  </span>
-                </div>
-
-                <!-- Active / Available Chest -->
-                <div
-                  v-else-if="node.status === 'active'"
-                  class="relative flex flex-col items-center group cursor-pointer"
-                  :class="{ 'opacity-50 pointer-events-none': isClaimingChest }"
-                  @click="handleNodeClick(node)"
-                >
-                  <button
-                    type="button"
-                    class="relative w-[64px] h-[64px] rounded-2xl bg-surface-container flex items-center justify-center shadow-md active:translate-y-1 transition-transform border border-outline-variant/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                    :disabled="isClaimingChest"
-                  >
-                    <div class="absolute inset-0 rounded-2xl bg-outline-variant -bottom-1 -z-10"></div>
-                    <span class="material-symbols-outlined text-[30px] text-primary icon-filled">inventory_2</span>
-                    <span v-if="!isClaimingChest" class="absolute -top-1 -right-1 flex h-3 w-3">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-                    </span>
-                  </button>
-                  <span class="mt-2 text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full shadow-xs">
-                    {{ isClaimingChest ? 'Abriendo...' : `+${node.bitsReward || 50} Bits` }}
-                  </span>
-                </div>
-
-                <!-- Locked Chest -->
-                <div
-                  v-else
-                  class="relative flex flex-col items-center opacity-60 cursor-not-allowed"
-                  @click="handleNodeClick(node)"
-                >
-                  <button
-                    type="button"
-                    class="relative w-[64px] h-[64px] rounded-2xl bg-surface-container-highest flex items-center justify-center shadow-inner cursor-not-allowed"
-                    disabled
-                  >
-                    <div class="absolute inset-0 rounded-2xl bg-outline-variant -bottom-1 -z-10"></div>
-                    <span class="material-symbols-outlined text-[26px] text-outline icon-filled">lock</span>
-                  </button>
-                  <span class="mt-2 text-xs text-outline bg-surface-container-low px-2.5 py-0.5 rounded-full font-medium">
-                    {{ node.title }} (+{{ node.bitsReward || 50 }} Bits)
-                  </span>
-                </div>
-              </template>
-
-              <!-- Case B: Lesson Node -->
-              <template v-else>
-                <!-- 1. COMPLETED Lesson Node -->
-                <div
-                  v-if="node.status === 'completed'"
-                  class="relative flex flex-col items-center group cursor-pointer"
-                  @click="handleNodeClick(node)"
-                >
-                  <div class="absolute -top-5 flex items-center gap-0.5 bg-surface-container-lowest px-2 py-0.5 rounded-full shadow-xs border border-outline-variant/30 z-20">
-                    <span
-                      v-for="starIdx in 3"
-                      :key="starIdx"
-                      class="material-symbols-outlined text-[13px] icon-filled"
-                      :class="starIdx <= (node.stars || 3) ? 'text-primary' : 'text-outline-variant/40'"
-                    >
-                      star
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    class="relative w-[68px] h-[68px] rounded-full bg-shield-green text-white flex items-center justify-center shadow-md active:translate-y-1 transition-all"
-                  >
-                    <div class="absolute inset-0 rounded-full bg-[#15803d] -bottom-1 -z-10"></div>
-                    <span class="material-symbols-outlined text-[30px] font-black">check</span>
-                  </button>
-                  <span class="mt-2 text-xs font-bold text-on-surface bg-surface-container-low px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1">
-                    <span>{{ node.title }}</span>
-                    <span class="material-symbols-outlined text-[13px] text-shield-green icon-filled">check_circle</span>
-                  </span>
-                </div>
-
-                <!-- 2. ACTIVE / CURRENT Lesson Node -->
-                <div
-                  v-else-if="node.status === 'active'"
-                  class="relative flex flex-col items-center"
-                >
-                  <!-- Suri Live Animated Speech Bubble on first active node -->
-                  <div
-                    v-if="activeLesson?.id === node.id"
-                    class="relative flex flex-col items-center mb-1"
-                  >
-                    <div class="bg-surface-container-lowest px-3 py-1 rounded-xl shadow-md flex items-center gap-1.5 mb-1 relative border border-outline-variant/20">
-                      <span class="text-xs font-extrabold text-primary">
-                        {{ node.isVideoGame ? '🎮 ¡Videojuego Listo!' : '¡Te toca a ti!' }}
-                      </span>
-                      <span class="w-2 h-2 bg-primary rounded-full animate-ping"></span>
-                      <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-[6px] border-t-surface-container-lowest"></div>
-                    </div>
-                    <SuriMascotAnimated
-                      :pose="node.isVideoGame ? 'cool' : 'idle'"
-                      size="sm"
-                      :interactive="true"
-                      :auto-blink="true"
-                      :show-shadow="false"
-                    />
-                  </div>
-
-                  <!-- Pulsing Target Node -->
-                  <div
-                    class="relative flex flex-col items-center cursor-pointer"
-                    @click="handleNodeClick(node)"
-                  >
-                    <div class="absolute -inset-2.5 rounded-full bg-primary/30 animate-ping pointer-events-none"></div>
-                    <button
-                      type="button"
-                      class="relative w-[76px] h-[76px] rounded-full text-white flex items-center justify-center shadow-lg active:translate-y-1.5 transition-transform"
-                      :class="node.isVideoGame ? 'bg-tertiary shadow-[0_4px_0_#004b55]' : 'bg-primary btn-tactile-primary'"
-                    >
-                      <span class="material-symbols-outlined text-[36px] icon-filled">{{ node.icon || 'play_arrow' }}</span>
-                    </button>
-                    <div class="mt-2 flex flex-col items-center max-w-[230px] text-center">
-                      <span class="text-xs font-black text-on-primary-fixed bg-primary-fixed px-3 py-1 rounded-full shadow-xs flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[15px]">
-                          {{ node.isVideoGame ? 'sports_esports' : 'play_arrow' }}
-                        </span>
-                        <span>{{ node.title }}</span>
-                      </span>
-                      <span
-                        v-if="node.gameTypeLabel"
-                        class="text-[10px] font-black text-tertiary bg-tertiary/10 px-2.5 py-0.5 rounded-full mt-1"
-                      >
-                        {{ node.gameTypeLabel }} • 📘 Teoría
-                      </span>
-                      <span class="text-[10px] text-on-surface-variant font-bold mt-0.5">
-                        +{{ node.expReward }} EXP • {{ node.estimatedMinutes }} min
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 3. LOCKED Lesson Node -->
-                <div
-                  v-else
-                  class="relative flex flex-col items-center opacity-65 cursor-not-allowed"
-                  @click="handleNodeClick(node)"
-                >
-                  <button
-                    type="button"
-                    class="relative w-[64px] h-[64px] rounded-full bg-surface-container-highest flex items-center justify-center shadow-inner cursor-not-allowed"
-                    disabled
-                  >
-                    <div class="absolute inset-0 rounded-full bg-outline-variant -bottom-1 -z-10"></div>
-                    <span class="material-symbols-outlined text-[26px] text-outline icon-filled">lock</span>
-                  </button>
-                  <span class="mt-2 text-xs text-outline bg-surface-container-low px-2.5 py-0.5 rounded-full font-medium">
-                    {{ node.title }}
-                  </span>
-                  <span v-if="node.gameTypeLabel" class="text-[10px] text-on-surface-variant/70 font-bold mt-0.5">
-                    {{ node.gameTypeLabel }}
-                  </span>
-                </div>
-              </template>
-            </div>
+              <CourseWindingPath
+                :unit="unit"
+                :is-first-unit="uIdx === 0"
+                :is-recommended="Boolean(diagnosticProfile?.completed && diagnosticProfile.recommendedCourseIndex === uIdx)"
+                :highlighted-lesson-id="globalActiveLesson?.id || null"
+                :is-claiming-chest="isClaimingChest"
+                :is-chest-claimed-fn="isChestClaimed"
+                @node-click="handleNodeClick"
+                @open-theory="openTheoryForUnit"
+              />
+            </section>
           </div>
 
           <!-- Bottom Action Card for Next Challenge -->
@@ -1153,7 +978,7 @@ async function claimDailyQuest() {
     <!-- Códice / Manual Teórico del Curso Seleccionado -->
     <UnitTheoryModal
       :is-open="isTheoryModalOpen"
-      :unit="currentUnit"
+      :unit="theoryModalUnit || currentUnit"
       @close="isTheoryModalOpen = false"
       @select-lesson="handleStartFromTheoryModal"
     />

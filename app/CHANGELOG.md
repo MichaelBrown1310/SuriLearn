@@ -6,6 +6,20 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 <!-- CHANGELOG_ENTRIES_START -->
 
+## [v0.15.0] - 2026-11-23
+
+- **Resumen**: Ruta continua estilo Duolingo con todos los cursos, separadores y camino curvo SVG
+- **Plan de Desarrollo**: [docs/plans/PLAN_v0.15.0.md](./docs/plans/PLAN_v0.15.0.md)
+- **Archivos impactados**:
+  - `M README.md`
+  - `M docs/DOCUMENTO_PROYECTO_TI_SURILEARN.md`
+  - `M src/views/LearnView.vue`
+  - `?? docs/plans/PLAN_v0.15.0.md`
+  - `?? src/__tests__/pathGeometry.spec.ts`
+  - `?? src/components/learn/`
+  - `?? src/utils/pathGeometry.ts`
+
+
 ## [v0.14.0] - 2026-11-23
 
 - **Resumen**: Paleta SuriLearn en juegos previos, mejoras jugables y 4 nuevos juegos clasicos (Curso 8)
