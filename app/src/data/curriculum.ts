@@ -39,6 +39,11 @@ export const LESSON_SEQUENCE = [
   'forensic-hunt-1',
   'forensic-hunt-2',
   'forensic-boss-6',
+  // Curso 7: Zona Arcade Centinela (Juegos Clásicos)
+  'arcade-hangman-1',
+  'arcade-snake-1',
+  'arcade-memory-1',
+  'arcade-whack-1',
 ] as const;
 
 export type LessonId = (typeof LESSON_SEQUENCE)[number];
@@ -356,6 +361,45 @@ export const UNIT_THEORY_GUIDES: Record<string, UnitTheoryGuide> = {
       'Un proceso sin firma digital válida que abre conexiones salientes hacia IPs desconocidas (ej. puerto 4444) es un troyano C2 activo.',
       'No apagues de golpe un servidor bajo investigación forense sin antes capturar o inspeccionar las evidencias en la memoria RAM volátil.',
       'Todo incidente forense concluye identificando y cerrando el vector raíz de entrada (IoC).',
+    ],
+  },
+
+  unit_07: {
+    subtitle: 'Minijuegos arcade clásicos para entrenar reflejos, vocabulario y memoria defensiva',
+    frameworkBadge: 'Arcade Gamificado · NIST + OWASP',
+    estimatedStudyMinutes: 10,
+    overview:
+      'Aprender ciberseguridad no tiene por qué ser aburrido. Esta Zona Arcade adapta cuatro mecánicas clásicas —Ahorcado, Culebrita, Memorama y Atrapa al Topo— para que fijes conceptos críticos mediante juego directo y velocidad mental.',
+    sections: [
+      {
+        title: '1. Vocabulario Táctico y Memoria Asociativa',
+        icon: 'spellcheck',
+        summary:
+          'Conocer el nombre exacto de cada ataque (Phishing, Ransomware) y emparejarlo con su defensa exacta reduce drásticamente los errores bajo presión real.',
+        keyPoints: [
+          'En el Ahorcado Centinela descifras términos clave usando pistas técnicas antes de perder el escudo.',
+          'En el Memorama emparejas cada vector malicioso con la contramedida recomendada por NIST y OWASP.',
+        ],
+        realWorldCase:
+          'Equipos que refuerzan memoria asociativa amenaza-defensa responden hasta 2 veces más rápido al reportar correos sospechosos.',
+      },
+      {
+        title: '2. Reflejos Arcade en Tráfico y Puertos',
+        icon: 'sports_esports',
+        summary:
+          'En la Culebrita Firewall y Atrapa al Hacker entrenas tu capacidad de distinguir paquetes cifrados válidos frente a malware sin bloquear servicios legítimos.',
+        keyPoints: [
+          'Recoge protocolos y controles seguros (HTTPS, MFA, VPN, PATCH) y esquiva cargas maliciosas.',
+          'Bloquea puertos atacados sin interrumpir respaldos TLS ni DNS corporativo.',
+        ],
+        realWorldCase:
+          'Un buen analista SOC equilibra disponibilidad y seguridad: detiene la amenaza sin causar falsos positivos en producción.',
+      },
+    ],
+    goldenRules: [
+      'Cada ataque tiene una defensa precisa: identifica primero el vector y aplica la contramedida adecuada.',
+      'Bloquea las conexiones sospechosas sin desconectar tráfico legítimo esencial.',
+      'Practicar mecánicas cortas a diario consolida el instinto preventivo.',
     ],
   },
 };
@@ -1192,6 +1236,157 @@ const UNIT_6_NODES: LearningNode[] = [
   },
 ];
 
+const UNIT_7_NODES: LearningNode[] = [
+  {
+    id: 'arcade-hangman-1',
+    unitId: 'unit_07',
+    order: 1,
+    title: 'Arcade: Ahorcado Centinela',
+    subtitle: 'Descifra términos críticos antes de perder tu escudo',
+    type: 'lesson',
+    status: 'active',
+    stars: 0,
+    icon: 'spellcheck',
+    lanePosition: 'left',
+    expReward: 30,
+    estimatedMinutes: 4,
+    gameTypeLabel: '🕹️ Ahorcado Clásico',
+    isVideoGame: true,
+    theorySlides: [
+      {
+        id: 'u7_l1_s1',
+        badge: 'Zona Arcade · Vocabulario',
+        title: 'Ahorcado Centinela: Decodifica Amenazas Clave',
+        icon: 'spellcheck',
+        standardRef: 'Glosario NIST',
+        content:
+          'Lee la pista táctica de Suri y selecciona letras con el teclado o en pantalla para descubrir cada concepto de ciberseguridad antes de agotar 6 intentos.',
+        trapExample:
+          'Adivinar letras al azar sin leer primero la pista ni las vocales frecuentes.',
+        safeExample:
+          'Usar la pista de categoría, probar vocales clave y cuidar los 6 escudos.',
+        suriTip:
+          'Si te atascas en una palabra larga, tienes 1 pista gratuita por ronda para revelar una letra.',
+      },
+    ],
+  },
+  {
+    id: 'arcade-snake-1',
+    unitId: 'unit_07',
+    order: 2,
+    title: 'Arcade: Culebrita Firewall',
+    subtitle: 'Recoge paquetes seguros y esquiva trampas de malware',
+    type: 'lesson',
+    status: 'active',
+    stars: 0,
+    icon: 'sports_esports',
+    lanePosition: 'center',
+    expReward: 35,
+    estimatedMinutes: 4,
+    gameTypeLabel: '🐍 Culebrita Clásica',
+    isVideoGame: true,
+    theorySlides: [
+      {
+        id: 'u7_l2_s1',
+        badge: 'Zona Arcade · Reflejos de Red',
+        title: 'Culebrita Firewall: Recoge Defensa y Esquiva Malware',
+        icon: 'route',
+        standardRef: 'Defensa Perimetral',
+        content:
+          'Guía a Suri por la cuadrícula 12x12 con las flechas del teclado, WASD o el D-Pad táctil. Captura 6 paquetes verdes seguros (HTTPS, MFA, VPN, PATCH) y evita chocar con los bordes o las trampas rojas de malware.',
+        trapExample:
+          'Girar bruscamente contra el borde o cruzar una casilla roja con calavera ☠.',
+        safeExample:
+          'Planificar giros con una casilla de margen; tienes 3 escudos por partida.',
+        suriTip:
+          'En móvil o desktop puedes pausar en cualquier momento si necesitas retomar el control.',
+      },
+    ],
+  },
+  {
+    id: 'arcade-memory-1',
+    unitId: 'unit_07',
+    order: 3,
+    title: 'Arcade: Memorama Centinela',
+    subtitle: 'Empareja cada ataque con su contramedida exacta',
+    type: 'lesson',
+    status: 'active',
+    stars: 0,
+    icon: 'grid_view',
+    lanePosition: 'right',
+    expReward: 35,
+    estimatedMinutes: 4,
+    gameTypeLabel: '🃏 Memorama Clásico',
+    isVideoGame: true,
+    theorySlides: [
+      {
+        id: 'u7_l3_s1',
+        badge: 'Zona Arcade · Memoria Táctica',
+        title: 'Memorama Amenaza ↔ Defensa',
+        icon: 'grid_view',
+        standardRef: 'Controles OWASP & NIST',
+        content:
+          'Voltea dos tarjetas por turno y asocia cada amenaza (roja) con la defensa correcta (teal) antes de consumir tus 16 movimientos.',
+        trapExample:
+          'Voltear cartas sin recordar qué amenaza viste en el turno anterior.',
+        safeExample:
+          'Memorizar posiciones clave para encadenar combos rápidos de emparejamiento.',
+        suriTip:
+          'Cada pareja encontrada muestra un resumen de por qué esa defensa neutraliza ese ataque.',
+      },
+    ],
+  },
+  {
+    id: 'arcade-whack-1',
+    unitId: 'unit_07',
+    order: 4,
+    title: 'Arcade: Atrapa al Hacker',
+    subtitle: 'Golpea intrusos en los puertos sin bloquear servicios reales',
+    type: 'lesson',
+    status: 'active',
+    stars: 0,
+    icon: 'bolt',
+    lanePosition: 'center',
+    expReward: 40,
+    estimatedMinutes: 3,
+    gameTypeLabel: '⚡ Atrapa al Hacker',
+    isVideoGame: true,
+    theorySlides: [
+      {
+        id: 'u7_l4_s1',
+        badge: 'Zona Arcade · Triaje en Puertos',
+        title: 'Atrapa al Hacker (Whack-a-Hacker)',
+        icon: 'bolt',
+        standardRef: 'SOC L1 Triage',
+        content:
+          'Vigila los 9 puertos de red. Toca rápido las amenazas rojas (troyanos, fuerza bruta, bots) para bloquear 8 ataques en 35 segundos, pero NO toques los servicios verdes legítimos.',
+        trapExample:
+          'Hacer clic sin mirar y bloquear un Backup TLS o DNS corporativo válido.',
+        safeExample:
+          'Reaccionar rápido solo ante alertas rojas para mantener tus 3 escudos.',
+        suriTip:
+          '¡Concéntrate en el color y el ícono antes de golpear cada puerto!',
+      },
+    ],
+  },
+  {
+    id: 'chest_07',
+    unitId: 'unit_07',
+    order: 5,
+    title: 'Cofre Maestro Arcade',
+    subtitle: 'Recompensa de la Zona Arcade (+250 Bits)',
+    type: 'reward_chest',
+    status: 'locked',
+    stars: 0,
+    icon: 'inventory_2',
+    lanePosition: 'center',
+    expReward: 0,
+    estimatedMinutes: 1,
+    isClaimed: false,
+    bitsReward: 250,
+  },
+];
+
 export const ALL_BASE_NODES: LearningNode[] = [
   ...UNIT_1_NODES,
   ...UNIT_2_NODES,
@@ -1199,6 +1394,7 @@ export const ALL_BASE_NODES: LearningNode[] = [
   ...UNIT_4_NODES,
   ...UNIT_5_NODES,
   ...UNIT_6_NODES,
+  ...UNIT_7_NODES,
 ];
 
 // Keep MODULE_1_BASE_NODES export for backward compatibility
@@ -2958,6 +3154,157 @@ export const LESSON_EXERCISES_MAP: Record<string, Exercise[]> = {
       },
     },
   ],
+
+  // ---------------------------------------------------------------------------
+  // CURSO 7: ZONA ARCADE CENTINELA (JUEGOS CLÁSICOS)
+  // ---------------------------------------------------------------------------
+  'arcade-hangman-1': [
+    {
+      id: 'ex_arcade_hangman_01',
+      type: 'cyber_hangman',
+      title: 'Ahorcado Centinela',
+      instruction: 'Descifra ambos conceptos clave antes de agotar tus 6 intentos:',
+      suriPrompt: 'Lee la pista táctica de cada ronda y empieza por las vocales.',
+      suriPoseInitial: 'idea',
+      maxMistakes: 6,
+      rounds: [
+        {
+          word: 'PHISHING',
+          category: 'Ingeniería Social · 8 letras',
+          clue: 'Ataque que suplanta bancos o RRHH por correo para robar credenciales.',
+          explanation: 'El Phishing engaña mediante urgencia falsa y dominios suplantados.',
+        },
+        {
+          word: 'RANSOMWARE',
+          category: 'Malware Corporativo · 10 letras',
+          clue: 'Código malicioso que cifra los archivos de la empresa y exige rescate.',
+          explanation: 'Se contiene aislando la red, purgando procesos y restaurando copias 3-2-1.',
+        },
+      ],
+      feedback: {
+        empathy: 'Recordar los nombres exactos de los ataques ayuda a reportarlos al instante.',
+        technicalIndicator: 'PHISHING y RANSOMWARE concentran la mayoría de incidentes en PYMES.',
+        preventiveTip: 'Verifica siempre dominios reales y mantén copias de seguridad offline.',
+      },
+    },
+  ],
+
+  'arcade-snake-1': [
+    {
+      id: 'ex_arcade_snake_01',
+      type: 'cyber_snake',
+      title: 'Culebrita Firewall',
+      instruction: 'Captura 6 paquetes seguros verdes y esquiva los bordes y trampas rojas:',
+      suriPrompt: 'Usa flechas, WASD o el D-Pad táctil para guiar a Suri sin chocar.',
+      suriPoseInitial: 'cool',
+      gridSize: 12,
+      targetSafeCount: 6,
+      initialSpeedMs: 185,
+      maxShields: 3,
+      safeLabels: ['HTTPS', 'MFA', 'VPN', 'PATCH', 'BACKUP', 'AES256'],
+      malwareLabels: ['PHISH', 'TROJAN', 'WORM', 'SQLI'],
+      feedback: {
+        empathy: 'Mantener el ritmo bajo velocidad creciente simula el monitoreo continuo de red.',
+        technicalIndicator: 'Priorizar tráfico cifrado (HTTPS/VPN), parches y MFA reduce la superficie de ataque.',
+        preventiveTip: 'Activa MFA y actualizaciones automáticas antes de navegar por redes externas.',
+      },
+    },
+  ],
+
+  'arcade-memory-1': [
+    {
+      id: 'ex_arcade_memory_01',
+      type: 'cyber_memory',
+      title: 'Memorama Centinela',
+      instruction: 'Encuentra los 6 pares conectando cada amenaza con su defensa:',
+      suriPrompt: 'Voltea dos tarjetas por turno y recuerda dónde viste cada vector.',
+      suriPoseInitial: 'wink',
+      maxMoves: 16,
+      pairs: [
+        {
+          id: 'pair_bec',
+          threatLabel: 'Fraude CEO urgente por WhatsApp',
+          threatIcon: 'chat_error',
+          defenseLabel: 'Confirmar por llamada o canal interno',
+          defenseIcon: 'verified_user',
+          explanation: 'El fraude BEC se detiene verificando fuera de banda.',
+        },
+        {
+          id: 'pair_wifi',
+          threatLabel: 'Wi-Fi abierto "Aeropuerto_Free"',
+          threatIcon: 'wifi_off',
+          defenseLabel: 'Activar túnel VPN cifrado',
+          defenseIcon: 'vpn_lock',
+          explanation: 'La VPN cifra el tráfico frente a sniffers Man-in-the-Middle.',
+        },
+        {
+          id: 'pair_pwd',
+          threatLabel: 'Contraseña corta "Admin2026"',
+          threatIcon: 'lock_open',
+          defenseLabel: 'Frase larga + Autenticación MFA',
+          defenseIcon: 'password',
+          explanation: 'La longitud alta y el MFA frenan ataques de fuerza bruta.',
+        },
+        {
+          id: 'pair_exe',
+          threatLabel: 'Adjunto "Factura.pdf.exe"',
+          threatIcon: 'bug_report',
+          defenseLabel: 'Bloquear doble extensión ejecutable',
+          defenseIcon: 'gpp_good',
+          explanation: 'Un PDF real nunca termina en .exe, .vbs o .scr.',
+        },
+        {
+          id: 'pair_sqli',
+          threatLabel: 'Inyección SQL en formulario',
+          threatIcon: 'code_off',
+          defenseLabel: 'Consultas SQL Parametrizadas',
+          defenseIcon: 'security',
+          explanation: 'Los Prepared Statements separan código SQL de datos del usuario.',
+        },
+        {
+          id: 'pair_ransom',
+          threatLabel: 'Ransomware cifrando carpetas',
+          threatIcon: 'warning',
+          defenseLabel: 'Aislar VLAN + Backup 3-2-1',
+          defenseIcon: 'backup',
+          explanation: 'Aislar el equipo detiene la propagación lateral en la red.',
+        },
+      ],
+      feedback: {
+        empathy: 'Asociar rápido cada amenaza con su control reduce dudas ante incidentes reales.',
+        technicalIndicator: 'Cada pareja conecta un vector de ataque con su defensa recomendada por NIST/OWASP.',
+        preventiveTip: 'Ten siempre a mano la acción defensiva antes de abrir enlaces o adjuntos.',
+      },
+    },
+  ],
+
+  'arcade-whack-1': [
+    {
+      id: 'ex_arcade_whack_01',
+      type: 'threat_whack',
+      title: 'Atrapa al Hacker',
+      instruction: 'Neutraliza 8 intrusos rojos en 35s sin bloquear tráfico legítimo verde:',
+      suriPrompt: 'Golpea rápido solo alertas rojas; deja pasar backups y tráfico HTTPS válido.',
+      suriPoseInitial: 'running',
+      durationSeconds: 35,
+      targetHits: 8,
+      maxMistakes: 3,
+      spawnPool: [
+        { label: 'Brute Force SSH', icon: 'gpp_bad', isThreat: true, tip: 'Bloquea escaneos repetidos en puerto 22.' },
+        { label: 'Ransomware SMB', icon: 'bug_report', isThreat: true, tip: 'Cierra movimiento lateral en puerto 445.' },
+        { label: 'Bot C2 Saliente', icon: 'skull', isThreat: true, tip: 'Corta beacons hacia servidores remotos.' },
+        { label: 'SQLi Payload', icon: 'code_off', isThreat: true, tip: 'Frena inyecciones maliciosas sobre API/SQL.' },
+        { label: 'Backup TLS Diario', icon: 'cloud_done', isThreat: false, tip: 'Respaldo automático autorizado de la empresa.' },
+        { label: 'Portal HTTPS 443', icon: 'https', isThreat: false, tip: 'Tráfico legítimo de clientes cifrado.' },
+        { label: 'DNS Corporativo', icon: 'dns', isThreat: false, tip: 'Resolución de nombres interna confiable.' },
+      ],
+      feedback: {
+        empathy: 'En un centro de operaciones hay que actuar velozmente sin frenar servicios sanos.',
+        technicalIndicator: 'Distinguir puertos atacados (SSH, SMB, C2) de backups TLS evita falsos positivos.',
+        preventiveTip: 'Limita puertos administrativos como RDP (3389) y SSH (22) detrás de VPN.',
+      },
+    },
+  ],
 };
 
 // Legacy aliases for backward compatibility
@@ -3110,6 +3457,7 @@ export function buildAllLearningUnits(
   const u4 = buildDynamicUnitNodes(UNIT_4_NODES, completedSet, claimedSet, lessonStars);
   const u5 = buildDynamicUnitNodes(UNIT_5_NODES, completedSet, claimedSet, lessonStars);
   const u6 = buildDynamicUnitNodes(UNIT_6_NODES, completedSet, claimedSet, lessonStars);
+  const u7 = buildDynamicUnitNodes(UNIT_7_NODES, completedSet, claimedSet, lessonStars);
 
   return [
     {
@@ -3177,6 +3525,17 @@ export function buildAllLearningUnits(
       progressPercentage: u6.progressPercentage,
       nodes: u6.nodes,
       theoryGuide: UNIT_THEORY_GUIDES.unit_06,
+    },
+    {
+      id: 'unit_07',
+      unitNumber: 7,
+      title: 'Curso 7: Zona Arcade Centinela (Juegos Clásicos)',
+      description: 'Ahorcado Centinela, Culebrita Firewall, Memorama Amenaza↔Defensa y Atrapa al Hacker en vivo.',
+      moduleBadge: 'Módulo 7 · Zona Arcade Clásica',
+      icon: 'sports_esports',
+      progressPercentage: u7.progressPercentage,
+      nodes: u7.nodes,
+      theoryGuide: UNIT_THEORY_GUIDES.unit_07,
     },
   ];
 }

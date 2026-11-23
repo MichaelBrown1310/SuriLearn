@@ -4,12 +4,13 @@ import { useRoute, useRouter } from 'vue-router';
 import { useGamificationStore } from '../stores/useGamificationStore';
 import { useUserStore } from '../stores/useUserStore';
 import { useFirestore } from '../composables/useFirestore';
-import { Exercise, LessonSessionSummary, InboxVerdict } from '../types/exercises';
+import { Exercise, LessonSessionSummary, InboxVerdict, SuriPose } from '../types/exercises';
 import SuriFeedbackModal from '../components/common/SuriFeedbackModal.vue';
 import LessonVictoryModal from '../components/common/LessonVictoryModal.vue';
 import OutOfHeartsModal from '../components/common/OutOfHeartsModal.vue';
 import SuspendedAccountModal from '../components/common/SuspendedAccountModal.vue';
 import LessonTheoryBriefing from '../components/common/LessonTheoryBriefing.vue';
+import SuriMascotAnimated from '../components/common/SuriMascotAnimated.vue';
 import InboxThreatScanner from '../components/games/InboxThreatScanner.vue';
 import UrlInspector from '../components/games/UrlInspector.vue';
 import PasswordVaultBuilder from '../components/games/PasswordVaultBuilder.vue';
@@ -21,7 +22,10 @@ import NetworkMazeGame from '../components/games/NetworkMazeGame.vue';
 import IncidentCommandGame from '../components/games/IncidentCommandGame.vue';
 import CodePatcherGame from '../components/games/CodePatcherGame.vue';
 import ForensicInvestigatorGame from '../components/games/ForensicInvestigatorGame.vue';
-import { getSuriImage } from '../utils/suriAssets';
+import CyberHangmanGame from '../components/games/CyberHangmanGame.vue';
+import CyberSnakeGame from '../components/games/CyberSnakeGame.vue';
+import CyberMemoryGame from '../components/games/CyberMemoryGame.vue';
+import ThreatWhackGame from '../components/games/ThreatWhackGame.vue';
 import { getNextLessonId, getLessonNode } from '../data/curriculum';
 
 const route = useRoute();
@@ -51,8 +55,14 @@ const lastSessionOutcome = ref<{
 } | null>(null);
 const correctIdsInSession = ref<string[]>([]);
 const isShowingTheory = ref<boolean>(true);
+const suriReactionPose = ref<SuriPose | null>(null);
+const suriReactionKey = ref<number>(0);
 
-const suriImg = getSuriImage('idle');
+const suriHeaderPose = computed<SuriPose>(() => {
+  if (suriReactionPose.value) return suriReactionPose.value;
+  if (isShowingTheory.value && hasTheorySlides.value) return 'idea';
+  return currentExercise.value?.suriPoseInitial || 'idle';
+});
 
 const isErrorReview = computed(() => lessonId.value === 'error-review');
 const currentLessonNode = computed(() => (isErrorReview.value ? undefined : getLessonNode(lessonId.value)));
@@ -185,6 +195,8 @@ function handleBooleanSubmit(isSuccess: boolean) {
 
 async function processVerdict(isCorrect: boolean) {
   isCurrentCorrect.value = isCorrect;
+  suriReactionPose.value = isCorrect ? 'ok' : 'surprised';
+  suriReactionKey.value += 1;
   const exId = currentExercise.value?.id;
 
   if (isCorrect) {
@@ -215,6 +227,7 @@ async function processVerdict(isCorrect: boolean) {
 
 async function handleModalContinue() {
   isModalOpen.value = false;
+  suriReactionPose.value = null;
 
   if (currentExerciseIndex.value < exercises.value.length - 1) {
     currentExerciseIndex.value += 1;
@@ -394,9 +407,15 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Suri Avatar -->
-        <div class="w-8 h-8 rounded-full overflow-hidden bg-primary-fixed border border-primary/20 shrink-0">
-          <img :src="suriImg" alt="Suri" class="w-full h-full object-contain" />
+        <!-- Suri Live Animated Avatar -->
+        <div class="w-10 h-10 rounded-full bg-primary-fixed/70 border border-primary/20 flex items-center justify-center shrink-0">
+          <SuriMascotAnimated
+            :pose="suriHeaderPose"
+            size="xs"
+            :reaction-key="suriReactionKey"
+            :show-shadow="false"
+            :auto-blink="true"
+          />
         </div>
       </div>
     </header>
@@ -509,6 +528,42 @@ onUnmounted(() => {
         <!-- 11. NEW VIDEO GAME (Curso 6): Forensic Investigator Threat Hunter -->
         <ForensicInvestigatorGame
           v-else-if="currentExercise.type === 'forensic_investigator'"
+          :key="currentExercise.id"
+          :exercise="currentExercise"
+          :disabled="isModalOpen"
+          @submit="handleBooleanSubmit"
+        />
+
+        <!-- 12. CLASSIC ARCADE (Curso 7): Ahorcado Centinela -->
+        <CyberHangmanGame
+          v-else-if="currentExercise.type === 'cyber_hangman'"
+          :key="currentExercise.id"
+          :exercise="currentExercise"
+          :disabled="isModalOpen"
+          @submit="handleBooleanSubmit"
+        />
+
+        <!-- 13. CLASSIC ARCADE (Curso 7): Culebrita Firewall -->
+        <CyberSnakeGame
+          v-else-if="currentExercise.type === 'cyber_snake'"
+          :key="currentExercise.id"
+          :exercise="currentExercise"
+          :disabled="isModalOpen"
+          @submit="handleBooleanSubmit"
+        />
+
+        <!-- 14. CLASSIC ARCADE (Curso 7): Memorama Centinela -->
+        <CyberMemoryGame
+          v-else-if="currentExercise.type === 'cyber_memory'"
+          :key="currentExercise.id"
+          :exercise="currentExercise"
+          :disabled="isModalOpen"
+          @submit="handleBooleanSubmit"
+        />
+
+        <!-- 15. CLASSIC ARCADE (Curso 7): Atrapa al Hacker -->
+        <ThreatWhackGame
+          v-else-if="currentExercise.type === 'threat_whack'"
           :key="currentExercise.id"
           :exercise="currentExercise"
           :disabled="isModalOpen"

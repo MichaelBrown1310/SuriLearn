@@ -906,7 +906,7 @@ Sprint 1: Cimientos y Auth          Sprint 3: Vidas y Economía        Sprint 5:
 
 ---
 
-## ANEXO DE ACTUALIZACIÓN EVOLUTIVA (`v0.9.0` → `v0.12.0`)
+## ANEXO DE ACTUALIZACIÓN EVOLUTIVA (`v0.9.0` → `v0.13.0`)
 
 Con posterioridad a la línea base inicial de 1 módulo y 6 minijuegos del SRS, el sistema evolucionó manteniendo la compatibilidad total con los requerimientos originales:
 
@@ -929,3 +929,6 @@ Con posterioridad a la línea base inicial de 1 módulo y 6 minijuegos del SRS, 
    - **B2B Real con RBAC y Tiempo Real**: Analítica semanal basada en `activeDates` reales + botón **Exportar CSV** (`AdminAnalytics.vue`), aislamiento RBAC estricto para colaboradores regulares (`OrganizationDashboardView.vue`), registro transaccional `runTransaction` en `joinOrganizationWithCode` y suspensión global instantánea por `onSnapshot` (`App.vue` + `useUserStore.ts`).
    - **Motor Cuantitativo y Accesibilidad WCAG 2.1 AA**: Motor puro `gamificationEngine.ts`, aprobación mínima `≥60%`, estrellas persistentes, consumo real del Congelador de Racha, persistencia de boosts `2X XP`, medallas dinámicas y ascenso automático de liga (`Bronce` a `Supremo`), junto con zoom desbloqueado en `index.html` y tokens de alto contraste claro/oscuro.
    - **PWA, Optimización y Pruebas**: Eliminación de paquetes `@ionic/*` sin uso, `manifest.webmanifest` + Service Worker (`public/sw.js`), `app.config.errorHandler`, lazy-loading de vistas y división de chunks en `vite.config.ts` (`71.67 kB` de entrada), más suite automatizada de pruebas en Vitest (`15/15` casos).
+5. **Zona Arcade Clásica (`Curso 7`) y Mascota Suri Animada (`v0.13.0`)**:
+   - **Suite de 4 Nuevos Juegos Clásicos (`src/components/games/`)**: `CyberHangmanGame.vue` (`cyber_hangman`), `CyberSnakeGame.vue` (`cyber_snake`), `CyberMemoryGame.vue` (`cyber_memory`) y `ThreatWhackGame.vue` (`threat_whack`), sumando **7 cursos (`25 lecciones`) y `15` motores interactivos** (`unit_07` — Zona Arcade Centinela).
+   - **Animaciones Reactivas de Suri**: Nuevo componente `SuriMascotAnimated.vue` (respiración idle, guiño periódico automático, rebote alegre con destellos, sacudida de alerta, trote y reacción táctil) respaldado por las **11 poses activas** de `SURI_IMAGES` (`wink`, `surprised` y `ok` desbloqueadas), más validación automática en Vitest (`16/16` pruebas).

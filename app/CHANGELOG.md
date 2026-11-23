@@ -6,6 +6,30 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 <!-- CHANGELOG_ENTRIES_START -->
 
+## [v0.13.0] - 2026-11-23
+
+- **Resumen**: Zona Arcade Clasica (Ahorcado, Culebrita, Memorama, Atrapa al Hacker) y animaciones vivas de Suri
+- **Plan de Desarrollo**: [docs/plans/PLAN_v0.13.0.md](./docs/plans/PLAN_v0.13.0.md)
+- **Archivos impactados**:
+  - `M README.md`
+  - `M docs/DOCUMENTO_PROYECTO_TI_SURILEARN.md`
+  - `M src/__tests__/curriculum.spec.ts`
+  - `M src/components/common/LessonVictoryModal.vue`
+  - `M src/components/common/SuriFeedbackModal.vue`
+  - `M src/data/curriculum.ts`
+  - `M src/types/exercises.ts`
+  - `M src/utils/suriAssets.ts`
+  - `M src/views/LearnView.vue`
+  - `M src/views/LessonView.vue`
+  - `M src/views/WelcomeView.vue`
+  - `?? docs/plans/PLAN_v0.13.0.md`
+  - `?? src/components/common/SuriMascotAnimated.vue`
+  - `?? src/components/games/CyberHangmanGame.vue`
+  - `?? src/components/games/CyberMemoryGame.vue`
+  - `?? src/components/games/CyberSnakeGame.vue`
+  - `?? src/components/games/ThreatWhackGame.vue`
+
+
 ## [v0.12.0] - 2026-11-23
 
 - **Resumen**: Personalizacion adaptativa, B2B real con RBAC, WCAG 2.1 AA, PWA, lazy-loading y pruebas Vitest

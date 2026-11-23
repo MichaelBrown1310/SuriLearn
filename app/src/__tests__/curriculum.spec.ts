@@ -5,12 +5,14 @@ import {
   LESSON_EXERCISES_MAP,
   LESSON_SEQUENCE,
 } from '../data/curriculum';
+import { SURI_IMAGES } from '../utils/suriAssets';
+import type { SuriPose } from '../types/exercises';
 
-describe('Curriculum & Minigame Integrity (6 Courses / 21 Lessons / 11 Engines)', () => {
-  it('exposes exactly 6 courses and 21 sequenced lessons', () => {
+describe('Curriculum & Minigame Integrity (7 Courses / 25 Lessons / 15 Engines)', () => {
+  it('exposes exactly 7 courses and 25 sequenced lessons', () => {
     const units = buildAllLearningUnits([], []);
-    expect(units).toHaveLength(6);
-    expect(LESSON_SEQUENCE).toHaveLength(21);
+    expect(units).toHaveLength(7);
+    expect(LESSON_SEQUENCE).toHaveLength(25);
   });
 
   it('validates exercises in every lesson without broken structural links', () => {
@@ -37,7 +39,50 @@ describe('Curriculum & Minigame Integrity (6 Courses / 21 Lessons / 11 Engines)'
             `Unsolvable password_builder without duplicates in ${ex.id}`
           ).toBeGreaterThanOrEqual(ex.minEntropyRequired);
         }
+        if (ex.type === 'cyber_hangman') {
+          expect(ex.rounds.length, `Empty hangman rounds in ${ex.id}`).toBeGreaterThan(0);
+          for (const round of ex.rounds) {
+            expect(round.word, `Invalid hangman word in ${ex.id}`).toMatch(/^[A-Z]+$/);
+          }
+        }
+        if (ex.type === 'cyber_snake') {
+          expect(ex.gridSize, `Grid too small in ${ex.id}`).toBeGreaterThanOrEqual(10);
+          expect(ex.targetSafeCount, `Invalid targetSafeCount in ${ex.id}`).toBeGreaterThan(0);
+        }
+        if (ex.type === 'cyber_memory') {
+          expect(ex.pairs.length, `Too few pairs in ${ex.id}`).toBeGreaterThanOrEqual(4);
+        }
+        if (ex.type === 'threat_whack') {
+          expect(
+            ex.spawnPool.some((i) => i.isThreat),
+            `No threats in ${ex.id}`
+          ).toBe(true);
+          expect(
+            ex.spawnPool.some((i) => !i.isThreat),
+            `No benign items in ${ex.id}`
+          ).toBe(true);
+        }
       }
+    }
+  });
+
+  it('resolves non-empty mascot assets for all 11 SuriPose states', () => {
+    const poses: SuriPose[] = [
+      'idle',
+      'victory',
+      'error',
+      'sleeping',
+      'shield',
+      'idea',
+      'cool',
+      'running',
+      'wink',
+      'surprised',
+      'ok',
+    ];
+    for (const pose of poses) {
+      expect(typeof SURI_IMAGES[pose], `Missing image string for pose ${pose}`).toBe('string');
+      expect(SURI_IMAGES[pose].length, `Empty image string for pose ${pose}`).toBeGreaterThan(0);
     }
   });
 

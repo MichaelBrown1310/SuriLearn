@@ -6,6 +6,18 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 <!-- CHANGELOG_ENTRIES_START -->
 
+## [v0.13.0] - 2026-11-23
+
+- **Resumen**: Zona Arcade Clásica (Curso 7: Ahorcado, Culebrita, Memorama, Atrapa al Hacker) y animaciones reactivas de Suri
+- **Plan de Desarrollo**: [docs/plans/PLAN_v0.13.0.md](./app/docs/plans/PLAN_v0.13.0.md)
+- **Archivos impactados**:
+  - `M README.md`, `CHANGELOG.md`, `app/README.md`, `app/docs/DOCUMENTO_PROYECTO_TI_SURILEARN.md`, `app/CHANGELOG.md`, `app/package.json`
+  - `A app/docs/plans/PLAN_v0.13.0.md`
+  - `A app/src/components/common/SuriMascotAnimated.vue` (animaciones CSS continuas + guiño automático + 11 poses activas)
+  - `A app/src/components/games/CyberHangmanGame.vue`, `CyberSnakeGame.vue`, `CyberMemoryGame.vue`, `ThreatWhackGame.vue`
+  - `M app/src/data/curriculum.ts` (7 cursos / 25 lecciones), `app/src/types/exercises.ts`, `app/src/utils/suriAssets.ts`, `app/src/__tests__/curriculum.spec.ts` (`16/16` pruebas)
+  - `M app/src/views/WelcomeView.vue`, `LearnView.vue`, `LessonView.vue`, `app/src/components/common/SuriFeedbackModal.vue`, `LessonVictoryModal.vue`
+
 ## [v0.12.0] - 2026-11-23
 
 - **Resumen**: Personalizacion adaptativa, B2B real con RBAC, WCAG 2.1 AA, PWA, lazy-loading y pruebas Vitest

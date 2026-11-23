@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { getSuriImage } from '../../utils/suriAssets';
+import SuriMascotAnimated from './SuriMascotAnimated.vue';
+import { SuriPose } from '../../types/exercises';
 
 const props = withDefaults(
   defineProps<{
@@ -33,7 +34,7 @@ const emit = defineEmits<{
   (e: 'retry'): void;
 }>();
 
-const suriImg = computed(() => getSuriImage(props.passed ? 'victory' : 'error'));
+const suriVictoryPose = computed<SuriPose>(() => (props.passed ? 'ok' : 'error'));
 
 function handleNext() {
   if (props.nextLessonId) {
@@ -79,16 +80,17 @@ function handleNext() {
           <span>¡Ascendiste a Liga {{ newLeague }}!</span>
         </div>
 
-        <!-- Suri Mascot -->
-        <div class="relative w-28 h-28 my-1 flex items-center justify-center">
+        <!-- Suri Live Animated Mascot -->
+        <div class="relative my-1 flex items-center justify-center">
           <div
             class="absolute inset-0 rounded-full scale-110 animate-pulse"
             :class="passed ? 'bg-primary/15' : 'bg-error/15'"
           ></div>
-          <img
-            :src="suriImg"
-            :alt="passed ? 'Suri Victoria' : 'Suri en guardia'"
-            class="relative z-10 w-full h-full object-contain drop-shadow-md"
+          <SuriMascotAnimated
+            :pose="suriVictoryPose"
+            size="lg"
+            :auto-blink="false"
+            :interactive="true"
           />
         </div>
 

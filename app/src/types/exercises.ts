@@ -10,13 +10,16 @@
 
 export type SuriPose =
   | 'idle' // Suri standing on two hind legs alert
-  | 'victory' // Suri celebrating with cheerful pose
-  | 'error' // Suri defensive shielding his burrow
+  | 'victory' // Suri celebrating with OK pose
+  | 'error' // Suri sad / defensive pose
   | 'sleeping' // Suri asleep / inactive
-  | 'shield' // Suri with cyber blue sentinel shield
-  | 'idea' // Suri with lightbulb / tactical insight
+  | 'shield' // Suri with laptop cyber sentinel desk
+  | 'idea' // Suri thinking with question bubble
   | 'cool' // Suri with sunglasses (SuriPro)
-  | 'running'; // Suri sprinting in rapid triage mode
+  | 'running' // Suri sprinting in rapid triage mode
+  | 'wink' // Suri playful winking eye
+  | 'surprised' // Suri startled / alert reaction
+  | 'ok'; // Suri giving OK sign
 
 export interface PedagogicalFeedback {
   // Step 1: Empathy with the deception
@@ -42,7 +45,11 @@ export type ExerciseType =
   | 'network_maze'
   | 'incident_soc'
   | 'code_patcher'
-  | 'forensic_investigator';
+  | 'forensic_investigator'
+  | 'cyber_hangman'
+  | 'cyber_snake'
+  | 'cyber_memory'
+  | 'threat_whack';
 
 export interface BaseExercise {
   id: string;
@@ -413,7 +420,65 @@ export interface ForensicInvestigatorExercise extends BaseExercise {
 }
 
 // ==========================================
-// 14. UNIFIED EXERCISE UNION & LESSON RUNTIME
+// 14. CLASSIC ARCADE GAMES (CURSO 7)
+// (`cyber_hangman`, `cyber_snake`, `cyber_memory`, `threat_whack`)
+// ==========================================
+
+export interface CyberHangmanRound {
+  word: string; // Pure uppercase ASCII A-Z (no spaces/accents)
+  category: string;
+  clue: string;
+  explanation: string;
+}
+
+export interface CyberHangmanExercise extends BaseExercise {
+  type: 'cyber_hangman';
+  maxMistakes: number;
+  rounds: CyberHangmanRound[];
+}
+
+export interface CyberSnakeExercise extends BaseExercise {
+  type: 'cyber_snake';
+  gridSize: number;
+  targetSafeCount: number;
+  initialSpeedMs: number;
+  maxShields: number;
+  safeLabels: string[];
+  malwareLabels: string[];
+}
+
+export interface CyberMemoryPair {
+  id: string;
+  threatLabel: string;
+  threatIcon: string;
+  defenseLabel: string;
+  defenseIcon: string;
+  explanation: string;
+}
+
+export interface CyberMemoryExercise extends BaseExercise {
+  type: 'cyber_memory';
+  maxMoves: number;
+  pairs: CyberMemoryPair[];
+}
+
+export interface ThreatWhackItem {
+  label: string;
+  icon: string;
+  isThreat: boolean;
+  tip: string;
+}
+
+export interface ThreatWhackExercise extends BaseExercise {
+  type: 'threat_whack';
+  durationSeconds: number;
+  targetHits: number;
+  maxMistakes: number;
+  spawnPool: ThreatWhackItem[];
+}
+
+// ==========================================
+// 15. UNIFIED EXERCISE UNION & LESSON RUNTIME
 // ==========================================
 
 export type Exercise =
@@ -427,7 +492,11 @@ export type Exercise =
   | NetworkMazeExercise
   | IncidentCommandExercise
   | CodePatcherExercise
-  | ForensicInvestigatorExercise;
+  | ForensicInvestigatorExercise
+  | CyberHangmanExercise
+  | CyberSnakeExercise
+  | CyberMemoryExercise
+  | ThreatWhackExercise;
 
 export interface ExerciseResult {
   exerciseId: string;

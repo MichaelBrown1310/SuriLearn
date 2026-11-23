@@ -2,32 +2,38 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '../stores/useUserStore';
-import { getSuriImage } from '../utils/suriAssets';
+import SuriMascotAnimated from '../components/common/SuriMascotAnimated.vue';
+import { SuriPose } from '../types/exercises';
 
 const router = useRouter();
 const userStore = useUserStore();
 
-const suriImg = getSuriImage('idle');
+const currentPose = ref<SuriPose>('idle');
 const showBubble = ref<boolean>(false);
 const bubbleMessage = ref<string>('¡Ojos abiertos, centinela! 👀');
 
+const poseCycle: SuriPose[] = ['ok', 'wink', 'cool', 'shield', 'idea', 'idle'];
 const messages = [
   '¡Ojos abiertos, centinela! 👀',
   '¡Listo para blindar tu red! 🛡️',
   '¿Hueles ese phishing sospechoso? 🐾',
   '¡3 minutos al día hacen la diferencia! ⚡',
+  '¡Nueva Zona Arcade lista para ti! 🎮',
+  '¡Aprender seguridad puede ser divertido! 🔥',
 ];
 let msgIdx = 0;
 let bubbleTimer: any = null;
 
 function handleMascotClick() {
   msgIdx = (msgIdx + 1) % messages.length;
+  currentPose.value = poseCycle[msgIdx % poseCycle.length];
   bubbleMessage.value = messages[msgIdx];
   showBubble.value = true;
   clearTimeout(bubbleTimer);
   bubbleTimer = setTimeout(() => {
     showBubble.value = false;
-  }, 2200);
+    currentPose.value = 'idle';
+  }, 2400);
 }
 
 async function handleGoogleLogin() {
@@ -66,27 +72,17 @@ function goToLogin() {
       <!-- Ambient Backdrop Aura -->
       <div class="absolute w-56 h-56 rounded-full bg-primary-fixed/40 blur-2xl pointer-events-none"></div>
 
-      <!-- Suri Mascot Image -->
-      <div
-        class="relative z-10 w-48 h-56 sm:w-56 sm:h-64 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 duration-200 cursor-pointer"
-        @click="handleMascotClick"
-      >
-        <img
-          :src="suriImg"
-          alt="Suri el centinela"
-          class="w-full h-full object-contain filter drop-shadow-[0_12px_20px_rgba(95,64,48,0.15)]"
+      <!-- Suri Live Animated Mascot -->
+      <div class="relative z-10 flex items-center justify-center">
+        <SuriMascotAnimated
+          :pose="currentPose"
+          size="xl"
+          :auto-blink="true"
+          :interactive="true"
+          :bubble-text="showBubble ? bubbleMessage : ''"
+          @interact="handleMascotClick"
         />
       </div>
-
-      <!-- Speech Micro-bubble on Tap -->
-      <Transition name="fade">
-        <div
-          v-if="showBubble"
-          class="absolute -top-1 bg-surface-container-lowest text-on-surface-variant font-bold text-xs px-3 py-1.5 rounded-xl shadow-md border border-outline-variant/30 pointer-events-none"
-        >
-          {{ bubbleMessage }}
-        </div>
-      </Transition>
     </div>
 
     <!-- Branding & Mission -->

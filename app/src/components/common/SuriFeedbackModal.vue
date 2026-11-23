@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { SuriPose, PedagogicalFeedback } from '../../types/exercises';
-import { getSuriImage } from '../../utils/suriAssets';
+import SuriMascotAnimated from './SuriMascotAnimated.vue';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -20,11 +20,7 @@ const emit = defineEmits<{
 }>();
 
 const suriPose = computed<SuriPose>(() => {
-  return props.isCorrect ? 'victory' : 'error';
-});
-
-const suriImageUrl = computed(() => {
-  return getSuriImage(suriPose.value);
+  return props.isCorrect ? 'ok' : 'surprised';
 });
 </script>
 
@@ -44,15 +40,16 @@ const suriImageUrl = computed(() => {
 
         <!-- Header: Suri Avatar & Immediate Verdict -->
         <div class="flex items-start gap-space-md mb-space-md">
-          <!-- Mascot Pose Frame -->
+          <!-- Mascot Live Animated Pose -->
           <div
-            class="w-16 h-16 rounded-2xl overflow-hidden shrink-0 shadow-sm flex items-center justify-center p-1"
+            class="w-20 h-20 rounded-2xl overflow-visible shrink-0 shadow-sm flex items-center justify-center p-1"
             :class="isCorrect ? 'bg-primary-fixed' : 'bg-error-container/60'"
           >
-            <img
-              :src="suriImageUrl"
-              :alt="isCorrect ? 'Suri celebrando acierto' : 'Suri en guardia'"
-              class="w-full h-full object-contain"
+            <SuriMascotAnimated
+              :pose="suriPose"
+              size="sm"
+              :auto-blink="false"
+              :show-shadow="false"
             />
           </div>
 

@@ -10,6 +10,7 @@ import OutOfHeartsModal from '../components/common/OutOfHeartsModal.vue';
 import SuspendedAccountModal from '../components/common/SuspendedAccountModal.vue';
 import UnitTheoryModal from '../components/common/UnitTheoryModal.vue';
 import DiagnosticModal from '../components/common/DiagnosticModal.vue';
+import SuriMascotAnimated from '../components/common/SuriMascotAnimated.vue';
 import {
   LearningNode,
   LearningUnit,
@@ -211,7 +212,7 @@ const weekDays = computed(() => {
 });
 
 onMounted(async () => {
-  if (gamificationStore.units.length < 6) {
+  if (gamificationStore.units.length < 7) {
     await gamificationStore.loadGamificationData();
   }
 
@@ -252,9 +253,13 @@ function isChestClaimed(node: LearningNode): boolean {
 const allUnits = computed<LearningUnit[]>(() => {
   const claimed = userStore.profile.claimedRewards || gamificationStore.state.claimedRewards || [];
   const baseList =
-    gamificationStore.units.length >= 6
+    gamificationStore.units.length >= 7
       ? gamificationStore.units
-      : buildAllLearningUnits(gamificationStore.state.completedLessons || [], claimed);
+      : buildAllLearningUnits(
+          gamificationStore.state.completedLessons || [],
+          claimed,
+          gamificationStore.state.lessonStars || {}
+        );
 
   return baseList.map((u) => ({
     ...u,
@@ -472,28 +477,30 @@ async function claimDailyQuest() {
             </div>
           </div>
 
-          <!-- Selector Rápido de los 6 Cursos / Módulos -->
+          <!-- Selector Rápido de los 7 Cursos / Módulos -->
           <div class="w-full bg-surface-container-lowest p-3 rounded-3xl border border-outline-variant/40 shadow-xs">
             <div class="flex flex-wrap items-center justify-between gap-1 px-1 mb-2.5">
               <span class="text-[11px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-[16px] icon-filled">hub</span>
-                <span>6 Cursos de Especialización Centinela</span>
+                <span>7 Cursos · Incluyendo Zona Arcade Clásica</span>
               </span>
               <span class="text-[10px] font-bold text-on-surface-variant">
                 Selecciona un módulo para explorar su teoría y videojuegos
               </span>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
               <button
                 v-for="(u, idx) in allUnits"
                 :key="u.id"
                 type="button"
-                class="p-2.5 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-1"
+                class="p-2.5 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-1 relative"
                 :class="
                   selectedUnitIndex === idx
                     ? 'bg-primary text-white border-primary shadow-[0_3px_0_#b87b2e]'
-                    : 'bg-surface-container-low text-on-surface border-outline-variant/40 hover:border-primary/50'
+                    : u.unitNumber === 7
+                      ? 'bg-tertiary/10 text-on-surface border-tertiary/40 hover:border-tertiary'
+                      : 'bg-surface-container-low text-on-surface border-outline-variant/40 hover:border-primary/50'
                 "
                 @click="selectedUnitIndex = idx"
               >
@@ -501,7 +508,14 @@ async function claimDailyQuest() {
                   <span class="text-[10px] font-black uppercase tracking-wider opacity-90">
                     Curso {{ u.unitNumber }}
                   </span>
-                  <span class="material-symbols-outlined text-[16px] icon-filled">
+                  <span
+                    v-if="u.unitNumber === 7"
+                    class="text-[9px] font-black px-1.5 py-0.2 rounded-full uppercase"
+                    :class="selectedUnitIndex === idx ? 'bg-white/25 text-white' : 'bg-tertiary text-white'"
+                  >
+                    ¡Clásicos!
+                  </span>
+                  <span v-else class="material-symbols-outlined text-[16px] icon-filled">
                     {{ u.icon || 'shield' }}
                   </span>
                 </div>
@@ -517,7 +531,9 @@ async function claimDailyQuest() {
                             ? 'Consola SOC & IA'
                             : u.unitNumber === 5
                               ? 'DevSecOps & Parcheo'
-                              : 'Forense & Threat Hunting'
+                              : u.unitNumber === 6
+                                ? 'Forense & Threat Hunting'
+                                : 'Zona Arcade 🎮'
                   }}
                 </span>
                 <div class="flex items-center justify-between text-[10px] font-black mt-0.5 opacity-90">
@@ -772,10 +788,10 @@ async function claimDailyQuest() {
                   v-else-if="node.status === 'active'"
                   class="relative flex flex-col items-center"
                 >
-                  <!-- Suri Animated Speech Bubble on first active node -->
+                  <!-- Suri Live Animated Speech Bubble on first active node -->
                   <div
                     v-if="activeLesson?.id === node.id"
-                    class="relative flex flex-col items-center mb-1 animate-bounce"
+                    class="relative flex flex-col items-center mb-1"
                   >
                     <div class="bg-surface-container-lowest px-3 py-1 rounded-xl shadow-md flex items-center gap-1.5 mb-1 relative border border-outline-variant/20">
                       <span class="text-xs font-extrabold text-primary">
@@ -784,9 +800,13 @@ async function claimDailyQuest() {
                       <span class="w-2 h-2 bg-primary rounded-full animate-ping"></span>
                       <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-[6px] border-t-surface-container-lowest"></div>
                     </div>
-                    <div class="relative w-14 h-14 rounded-full bg-surface-container-high p-1 shadow-md border-2 border-primary-container">
-                      <img :src="suriImg" alt="Suri Centinela" class="w-full h-full object-contain rounded-full" />
-                    </div>
+                    <SuriMascotAnimated
+                      :pose="node.isVideoGame ? 'cool' : 'idle'"
+                      size="sm"
+                      :interactive="true"
+                      :auto-blink="true"
+                      :show-shadow="false"
+                    />
                   </div>
 
                   <!-- Pulsing Target Node -->
@@ -1099,11 +1119,13 @@ async function claimDailyQuest() {
             </div>
 
             <div class="flex items-start gap-3.5 mt-1">
-              <div class="w-14 h-14 rounded-2xl bg-surface-container-lowest p-1 shadow-sm border border-outline-variant/30 shrink-0 overflow-hidden flex items-center justify-center">
-                <img
-                  :src="suriImg"
-                  alt="Suri Centinela"
-                  class="w-full h-full object-contain filter drop-shadow-xs"
+              <div class="rounded-2xl bg-surface-container-lowest p-1 shadow-sm border border-outline-variant/30 shrink-0 flex items-center justify-center">
+                <SuriMascotAnimated
+                  pose="idea"
+                  size="sm"
+                  :interactive="true"
+                  :show-shadow="false"
+                  @interact="nextTip"
                 />
               </div>
               <div class="flex-1 min-w-0">
