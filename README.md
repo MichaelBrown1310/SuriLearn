@@ -1,6 +1,8 @@
 # 🛡️ SuriLearn — Plataforma Gamificada de Ciberseguridad (B2C + PYMES B2B)
 
-> **Versión Actual:** `v0.16.0` (Pre-1.0 · 15 Cursos Secuenciales × 5 Lecciones, Diagnóstico de 10 Preguntas, Mapa Limpio y Podios Firestore)  
+> **Versión Actual:** `v0.17.0` (Pre-1.0 · Web Pública en Firebase Hosting + APK Android TWA Firmada)  
+> **🌐 Aplicación Web Pública:** https://surilearn-9b60e.web.app  
+> **📱 Descarga Directa APK Android (`3.58 MB`, v2-signed):** https://github.com/MichaelBrown1310/SuriLearn/raw/main/releases/SuriLearn-v0.17.0.apk  
 > **Propuesta de Valor:** *Una plataforma de aprendizaje de ciberseguridad gamificada que transforma la capacitación tradicional en una experiencia interactiva, progresiva y personalizada, dirigida tanto a usuarios individuales como a organizaciones que buscan fortalecer las competencias de seguridad de sus empleados.*
 
 ---
@@ -13,7 +15,8 @@ Este monorepo reúne los **3 pilares completos del proyecto**:
 
 | Carpeta | Contenido | Tecnología / Entregables |
 |---|---|---|
-| [`app/`](./app/) | **Aplicación Web Progresiva PWA (`v0.16.0`)** | Vue 3, TypeScript (`strict: true`), Pinia, Tailwind CSS (WCAG 2.1 AA), Chart.js, Vitest (`20/20`), Firebase Auth/Firestore, Stripe Checkout + Cloud Functions v2 |
+| [`app/`](./app/) | **Aplicación Web Progresiva PWA (`v0.17.0`)** | Vue 3, TypeScript (`strict: true`), Pinia, Tailwind CSS (WCAG 2.1 AA), Chart.js, Vitest (`20/20`), Firebase Auth/Hosting/Firestore, Android TWA (`com.surilearn.app`) |
+| [`releases/`](./releases/) | **Instalador Android Firmado (`.apk`)** | [`SuriLearn-v0.17.0.apk`](./releases/SuriLearn-v0.17.0.apk) (`3,749,917` bytes, Trusted Web Activity verificada por Digital Asset Links) |
 | [`promo-video/`](./promo-video/) | **Video Promocional Animado (1080p @ 30fps)** | Remotion (`4.0.539`), React 19, Tailwind CSS v4, escenas actualizadas a `v0.12.0` + renders `.mp4` / `.png` |
 | [`docs-negocio/`](./docs-negocio/) | **Emprendimiento, Validación y Modelado** | Business Model Canvas, Estudio Estadístico ($n=50$), Análisis Financiero, Buyer Personas, Mapa de Empatía, Diagramas UML/BPMN/ER y Mockups HD |
 
@@ -121,11 +124,13 @@ npm run dev            # Abre Remotion Studio
 ```text
 SuriLearn/
 ├── README.md                  # Documentación principal del ecosistema SuriLearn
-├── CHANGELOG.md               # Historial cronológico de versiones (v0.1.0 -> v0.16.0)
-├── .gitignore                 # Exclusiones de secretos (.env), node_modules, dist y temporales
-├── app/                       # PWA Vue 3 + TypeScript + Vitest + Firebase + Stripe + Cloud Functions
+├── CHANGELOG.md               # Historial cronológico de versiones (v0.1.0 -> v0.17.0)
+├── .gitignore                 # Exclusiones de secretos (.env), keystores (.jks), node_modules y dist
+├── releases/                  # Binario APK Android TWA firmado listo para instalar/compartir
+├── app/                       # PWA Vue 3 + TypeScript + Vitest + Firebase + Android TWA + Cloud Functions
+│   ├── android-twa/           # Proyecto Android Gradle (com.surilearn.app)
 │   ├── README.md              # Documentación técnica de la aplicación
-│   ├── docs/                  # SRS, Informe Técnico, Design System y Planes v0.1.0 - v0.16.0
+│   ├── docs/                  # SRS, Informe Técnico, Design System y Planes v0.1.0 - v0.17.0
 │   ├── functions/             # Cloud Functions v2 para Stripe B2C/B2B y Webhooks
 │   ├── prototypes/            # Prototipos HTML/PNG de Stitch UI
 │   ├── src/                   # Código fuente (vistas, minijuegos, stores, composables)

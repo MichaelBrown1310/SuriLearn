@@ -906,7 +906,7 @@ Sprint 1: Cimientos y Auth          Sprint 3: Vidas y Economía        Sprint 5:
 
 ---
 
-## ANEXO DE ACTUALIZACIÓN EVOLUTIVA (`v0.9.0` → `v0.16.0`)
+## ANEXO DE ACTUALIZACIÓN EVOLUTIVA (`v0.9.0` → `v0.17.0`)
 
 Con posterioridad a la línea base inicial de 1 módulo y 6 minijuegos del SRS, el sistema evolucionó manteniendo la compatibilidad total con los requerimientos originales:
 
@@ -943,3 +943,6 @@ Con posterioridad a la línea base inicial de 1 módulo y 6 minijuegos del SRS, 
    - **Mapa Limpio y Bloqueo Secuencial Estricto**: Eliminación del selector superior de cursos en `LearnView.vue` y de las excepciones de acceso libre; el avance exige superar cada lección y curso previo (mostrando insignia `🔒 Bloqueado · Completa el Curso X` en `CourseWindingPath.vue`).
    - **Cuestionario Inicial de 10 Preguntas (`DiagnosticModal.vue` + `evaluateDiagnosticAnswers`)**: Evaluación progresiva automática post-registro (`/tabs/learn?diagnostic=1`) que ubica y acredita al usuario en el curso acorde a su nivel (`Cursos 1, 4, 7, 10 o 13`, con salvaguarda si falla Q1 y Q2).
    - **25 Cuentas Seed en Firestore y Selector de Ligas (`LeaderboardView.vue`)**: Poblado de `5` competidores por división en las `5` ligas (`Bronce`, `Plata`, `Oro`, `Diamante`, `Supremo`; `29` usuarios totales en `/users`) junto con pestañas para inspeccionar todos los podios globales (`20/20` pruebas Vitest).
+9. **Despliegue Web Público en Firebase Hosting y APK Android TWA Firmada (`v0.17.0`)**:
+   - **Hosting Público (`https://surilearn-9b60e.web.app`)**: Compilación optimizada PWA desplegada en Firebase Hosting (plan Spark) con `firebase.json` adaptado para SPA y configuración Blaze preservada en `firebase.blaze.json`.
+   - **APK Android Firmada (`android-twa/`, `com.surilearn.app`, `3,749,917` bytes)**: Empaquetado TWA (*Trusted Web Activity*) con verificación **Digital Asset Links** (`public/.well-known/assetlinks.json`, esquema v2 SHA-256) e iconos adaptativos Suri, disponible para descarga compartible en `https://github.com/MichaelBrown1310/SuriLearn/raw/main/releases/SuriLearn-v0.17.0.apk` y desde botón directo en `WelcomeView.vue`.

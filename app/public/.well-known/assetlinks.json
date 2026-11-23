@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.surilearn.app",
+      "sha256_cert_fingerprints": [
+        "F4:F7:56:8D:F1:1A:8A:AD:F6:54:98:1B:1E:61:55:F9:A7:51:E9:55:09:B0:81:79:15:C2:1B:18:17:76:8B:6B"
+      ]
+    }
+  }
+]

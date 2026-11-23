@@ -1,8 +1,10 @@
-const CACHE_NAME = 'surilearn-v0.12.0';
+const CACHE_NAME = 'surilearn-v0.17.0';
 const APP_SHELL = [
   '/',
   '/welcome',
   '/manifest.webmanifest',
+  '/suri-icon-192.png',
+  '/suri-icon-512.png',
   '/suri-idle.png',
   '/suri-running.png',
   '/suri-sleeping.png',
@@ -31,7 +33,11 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith('/api/')) return;
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/.well-known/') ||
+    url.pathname.startsWith('/downloads/')
+  ) return;
 
   event.respondWith(
     fetch(request)

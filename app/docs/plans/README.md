@@ -9,6 +9,7 @@ Esta carpeta almacena todos los **Planes de Ingeniería y Desarrollo** utilizado
 <!-- PLANS_TABLE_START -->
 | Versión | Fecha | Estado | Resumen del Avance | Documento del Plan |
 |---|---|---|---|---|
+| **v0.17.0** | 2026-11-23 | Completado | Despliegue web publico en Firebase Hosting y APK Android firmada (TWA) descargable | [PLAN_v0.17.0.md](./PLAN_v0.17.0.md) |
 | **v0.16.0** | 2026-11-23 | Completado | 15 cursos secuenciales (75 lecciones), diagnostico de 10 preguntas, mapa limpio y podios poblados en Firestore | [PLAN_v0.16.0.md](./PLAN_v0.16.0.md) |
 | **v0.15.0** | 2026-11-23 | Completado | Ruta continua estilo Duolingo con todos los cursos, separadores y camino curvo SVG | [PLAN_v0.15.0.md](./PLAN_v0.15.0.md) |
 | **v0.14.0** | 2026-11-23 | Completado | Paleta SuriLearn en juegos previos, mejoras jugables y 4 nuevos juegos clasicos (Curso 8) | [PLAN_v0.14.0.md](./PLAN_v0.14.0.md) |

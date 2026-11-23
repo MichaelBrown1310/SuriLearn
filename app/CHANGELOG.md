@@ -6,6 +6,26 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 <!-- CHANGELOG_ENTRIES_START -->
 
+## [v0.17.0] - 2026-11-23
+
+- **Resumen**: Despliegue web publico en Firebase Hosting y APK Android firmada (TWA) descargable
+- **Plan de Desarrollo**: [docs/plans/PLAN_v0.17.0.md](./docs/plans/PLAN_v0.17.0.md)
+- **Archivos impactados**:
+  - `M .gitignore`
+  - `M README.md`
+  - `M docs/DOCUMENTO_PROYECTO_TI_SURILEARN.md`
+  - `M firebase.json`
+  - `M public/manifest.webmanifest`
+  - `M public/sw.js`
+  - `M src/views/WelcomeView.vue`
+  - `?? android-twa/`
+  - `?? docs/plans/PLAN_v0.17.0.md`
+  - `?? firebase.blaze.json`
+  - `?? public/.well-known/`
+  - `?? public/suri-icon-192.png`
+  - `?? public/suri-icon-512.png`
+
+
 ## [v0.16.0] - 2026-11-23
 
 - **Resumen**: 15 cursos secuenciales (75 lecciones), diagnostico de 10 preguntas, mapa limpio y podios poblados en Firestore

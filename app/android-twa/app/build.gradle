@@ -1,0 +1,50 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.surilearn.app'
+    compileSdk 36
+    buildToolsVersion '36.1.0'
+
+    defaultConfig {
+        applicationId 'com.surilearn.app'
+        minSdk 24
+        targetSdk 36
+        versionCode 17
+        versionName '0.17.0'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    signingConfigs {
+        release {
+            def ksPath = System.getenv('SURILEARN_KEYSTORE_PATH')
+            if (ksPath) {
+                storeFile file(ksPath)
+                storePassword System.getenv('SURILEARN_KEYSTORE_PASS') ?: ''
+                keyAlias System.getenv('SURILEARN_KEY_ALIAS') ?: 'surilearn'
+                keyPassword System.getenv('SURILEARN_KEY_PASS') ?: ''
+                enableV1Signing true
+                enableV2Signing true
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (System.getenv('SURILEARN_KEYSTORE_PATH')) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.6.2'
+    implementation 'androidx.browser:browser:1.8.0'
+}

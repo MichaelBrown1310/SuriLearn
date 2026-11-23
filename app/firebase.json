@@ -6,23 +6,22 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "headers": [
+      {
+        "source": "/.well-known/assetlinks.json",
+        "headers": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Cache-Control", "value": "no-cache" }
+        ]
+      },
+      {
+        "source": "/sw.js",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache" }
+        ]
+      }
+    ],
     "rewrites": [
-      {
-        "source": "/api/create-checkout-session",
-        "function": "createCheckoutSession"
-      },
-      {
-        "source": "/api/create-b2b-checkout-session",
-        "function": "createB2BCheckoutSession"
-      },
-      {
-        "source": "/api/verify-checkout-session",
-        "function": "verifyCheckoutSession"
-      },
-      {
-        "source": "/api/stripe-webhook",
-        "function": "stripeWebhook"
-      },
       {
         "source": "**",
         "destination": "/index.html"
@@ -32,11 +31,5 @@
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
-  },
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default"
-    }
-  ]
+  }
 }

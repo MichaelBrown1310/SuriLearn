@@ -1,6 +1,8 @@
 # 🛡️ SuriLearn — Aplicación Web Gamificada de Ciberseguridad (PWA)
 
-> **Versión Actual:** `v0.16.0` (Pre-1.0 · 15 Cursos Secuenciales × 5 Lecciones, Diagnóstico de 10 Preguntas y Ligas Pobladas)  
+> **Versión Actual:** `v0.17.0` (Pre-1.0 · Web Pública en Firebase Hosting + APK Android TWA Firmada)  
+> **URL Pública Web:** https://surilearn-9b60e.web.app  
+> **Descarga APK Android:** https://github.com/MichaelBrown1310/SuriLearn/raw/main/releases/SuriLearn-v0.17.0.apk  
 > **Metáfora del Sistema:** *"La Madriguera Digital y el Centinela Suri"*
 
 **SuriLearn** es una aplicación web progresiva (**PWA / SPA** con Vue 3 + TypeScript + Pinia + Tailwind CSS + Firebase + Stripe) que transforma la capacitación tradicional en ciberseguridad en micro-entrenamientos diarios interactivos de **3 a 5 minutos**, dirigida tanto a **usuarios individuales (B2C)** como a **PYMES (B2B)**.
@@ -41,6 +43,7 @@ Sin selector superior de saltos: el usuario recorre el **mapa continuo estilo Du
 
 ```text
 app/ (stitch_surilearn_gamified_app/)
+├── android-twa/                # Proyecto Android TWA firmado (com.surilearn.app · Gradle 8.14.3)
 ├── functions/                  # Firebase Cloud Functions v2 (Stripe Checkout B2C/B2B + Webhooks)
 ├── src/
 │   ├── __tests__/              # Suite de pruebas unitarias Vitest (motor, currículo y Stripe/Auth)
@@ -58,13 +61,14 @@ app/ (stitch_surilearn_gamified_app/)
 │   ├── stores/                 # Pinia: useUserStore y useGamificationStore
 │   ├── types/                  # Contratos TypeScript estrictos
 │   ├── utils/                  # gamificationEngine.ts, pathGeometry.ts, authErrors.ts y suriAssets.ts
-│   └── views/                  # 10 Vistas principales (LearnView con mapa continuo secuencial de 15 cursos)
-├── public/                     # manifest.webmanifest, sw.js e iconos oficiales de Suri
-├── docs/                       # SRS, Informe Técnico, Design System y Planes v0.1.0 - v0.16.0
+│   └── views/                  # 10 Vistas principales (LearnView 15 cursos + WelcomeView con descarga APK)
+├── public/                     # manifest.webmanifest, sw.js, iconos PWA y .well-known/assetlinks.json
+├── docs/                       # SRS, Informe Técnico, Design System y Planes v0.1.0 - v0.17.0
 ├── prototypes/                 # Prototipos originales Stitch UI
 ├── Suri/                       # Poses oficiales transparentes de Suri
 ├── firestore.rules             # Reglas Zero Trust validadas
-└── firebase.json               # Hosting + Functions + Firestore config
+├── firebase.json               # Hosting SPA Spark + assetlinks + Firestore config
+└── firebase.blaze.json         # Respaldo de rewrites Cloud Functions para Plan Blaze
 ```
 
 ---

@@ -39,3 +39,13 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Firmas y compilaciones Android locales
+*.jks
+*.keystore
+*.pem
+*.key
+android-twa/local.properties
+android-twa/.gradle/
+android-twa/build/
+android-twa/app/build/

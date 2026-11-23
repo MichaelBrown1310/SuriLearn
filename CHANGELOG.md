@@ -6,6 +6,20 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 <!-- CHANGELOG_ENTRIES_START -->
 
+## [v0.17.0] - 2026-11-23
+
+- **Resumen**: Despliegue web público en Firebase Hosting (`https://surilearn-9b60e.web.app`) y APK Android firmada (`com.surilearn.app`, TWA) lista para descargar y compartir
+- **URL Pública Web**: https://surilearn-9b60e.web.app
+- **Descarga Directa APK Android**: https://github.com/MichaelBrown1310/SuriLearn/raw/main/releases/SuriLearn-v0.17.0.apk
+- **Plan de Desarrollo**: [docs/plans/PLAN_v0.17.0.md](./app/docs/plans/PLAN_v0.17.0.md)
+- **Archivos impactados**:
+  - `M README.md`, `CHANGELOG.md`, `.gitignore`, `app/README.md`, `app/docs/DOCUMENTO_PROYECTO_TI_SURILEARN.md`, `app/CHANGELOG.md`, `app/package.json`
+  - `A app/docs/plans/PLAN_v0.17.0.md`
+  - `A releases/SuriLearn-v0.17.0.apk` (`3,749,917` bytes, esquema v2 verificado por `apksigner`)
+  - `A app/android-twa/` (proyecto Gradle Android TWA `com.surilearn.app`, iconos adaptativos y splash `#FFF8F1`)
+  - `A app/public/.well-known/assetlinks.json`, `app/public/suri-icon-192.png`, `app/public/suri-icon-512.png`, `app/firebase.blaze.json`
+  - `M app/firebase.json` (SPA Hosting Spark + headers `assetlinks.json`), `app/public/manifest.webmanifest`, `app/public/sw.js` (`surilearn-v0.17.0`), `app/src/views/WelcomeView.vue` (botón descargar APK)
+
 ## [v0.16.0] - 2026-11-23
 
 - **Resumen**: 15 cursos secuenciales (75 lecciones), diagnóstico inicial de 10 preguntas, mapa limpio sin selector superior y podios poblados en Firestore

@@ -7,6 +7,11 @@ import { SuriPose } from '../types/exercises';
 
 const router = useRouter();
 const userStore = useUserStore();
+const isStandaloneApp = ref<boolean>(
+  typeof window !== 'undefined' &&
+    (window.matchMedia?.('(display-mode: standalone)').matches ||
+      (navigator as any).standalone === true)
+);
 
 const currentPose = ref<SuriPose>('idle');
 const showBubble = ref<boolean>(false);
@@ -169,6 +174,18 @@ function goToLogin() {
       >
         <span>Ya tengo cuenta · Iniciar Sesión</span>
       </button>
+
+      <!-- Android APK Download Button (visible in Web browser, hidden inside standalone/TWA app) -->
+      <a
+        v-if="!isStandaloneApp"
+        href="https://github.com/MichaelBrown1310/SuriLearn/raw/main/releases/SuriLearn-v0.17.0.apk"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="w-full py-2.5 px-4 rounded-full bg-surface-container-high border border-outline-variant/40 hover:border-primary/50 text-xs font-extrabold text-on-surface flex items-center justify-center gap-2 shadow-2xs active:scale-[0.99] transition-all"
+      >
+        <span class="material-symbols-outlined text-[17px] text-primary icon-filled">android</span>
+        <span>Descargar App Android (.APK)</span>
+      </a>
     </div>
 
     <!-- Footnote Trust Seal -->
