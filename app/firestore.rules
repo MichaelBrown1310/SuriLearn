@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Reglas Zero Trust para SuriLearn (Plan Spark $0 + B2B Multi-Tenant)
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isOrgAdmin(orgId) {
+      return isAuthenticated() &&
+        orgId != null &&
+        exists(/databases/$(database)/documents/organizations/$(orgId)) &&
+        get(/databases/$(database)/documents/organizations/$(orgId)).data.adminUid == request.auth.uid;
+    }
+
+    // Perfil de Usuario
+    // - Lectura autenticada (necesaria para rankings y directorios corporativos)
+    // - Creación estricta por el dueño sin privilegios iniciales elevados
+    // - Actualización por el dueño (sin poder revertir su propia suspensión)
+    //   o por el administrador PYME de la misma organización sobre campos administrativos
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) &&
+        request.resource.data.get('isPro', false) == false &&
+        request.resource.data.get('role', 'individual') in ['individual', 'sme_member'];
+      allow update: if (
+        isOwner(userId) &&
+        !(resource.data.get('status', 'active') == 'suspended' &&
+          request.resource.data.get('status', 'active') != 'suspended')
+      ) || (
+        resource.data.get('organizationId', null) != null &&
+        isOrgAdmin(resource.data.get('organizationId', null)) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'suspendedAt',
+          'organizationId',
+          'companyName',
+          'role',
+          'isPro'
+        ])
+      );
+      allow delete: if false;
+    }
+
+    // Estado de Gamificación dedicado (estrictamente privado al dueño)
+    match /gamification/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Catálogo curricular (solo lectura pública; sin escritura desde cliente)
+    match /learning_units/{unitId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /lessons/{lessonId}/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Tabla de Clasificación (lectura autenticada; sin manipulación arbitraria)
+    match /leaderboard/{entryId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // Organizaciones y PYMES (Multi-tenant B2B)
+    // - Creación solo cuando el solicitante se declara adminUid
+    // - Actualización por el administrador de la org, o incremento atómico (+1) de usedSeats al unirse
+    match /organizations/{orgId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.adminUid == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.adminUid == request.auth.uid ||
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedSeats']) &&
+          request.resource.data.usedSeats == resource.data.usedSeats + 1 &&
+          request.resource.data.usedSeats <= resource.data.maxSeats
+        )
+      );
+      allow delete: if false;
+    }
+  }
+}

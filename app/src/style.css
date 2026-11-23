@@ -1,0 +1,102 @@
+@import './theme/variables.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--color-surface, #fff8f1);
+    color: var(--color-on-surface, #241a02);
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 16px);
+  }
+
+  /* Hide scrollbars but keep functionality */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Material Symbols Fill class */
+.icon-filled {
+  font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+}
+
+/* 2.5D Tactile Gamified Depth Model */
+.btn-tactile-primary {
+  background-color: #e1a653;
+  color: #ffffff;
+  box-shadow: 0 4px 0 #b87b2e;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.btn-tactile-primary:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #b87b2e;
+}
+
+.btn-tactile-secondary {
+  background-color: var(--color-surface-container-lowest, #ffffff);
+  color: var(--color-on-surface-variant, #5f4030);
+  border: 2px solid var(--color-outline-variant, #ead2a8);
+  box-shadow: 0 3px 0 var(--color-outline-variant, #ead2a8);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.btn-tactile-secondary:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--color-outline-variant, #ead2a8);
+}
+
+.card-tactile {
+  background-color: var(--color-surface-container-lowest, #ffffff);
+  border: 2px solid var(--color-outline-variant, #ead2a8);
+  box-shadow: 0 4px 0 var(--color-outline-variant, #d5bd92);
+  border-radius: 1rem;
+}
+
+body.dark .card-tactile {
+  box-shadow: 0 4px 0 #181412;
+}
+
+.card-tactile-selected {
+  border-color: #00e5ff;
+  background-color: rgba(0, 229, 255, 0.08);
+  box-shadow: 0 4px 0 #0099aa;
+}
+
+.card-tactile-error {
+  border-color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.08);
+  animation: shake 0.35s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
