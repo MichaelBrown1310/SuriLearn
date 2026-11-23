@@ -128,16 +128,23 @@ const cardStyle = computed(() => {
           class="p-2.5 rounded-xl border border-outline-variant/30 bg-surface-container-low flex items-start gap-2.5"
         >
           <div
-            class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-white"
-            :class="perm.isJustifiedForFunction ? 'bg-shield-green' : 'bg-error'"
+            class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+            :class="
+              selectedDecision === null
+                ? 'bg-surface-container-high text-primary'
+                : perm.isJustifiedForFunction
+                  ? 'bg-shield-green text-white'
+                  : 'bg-error text-white'
+            "
           >
             <span class="material-symbols-outlined text-[16px]">{{ perm.icon }}</span>
           </div>
           <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-2">
               <span class="text-xs font-bold text-on-surface truncate">{{ perm.title }}</span>
               <span
-                class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded"
+                v-if="selectedDecision !== null"
+                class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded shrink-0"
                 :class="
                   perm.riskSeverity === 'critical' || perm.riskSeverity === 'high'
                     ? 'bg-error/20 text-error'
@@ -147,8 +154,11 @@ const cardStyle = computed(() => {
                 Riesgo: {{ perm.riskSeverity }}
               </span>
             </div>
-            <p class="text-[10px] text-on-surface-variant mt-0.5 leading-tight">
+            <p v-if="selectedDecision !== null" class="text-[10px] text-on-surface-variant mt-0.5 leading-tight">
               {{ perm.riskExplanation }}
+            </p>
+            <p v-else class="text-[10px] text-on-surface-variant/80 mt-0.5 leading-tight">
+              Evalúa si este permiso es coherente con la función declarada de la app.
             </p>
           </div>
         </div>

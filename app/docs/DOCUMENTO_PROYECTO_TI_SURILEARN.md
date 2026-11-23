@@ -906,7 +906,7 @@ Sprint 1: Cimientos y Auth          Sprint 3: Vidas y Economía        Sprint 5:
 
 ---
 
-## ANEXO DE ACTUALIZACIÓN EVOLUTIVA (`v0.9.0` → `v0.11.0`)
+## ANEXO DE ACTUALIZACIÓN EVOLUTIVA (`v0.9.0` → `v0.12.0`)
 
 Con posterioridad a la línea base inicial de 1 módulo y 6 minijuegos del SRS, el sistema evolucionó manteniendo la compatibilidad total con los requerimientos originales:
 
@@ -924,3 +924,8 @@ Con posterioridad a la línea base inicial de 1 módulo y 6 minijuegos del SRS, 
 3. **Endurecimiento Crítico P0 (`v0.11.0`)**:
    - Migración de Stripe Checkout B2C/B2B y verificación de sesiones a endpoints server-side (`vite.config.ts` en desarrollo y `functions/` Cloud Functions v2 en producción) eliminando secretos de `dist/`.
    - Cierre de bypass de pagos por query params, endurecimiento de `firestore.rules` (sin regla comodín abierta), guards de autenticación en `vue-router`, corrección del soft-lock en minijuegos con `:key`, corrección del disparo inmediato de `OutOfHeartsModal` a 0 vidas, montaje de `ToastNotification.vue` global y restauración del login dual Email/Google.
+4. **Personalización, B2B Real, Accesibilidad y Calidad PWA (`v0.12.0` — P1 + P2)**:
+   - **Personalización Adaptativa**: Diagnóstico de 4 preguntas (`DiagnosticModal.vue` + `evaluateDiagnosticAnswers`) con recomendación de curso, **Centro de Errores** (`/lesson/error-review`) con seguimiento persistente de fallos, selector editable de Meta Diaria (`ProfileView.vue`) y meta diaria real en `LearnView.vue`.
+   - **B2B Real con RBAC y Tiempo Real**: Analítica semanal basada en `activeDates` reales + botón **Exportar CSV** (`AdminAnalytics.vue`), aislamiento RBAC estricto para colaboradores regulares (`OrganizationDashboardView.vue`), registro transaccional `runTransaction` en `joinOrganizationWithCode` y suspensión global instantánea por `onSnapshot` (`App.vue` + `useUserStore.ts`).
+   - **Motor Cuantitativo y Accesibilidad WCAG 2.1 AA**: Motor puro `gamificationEngine.ts`, aprobación mínima `≥60%`, estrellas persistentes, consumo real del Congelador de Racha, persistencia de boosts `2X XP`, medallas dinámicas y ascenso automático de liga (`Bronce` a `Supremo`), junto con zoom desbloqueado en `index.html` y tokens de alto contraste claro/oscuro.
+   - **PWA, Optimización y Pruebas**: Eliminación de paquetes `@ionic/*` sin uso, `manifest.webmanifest` + Service Worker (`public/sw.js`), `app.config.errorHandler`, lazy-loading de vistas y división de chunks en `vite.config.ts` (`71.67 kB` de entrada), más suite automatizada de pruebas en Vitest (`15/15` casos).

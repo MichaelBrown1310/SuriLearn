@@ -1,13 +1,13 @@
-# 🛡️ SuriLearn — Aplicación Web Gamificada de Ciberseguridad
+# 🛡️ SuriLearn — Aplicación Web Gamificada de Ciberseguridad (PWA)
 
-> **Versión Actual:** `v0.11.0` (Pre-1.0 con Endurecimiento P0)  
+> **Versión Actual:** `v0.12.0` (Pre-1.0 · P0 + P1 + P2 Completados)  
 > **Metáfora del Sistema:** *"La Madriguera Digital y el Centinela Suri"*
 
-**SuriLearn** es una aplicación web (**SPA** con Vue 3 + TypeScript + Pinia + Tailwind CSS + Firebase + Stripe) que transforma la capacitación tradicional en ciberseguridad en micro-entrenamientos diarios interactivos de **3 a 5 minutos**, dirigida tanto a **usuarios individuales (B2C)** como a **PYMES (B2B)**.
+**SuriLearn** es una aplicación web progresiva (**PWA / SPA** con Vue 3 + TypeScript + Pinia + Tailwind CSS + Firebase + Stripe) que transforma la capacitación tradicional en ciberseguridad en micro-entrenamientos diarios interactivos de **3 a 5 minutos**, dirigida tanto a **usuarios individuales (B2C)** como a **PYMES (B2B)**.
 
 ---
 
-## ✨ Características Principales (`v0.11.0`)
+## ✨ Características Principales (`v0.12.0`)
 
 ### 1. Currículo Completo de 6 Cursos (21 Lecciones) y Sistema Teórico Dual
 Cada curso integra un **Códice / Manual Teórico** (`UnitTheoryModal.vue`) y un **Briefing Pre-Misión** (`LessonTheoryBriefing.vue`) antes de pasar a la práctica:
@@ -27,10 +27,11 @@ Cada curso integra un **Códice / Manual Teórico** (`UnitTheoryModal.vue`) y un
 - **6 Minijuegos Core**: `InboxThreatScanner`, `UrlInspector`, `PasswordVaultBuilder`, `SocialEngineeringChat`, `PermissionGatekeeper`, `RapidTriageRadar`.
 - **5 Videojuegos Avanzados**: `FirewallDefenseGame` (arcade 3 carriles), `NetworkMazeGame` (laberinto táctico 2D), `IncidentCommandGame` (consola SOC en tiempo real), `CodePatcherGame` (hotfix DevSecOps) y `ForensicInvestigatorGame` (laboratorio CSI en RAM).
 
-### 3. Gamificación, B2B Multi-Tenant y Seguridad
-- **Gamificación**: 5 vidas con recarga pasiva cada 4 horas, **Modo Refuerzo** a 0 vidas, multiplicadores de racha (`x1.0` a `x2.0`) conscientes del calendario local, tienda de Bits, cofres atómicos (`runTransaction`), notificaciones `ToastNotification.vue`, Modo Oscuro *Dark Sentinel* y ligas en tiempo real (`onSnapshot`).
-- **Panel PYME B2B**: Creación de empresas, códigos de invitación de 6 caracteres, límites de puestos (`10` / `30` / `100`), analítica con **Chart.js** (`AdminAnalytics.vue`), suspensión y desvinculación de colaboradores.
-- **Seguridad P0**: Autenticación dual (**Email/Contraseña** + **Google OAuth**), guards `router.beforeEach`, reglas Zero Trust en `firestore.rules`, y procesamiento/verificación de pagos Stripe exclusivamente en el servidor (`vite.config.ts` en dev y `functions/` Cloud Functions v2 en producción) sin llaves secretas en el bundle cliente.
+### 3. Personalización, Gamificación, B2B Real y Calidad (`v0.11.0` – `v0.12.0`)
+- **Personalización Adaptativa**: Evaluación diagnóstica inicial de 4 preguntas (`DiagnosticModal.vue`) que recomienda curso según perfil y brechas, **Centro de Errores** real (`/lesson/error-review`) con repaso dirigido, selector funcional de Meta Diaria (`3 / 5 / 10 min`) y meta diaria real en la ruta de aprendizaje.
+- **Gamificación Cuantitativa**: 5 vidas con recarga pasiva cada 4h, **Modo Refuerzo** a 0 vidas, regla de aprobación mínima (`≥60%`) con `1–3` estrellas persistentes, multiplicadores de racha (`x1.0` a `x2.0`) con consumo real del Congelador de Racha, persistencia de boosts `2X XP`, ascenso automático de ligas (`Bronce → Plata → Oro → Diamante → Supremo`), medallas dinámicas, notificaciones `ToastNotification.vue` y **Dark Sentinel WCAG 2.1 AA**.
+- **Panel PYME B2B con RBAC**: Creación de organizaciones (`micro_pyme` 10, `growth_pyme` 30, `enterprise` 100), código de invitación transaccional (`runTransaction`), aislamiento RBAC entre Administradores CISO y Colaboradores, analítica semanal real basada en `activeDates` + exportación CSV, badge `"En Riesgo"` y suspensión preventiva en tiempo real (`onSnapshot`).
+- **PWA, Rendimiento y Seguridad**: Autenticación dual (**Email/Contraseña** + **Google OAuth**), guards `requiresAuth` / `guestOnly`, reglas Zero Trust en `firestore.rules`, Stripe server-side (`vite.config.ts` / `functions/`), PWA instalable (`manifest.webmanifest` + `sw.js`), lazy-loading completo de rutas y suite de pruebas unitarias con **Vitest**.
 
 ---
 
@@ -40,20 +41,23 @@ Cada curso integra un **Códice / Manual Teórico** (`UnitTheoryModal.vue`) y un
 app/ (stitch_surilearn_gamified_app/)
 ├── functions/                  # Firebase Cloud Functions v2 (Stripe Checkout B2C/B2B + Webhooks)
 ├── src/
+│   ├── __tests__/              # Suite de pruebas unitarias Vitest (motor, currículo y Stripe/Auth)
 │   ├── components/
-│   │   ├── common/             # HeaderHud, BottomTabBar, ToastNotification y modales Suri
+│   │   ├── common/             # HeaderHud, BottomTabBar, ToastNotification, DiagnosticModal y modales Suri
 │   │   ├── games/              # 11 Minijuegos y videojuegos interactivos
 │   │   ├── navigation/         # SidebarNav responsivo
-│   │   └── organization/       # AdminAnalytics (Chart.js) y MemberDetailModal
+│   │   └── organization/       # AdminAnalytics (Chart.js + CSV) y MemberDetailModal
 │   ├── composables/            # useFirestore (caché TTL + ACID) y useTheme (Dark Sentinel)
 │   ├── data/curriculum.ts      # 6 cursos, 21 lecciones, manuales y briefings
 │   ├── firebase/config.ts      # Singleton Firebase + caché persistente IndexedDB
-│   ├── router/index.ts         # Rutas SPA con guards requiresAuth / guestOnly
+│   ├── router/index.ts         # Rutas SPA con lazy-loading y guards requiresAuth / guestOnly
 │   ├── services/stripeService.ts # Cliente seguro hacia /api/* (sin llaves secretas)
 │   ├── stores/                 # Pinia: useUserStore y useGamificationStore
 │   ├── types/                  # Contratos TypeScript estrictos
+│   ├── utils/                  # Motor puro gamificationEngine.ts, authErrors.ts y suriAssets.ts
 │   └── views/                  # 10 Vistas principales
-├── docs/                       # SRS, Informe Técnico, Design System y Planes v0.1.0 - v0.11.0
+├── public/                     # manifest.webmanifest, sw.js e iconos oficiales de Suri
+├── docs/                       # SRS, Informe Técnico, Design System y Planes v0.1.0 - v0.12.0
 ├── prototypes/                 # Prototipos originales Stitch UI
 ├── Suri/                       # Poses oficiales transparentes de Suri
 ├── firestore.rules             # Reglas Zero Trust validadas
@@ -77,8 +81,9 @@ app/ (stitch_surilearn_gamified_app/)
    ```bash
    npm run dev
    ```
-4. **Verificar tipos y compilar para producción**:
+4. **Ejecutar pruebas, verificar tipos y compilar para producción**:
    ```bash
+   npm test
    node ./node_modules/vue-tsc/bin/vue-tsc.js --noEmit
    npm run build
    ```

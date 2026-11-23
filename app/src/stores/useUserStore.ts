@@ -16,35 +16,22 @@ import {
 import { auth, googleAuthProvider } from '../firebase/config';
 import { useFirestore } from '../composables/useFirestore';
 import { useGamificationStore } from './useGamificationStore';
-import { UserProfile, DailyGoalType, Organization, OrganizationPlan } from '../types/gamification';
+import {
+  UserProfile,
+  DailyGoalType,
+  DAILY_GOAL_CONFIGS,
+  DiagnosticProfile,
+  Organization,
+  OrganizationPlan,
+} from '../types/gamification';
+import { translateAuthError } from '../utils/authErrors';
 
-function translateAuthError(err: any): string {
-  const code = err?.code || '';
-  switch (code) {
-    case 'auth/invalid-credential':
-    case 'auth/wrong-password':
-    case 'auth/user-not-found':
-      return 'Correo o contraseña incorrectos. Verifica tus datos e inténtalo de nuevo.';
-    case 'auth/email-already-in-use':
-      return 'Este correo ya está registrado. Intenta iniciar sesión.';
-    case 'auth/weak-password':
-      return 'La contraseña debe tener al menos 6 caracteres.';
-    case 'auth/invalid-email':
-      return 'El formato del correo electrónico no es válido.';
-    case 'auth/too-many-requests':
-      return 'Demasiados intentos fallidos. Espera unos minutos antes de reintentar.';
-    case 'auth/popup-closed-by-user':
-      return 'Se cerró la ventana de Google antes de completar el inicio de sesión.';
-    case 'auth/network-request-failed':
-      return 'Sin conexión de red. Verifica tu acceso a internet e inténtalo nuevamente.';
-    default:
-      return err?.message || 'Ocurrió un error de autenticación.';
-  }
-}
+export { translateAuthError };
 
 export const useUserStore = defineStore('user', () => {
   const firestore = useFirestore();
   let authUnsubscribe: (() => void) | null = null;
+  let profileUnsubscribe: (() => void) | null = null;
 
   // State: Initialized to clean zero-baseline, never mock data
   const currentUser = ref<FirebaseUser | null>(null);
@@ -66,6 +53,12 @@ export const useUserStore = defineStore('user', () => {
     bits: 0,
     streakDays: 0,
     claimedRewards: [],
+    failedExerciseIds: [],
+    dailyLessonsCompleted: 0,
+    dailyLessonsDate: '',
+    lessonStars: {},
+    diagnosticProfile: null,
+    notificationsEnabled: true,
     createdAt: new Date().toISOString(),
     lastLoginAt: new Date().toISOString(),
     role: 'individual',
@@ -215,6 +208,10 @@ export const useUserStore = defineStore('user', () => {
   }
 
   async function logout(): Promise<void> {
+    if (profileUnsubscribe) {
+      profileUnsubscribe();
+      profileUnsubscribe = null;
+    }
     try {
       await signOut(auth);
     } catch (err) {
@@ -242,6 +239,12 @@ export const useUserStore = defineStore('user', () => {
       bits: 0,
       streakDays: 0,
       claimedRewards: [],
+      failedExerciseIds: [],
+      dailyLessonsCompleted: 0,
+      dailyLessonsDate: '',
+      lessonStars: {},
+      diagnosticProfile: null,
+      notificationsEnabled: true,
       createdAt: new Date().toISOString(),
       lastLoginAt: new Date().toISOString(),
       role: 'individual',
@@ -257,12 +260,43 @@ export const useUserStore = defineStore('user', () => {
     if (profile.value.uid) {
       await firestore.saveUserProfile(profile.value.uid, { dailyGoal: goal });
     }
+    const cfg = DAILY_GOAL_CONFIGS[goal];
+    const gamStore = useGamificationStore();
+    gamStore.showToast(`Meta diaria actualizada: ${cfg.title} (${cfg.description})`, true);
+  }
+
+  async function saveDiagnosticProfile(diag: DiagnosticProfile): Promise<void> {
+    profile.value.diagnosticProfile = diag;
+    if (profile.value.uid) {
+      await firestore.saveUserProfile(profile.value.uid, { diagnosticProfile: diag });
+    }
+    const gamStore = useGamificationStore();
+    gamStore.showToast(`Ruta adaptativa guardada · ${diag.recommendedCourseTitle}`, true);
+  }
+
+  async function setNotificationsEnabled(enabled: boolean): Promise<void> {
+    profile.value.notificationsEnabled = enabled;
+    if (profile.value.uid) {
+      await firestore.saveUserProfile(profile.value.uid, { notificationsEnabled: enabled });
+    }
+    const gamStore = useGamificationStore();
+    gamStore.showToast(
+      enabled
+        ? 'Alertas y recordatorios de racha activados.'
+        : 'Recordatorios de racha silenciados.',
+      true
+    );
   }
 
   function initAuthObserver() {
     if (authUnsubscribe) return;
     authUnsubscribe = onAuthStateChanged(auth, async (user) => {
       currentUser.value = user;
+      if (profileUnsubscribe) {
+        profileUnsubscribe();
+        profileUnsubscribe = null;
+      }
+
       if (user) {
         const userDoc = await firestore.ensureUserDocument(user);
         profile.value = userDoc;
@@ -271,6 +305,14 @@ export const useUserStore = defineStore('user', () => {
         }
         const gamStore = useGamificationStore();
         await gamStore.loadGamificationData(user.uid);
+
+        // Subscribe to real-time profile updates for immediate RN-08 suspension enforcement
+        profileUnsubscribe = firestore.subscribeToUserProfile(user.uid, (partial) => {
+          profile.value = {
+            ...profile.value,
+            ...partial,
+          };
+        });
       } else {
         currentOrganization.value = null;
         organizationMembers.value = [];
@@ -293,6 +335,12 @@ export const useUserStore = defineStore('user', () => {
           bits: 0,
           streakDays: 0,
           claimedRewards: [],
+          failedExerciseIds: [],
+          dailyLessonsCompleted: 0,
+          dailyLessonsDate: '',
+          lessonStars: {},
+          diagnosticProfile: null,
+          notificationsEnabled: true,
           createdAt: new Date().toISOString(),
           lastLoginAt: new Date().toISOString(),
           role: 'individual',
@@ -503,6 +551,8 @@ export const useUserStore = defineStore('user', () => {
     loginWithGoogle,
     logout,
     setDailyGoal,
+    saveDiagnosticProfile,
+    setNotificationsEnabled,
     initAuthObserver,
     activateProMembership,
     currentOrganization,

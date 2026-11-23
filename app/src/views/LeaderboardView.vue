@@ -7,6 +7,7 @@ import { useFirestore } from '../composables/useFirestore';
 import { auth } from '../firebase/config';
 import HeaderHud from '../components/common/HeaderHud.vue';
 import { getSuriImage } from '../utils/suriAssets';
+import { computeLeagueFromXp, getWeeklyCountdownLabel } from '../utils/gamificationEngine';
 import { LeagueLeaderboardEntry } from '../types/gamification';
 
 const route = useRoute();
@@ -14,8 +15,8 @@ const gamificationStore = useGamificationStore();
 const userStore = useUserStore();
 const firestore = useFirestore();
 
-const suriIdleFallback = '/src/assets/images/suri/suri-idle.png';
 const suriImg = getSuriImage('idle');
+const suriIdleFallback = suriImg;
 
 // Scope toggle: 'global' (Division ranking) or 'company' (Private Organization ranking)
 const activeScope = ref<'global' | 'company'>('global');
@@ -42,17 +43,19 @@ function handleImageError(event: Event) {
   }
 }
 
+const currentLeagueTier = computed(() => {
+  return computeLeagueFromXp(currentUserXp.value);
+});
+
 const currentLeagueTitle = computed(() => {
-  return gamificationStore.state.currentLeague || userStore.profile.currentLeague || 'Bronce';
+  return gamificationStore.state.currentLeague || userStore.profile.currentLeague || currentLeagueTier.value.name;
 });
 
 const nextLeagueTitle = computed(() => {
-  const current = currentLeagueTitle.value.toLowerCase();
-  if (current.includes('bronce')) return 'Liga Centinela Plata';
-  if (current.includes('plata')) return 'Liga Centinela Oro';
-  if (current.includes('oro')) return 'Liga Centinela Diamante';
-  return 'Liga Centinela Supremo';
+  return currentLeagueTier.value.nextLeagueName;
 });
+
+const weeklyCountdown = computed(() => getWeeklyCountdownLabel());
 
 // Current Authenticated User attributes from store & auth
 const currentUserId = computed(() => userStore.profile.uid || auth.currentUser?.uid || '');
@@ -253,6 +256,17 @@ watch(
   }
 );
 
+watch(
+  () => route.query.scope,
+  (newScope) => {
+    if (newScope === 'company') {
+      activeScope.value = 'company';
+    } else if (newScope === 'global') {
+      activeScope.value = 'global';
+    }
+  }
+);
+
 onMounted(async () => {
   if (route.query.scope === 'company' || route.query.view === 'company') {
     activeScope.value = 'company';
@@ -348,7 +362,7 @@ onUnmounted(() => {
                     {{ activeScope === 'company' ? 'group' : 'schedule' }}
                   </span>
                   <span>
-                    {{ activeScope === 'company' ? `${sortedLeaderboard.length} colaboradores activos` : 'Termina en 2d 4h 17m' }}
+                    {{ activeScope === 'company' ? `${sortedLeaderboard.length} colaboradores activos` : weeklyCountdown }}
                   </span>
                   <button
                     @click="handleRefresh"
@@ -371,7 +385,7 @@ onUnmounted(() => {
                 {{ activeScope === 'company' ? 'verified' : 'workspace_premium' }}
               </span>
               <span class="text-[11px] font-bold text-on-surface">
-                {{ activeScope === 'company' ? 'Interna' : 'División V' }}
+                {{ activeScope === 'company' ? 'Interna' : currentLeagueTier.divisionRoman }}
               </span>
             </div>
           </div>

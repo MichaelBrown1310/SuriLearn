@@ -75,7 +75,7 @@ export const Scene3Solution: React.FC = () => {
             SuriLearn
           </h1>
           <div className="px-3 py-1 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-sm font-extrabold uppercase">
-            v0.8.0
+            v0.12.0
           </div>
         </div>
 
@@ -121,9 +121,9 @@ export const Scene3Solution: React.FC = () => {
               <Gamepad2 className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-white">6 Minijuegos Interactivos</h3>
+              <h3 className="text-lg font-black text-white">6 Cursos y 11 Motores Interactivos</h3>
               <p className="text-slate-400 text-sm">
-                Inbox Threat Scanner, Password Vault, URL Inspector y simuladores reales.
+                Phishing, Bóveda NIST, Chat, Firewall Arcade, Laberinto VPN, Consola SOC, DevSecOps y Forense.
               </p>
             </div>
           </div>
@@ -140,9 +140,9 @@ export const Scene3Solution: React.FC = () => {
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-white">Metodología NIST SP 800-63B</h3>
+              <h3 className="text-lg font-black text-white">Diagnóstico Adaptativo y Centro de Errores</h3>
               <p className="text-slate-400 text-sm">
-                Criterios de seguridad corporativa adaptados de forma lúdica y sin tecnicismos.
+                Rutas personalizadas con estándar NIST SP 800-63B y OWASP, sin tecnicismos.
               </p>
             </div>
           </div>

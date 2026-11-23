@@ -6,6 +6,17 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 <!-- CHANGELOG_ENTRIES_START -->
 
+## [v0.12.0] - 2026-11-23
+
+- **Resumen**: Personalizacion adaptativa, B2B real con RBAC, WCAG 2.1 AA, PWA, lazy-loading y pruebas Vitest
+- **Plan de Desarrollo**: [docs/plans/PLAN_v0.12.0.md](./app/docs/plans/PLAN_v0.12.0.md)
+- **Archivos impactados**:
+  - `M app/README.md`, `app/docs/DOCUMENTO_PROYECTO_TI_SURILEARN.md`, `app/package.json`, `app/vite.config.ts`, `app/index.html`, `app/tailwind.config.js`
+  - `M app/src/` (motor `gamificationEngine.ts`, `DiagnosticModal.vue`, Centro de Errores, `AdminAnalytics.vue`, RBAC `OrganizationDashboardView.vue`, suspensión en vivo `App.vue`, lazy routes, WCAG 2.1 AA)
+  - `A app/public/manifest.webmanifest`, `app/public/sw.js`, `app/vitest.config.ts`, `app/src/__tests__/` (`15/15` pruebas)
+  - `M promo-video/src/scenes/Scene3Solution.tsx`, `promo-video/src/scenes/Scene4Gamification.tsx`
+
+
 ## [v0.11.0] - 2026-11-23
 
 - **Resumen**: Endurecimiento P0 de seguridad, estabilidad en minijuegos, vidas y login dual

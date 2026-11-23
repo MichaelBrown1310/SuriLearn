@@ -129,7 +129,7 @@ async function handleCreateOrg() {
   if (!newOrgName.value.trim()) return;
   isCreating.value = true;
   try {
-    const res = await userStore.createNewOrganization(newOrgName.value.trim(), 'growth_pyme');
+    const res = await userStore.createNewOrganization(newOrgName.value.trim(), 'micro_pyme');
     if (res.success) {
       showCreateModal.value = false;
       newOrgName.value = '';
@@ -271,7 +271,7 @@ onMounted(async () => {
               </button>
 
               <router-link
-                to="/tabs/leaderboard"
+                to="/tabs/leaderboard?scope=company"
                 class="flex items-center gap-1.5 px-3.5 py-2 bg-tertiary text-white rounded-xl text-xs font-black hover:bg-tertiary/90 transition-all shadow-sm"
               >
                 <span class="material-symbols-outlined text-[16px] icon-filled">trophy</span>
@@ -280,8 +280,11 @@ onMounted(async () => {
             </div>
           </div>
 
-          <!-- Invite Code Bar -->
-          <div class="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <!-- Invite Code Bar (Strictly visible only to SME Admins) -->
+          <div
+            v-if="isSmeAdmin"
+            class="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
+          >
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-primary text-[20px]">group_add</span>
               <div class="flex flex-col">
@@ -308,166 +311,230 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Section: Accumulated Analytics & Interactive Charts -->
-        <AdminAnalytics :organization="organization" :members="members" />
+        <!-- Admin View: Accumulated Analytics & Team Directory (RBAC Protected) -->
+        <template v-if="isSmeAdmin">
+          <AdminAnalytics :organization="organization" :members="members" />
 
-        <!-- Section: Team Collaborators Management Directory -->
-        <div class="flex flex-col gap-3 bg-surface-container-lowest p-4 lg:p-5 rounded-3xl border border-outline-variant/30 shadow-xs">
-          <!-- Title & Search/Filter Controls -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-outline-variant/30">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                <span class="material-symbols-outlined text-[18px]">badge</span>
-              </div>
-              <div>
-                <h2 class="text-sm font-black uppercase tracking-wider text-on-surface">
-                  Directorio de Colaboradores
-                </h2>
-                <p class="text-[11px] text-on-surface-variant font-medium">
-                  Supervisa y gestiona los accesos del personal en guardia
-                </p>
-              </div>
-            </div>
-
-            <!-- Filters & Search -->
-            <div class="flex items-center gap-2 flex-wrap">
-              <!-- Search Input -->
-              <div class="relative flex-1 sm:w-48">
-                <span class="material-symbols-outlined absolute left-2.5 top-2 text-on-surface-variant/60 text-[16px]">search</span>
-                <input
-                  v-model="memberSearchQuery"
-                  type="text"
-                  placeholder="Buscar colaborador..."
-                  class="w-full pl-8 pr-3 py-1.5 bg-surface-container-low rounded-xl text-xs font-semibold text-on-surface border border-outline-variant/30 focus:outline-none focus:border-primary"
-                />
+          <!-- Section: Team Collaborators Management Directory -->
+          <div class="flex flex-col gap-3 bg-surface-container-lowest p-4 lg:p-5 rounded-3xl border border-outline-variant/30 shadow-xs">
+            <!-- Title & Search/Filter Controls -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-outline-variant/30">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[18px]">badge</span>
+                </div>
+                <div>
+                  <h2 class="text-sm font-black uppercase tracking-wider text-on-surface">
+                    Directorio de Colaboradores
+                  </h2>
+                  <p class="text-[11px] text-on-surface-variant font-medium">
+                    Supervisa y gestiona los accesos del personal en guardia
+                  </p>
+                </div>
               </div>
 
-              <!-- Status Toggle Filters -->
-              <div class="flex bg-surface-container-low p-0.5 rounded-xl border border-outline-variant/30 text-[11px] font-black">
-                <button
-                  @click="memberStatusFilter = 'all'"
-                  class="px-2.5 py-1 rounded-lg transition-all"
-                  :class="memberStatusFilter === 'all' ? 'bg-primary text-white shadow-xs' : 'text-on-surface-variant hover:text-on-surface'"
-                >
-                  Todos ({{ members.length }})
-                </button>
-                <button
-                  @click="memberStatusFilter = 'active'"
-                  class="px-2.5 py-1 rounded-lg transition-all"
-                  :class="memberStatusFilter === 'active' ? 'bg-[#22C55E] text-white shadow-xs' : 'text-on-surface-variant hover:text-on-surface'"
-                >
-                  Activos
-                </button>
-                <button
-                  @click="memberStatusFilter = 'suspended'"
-                  class="px-2.5 py-1 rounded-lg transition-all"
-                  :class="memberStatusFilter === 'suspended' ? 'bg-[#EF4444] text-white shadow-xs' : 'text-on-surface-variant hover:text-on-surface'"
-                >
-                  Suspendidos
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Members Grid / List -->
-          <div v-if="filteredMembers.length === 0" class="py-8 flex flex-col items-center justify-center text-center text-on-surface-variant">
-            <span class="material-symbols-outlined text-[36px] text-on-surface-variant/40 mb-1">person_search</span>
-            <p class="text-xs font-bold">No se encontraron colaboradores con los criterios seleccionados.</p>
-          </div>
-
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            <div
-              v-for="member in filteredMembers"
-              :key="member.uid"
-              class="bg-surface rounded-2xl p-3.5 border transition-all hover:shadow-xs flex items-center justify-between gap-3"
-              :class="
-                member.status === 'suspended'
-                  ? 'border-[#EF4444]/40 bg-[#EF4444]/5'
-                  : (member.uid === userStore.profile.uid ? 'border-[#5F4030] bg-[#F6E3B8]/20' : 'border-outline-variant/30')
-              "
-            >
-              <!-- Left Info -->
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="relative w-11 h-11 rounded-2xl overflow-hidden bg-primary-fixed border border-primary/20 shrink-0">
-                  <img
-                    :src="resolveAvatar(member.avatarUrl)"
-                    @error="handleImageError"
-                    :alt="member.displayName"
-                    class="w-full h-full object-cover"
+              <!-- Filters & Search -->
+              <div class="flex items-center gap-2 flex-wrap">
+                <!-- Search Input -->
+                <div class="relative flex-1 sm:w-48">
+                  <span class="material-symbols-outlined absolute left-2.5 top-2 text-on-surface-variant/60 text-[16px]">search</span>
+                  <input
+                    v-model="memberSearchQuery"
+                    type="text"
+                    placeholder="Buscar colaborador..."
+                    class="w-full pl-8 pr-3 py-1.5 bg-surface-container-low rounded-xl text-xs font-semibold text-on-surface border border-outline-variant/30 focus:outline-none focus:border-primary"
                   />
-                  <!-- Status Indicator Dot -->
-                  <div
-                    class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white flex items-center justify-center"
-                    :class="member.status === 'suspended' ? 'bg-[#EF4444]' : 'bg-[#22C55E]'"
-                    :title="member.status === 'suspended' ? 'Cuenta pausada' : 'Activo'"
-                  ></div>
                 </div>
 
-                <div class="flex flex-col min-w-0">
-                  <div class="flex items-center gap-1.5 truncate">
-                    <span class="text-xs font-black text-on-surface truncate">
-                      {{ member.displayName }}
-                    </span>
-                    <span
-                      v-if="member.uid === userStore.profile.uid"
-                      class="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-[#5F4030] text-[#F6E3B8] shrink-0"
-                    >
-                      Tú
-                    </span>
-                    <span
-                      v-if="member.role === 'sme_admin'"
-                      class="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0"
-                    >
-                      Admin
-                    </span>
-                  </div>
-                  <span class="text-[10px] text-on-surface-variant truncate">
-                    {{ member.email }}
-                  </span>
-                  <!-- Metrics Sub-row -->
-                  <div class="flex items-center gap-2 mt-0.5 text-[10px] font-bold">
-                    <span class="text-primary flex items-center gap-0.5">
-                      <span class="material-symbols-outlined text-[11px] icon-filled">bolt</span>
-                      {{ (member.xp || 0).toLocaleString() }} XP
-                    </span>
-                    <span class="text-on-surface-variant/40">•</span>
-                    <span class="text-tertiary">
-                      {{ member.accuracyRate || 0 }}% acierto
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Right Actions -->
-              <div class="flex items-center gap-1.5 shrink-0">
-                <!-- Detail Button -->
-                <button
-                  @click="openMemberDetail(member)"
-                  class="p-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors"
-                  title="Ver Detalle y Métricas"
-                >
-                  <span class="material-symbols-outlined text-[16px]">visibility</span>
-                </button>
-
-                <!-- Admin Action Quick Toggle (only if current user is SME admin and not targeting self) -->
-                <template v-if="isSmeAdmin && member.uid !== userStore.profile.uid">
+                <!-- Status Toggle Filters -->
+                <div class="flex bg-surface-container-low p-0.5 rounded-xl border border-outline-variant/30 text-[11px] font-black">
                   <button
-                    @click="handleToggleMemberStatus(member)"
-                    class="p-2 rounded-xl transition-colors"
-                    :class="
-                      member.status === 'suspended'
-                        ? 'bg-[#22C55E]/15 text-[#22C55E] hover:bg-[#22C55E]/25'
-                        : 'bg-amber-500/15 text-amber-700 hover:bg-amber-500/25'
-                    "
-                    :title="member.status === 'suspended' ? 'Reactivar acceso' : 'Pausar/Suspender colaborador'"
+                    @click="memberStatusFilter = 'all'"
+                    class="px-2.5 py-1 rounded-lg transition-all"
+                    :class="memberStatusFilter === 'all' ? 'bg-primary text-white shadow-xs' : 'text-on-surface-variant hover:text-on-surface'"
                   >
-                    <span class="material-symbols-outlined text-[16px]">
-                      {{ member.status === 'suspended' ? 'play_arrow' : 'pause' }}
-                    </span>
+                    Todos ({{ members.length }})
                   </button>
-                </template>
+                  <button
+                    @click="memberStatusFilter = 'active'"
+                    class="px-2.5 py-1 rounded-lg transition-all"
+                    :class="memberStatusFilter === 'active' ? 'bg-[#22C55E] text-white shadow-xs' : 'text-on-surface-variant hover:text-on-surface'"
+                  >
+                    Activos
+                  </button>
+                  <button
+                    @click="memberStatusFilter = 'suspended'"
+                    class="px-2.5 py-1 rounded-lg transition-all"
+                    :class="memberStatusFilter === 'suspended' ? 'bg-[#EF4444] text-white shadow-xs' : 'text-on-surface-variant hover:text-on-surface'"
+                  >
+                    Suspendidos
+                  </button>
+                </div>
               </div>
             </div>
+
+            <!-- Members Grid / List -->
+            <div v-if="filteredMembers.length === 0" class="py-8 flex flex-col items-center justify-center text-center text-on-surface-variant">
+              <span class="material-symbols-outlined text-[36px] text-on-surface-variant/40 mb-1">person_search</span>
+              <p class="text-xs font-bold">No se encontraron colaboradores con los criterios seleccionados.</p>
+            </div>
+
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              <div
+                v-for="member in filteredMembers"
+                :key="member.uid"
+                class="bg-surface rounded-2xl p-3.5 border transition-all hover:shadow-xs flex items-center justify-between gap-3"
+                :class="
+                  member.status === 'suspended'
+                    ? 'border-[#EF4444]/40 bg-[#EF4444]/5'
+                    : (member.uid === userStore.profile.uid ? 'border-[#5F4030] bg-[#F6E3B8]/20' : 'border-outline-variant/30')
+                "
+              >
+                <!-- Left Info -->
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="relative w-11 h-11 rounded-2xl overflow-hidden bg-primary-fixed border border-primary/20 shrink-0">
+                    <img
+                      :src="resolveAvatar(member.avatarUrl)"
+                      @error="handleImageError"
+                      :alt="member.displayName"
+                      class="w-full h-full object-cover"
+                    />
+                    <!-- Status Indicator Dot -->
+                    <div
+                      class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white flex items-center justify-center"
+                      :class="member.status === 'suspended' ? 'bg-[#EF4444]' : 'bg-[#22C55E]'"
+                      :title="member.status === 'suspended' ? 'Cuenta pausada' : 'Activo'"
+                    ></div>
+                  </div>
+
+                  <div class="flex flex-col min-w-0">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <span class="text-xs font-black text-on-surface truncate">
+                        {{ member.displayName }}
+                      </span>
+                      <span
+                        v-if="member.uid === userStore.profile.uid"
+                        class="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-[#5F4030] text-[#F6E3B8] shrink-0"
+                      >
+                        Tú
+                      </span>
+                      <span
+                        v-if="member.role === 'sme_admin'"
+                        class="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0"
+                      >
+                        Admin
+                      </span>
+                      <span
+                        v-if="(member.accuracyRate ?? 0) < 60 || member.status === 'suspended'"
+                        class="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-error/15 text-error border border-error/30 shrink-0"
+                      >
+                        En Riesgo
+                      </span>
+                    </div>
+                    <span class="text-[10px] text-on-surface-variant truncate">
+                      {{ member.email }}
+                    </span>
+                    <!-- Metrics Sub-row -->
+                    <div class="flex items-center gap-2 mt-0.5 text-[10px] font-bold">
+                      <span class="text-primary flex items-center gap-0.5">
+                        <span class="material-symbols-outlined text-[11px] icon-filled">bolt</span>
+                        {{ (member.xp || 0).toLocaleString() }} XP
+                      </span>
+                      <span class="text-on-surface-variant/40">•</span>
+                      <span class="text-tertiary">
+                        {{ member.accuracyRate || 0 }}% acierto
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right Actions -->
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <!-- Detail Button -->
+                  <button
+                    @click="openMemberDetail(member)"
+                    class="p-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors"
+                    title="Ver Detalle y Métricas"
+                  >
+                    <span class="material-symbols-outlined text-[16px]">visibility</span>
+                  </button>
+
+                  <!-- Admin Action Quick Toggle (only if current user is SME admin and not targeting self) -->
+                  <template v-if="isSmeAdmin && member.uid !== userStore.profile.uid">
+                    <button
+                      @click="handleToggleMemberStatus(member)"
+                      class="p-2 rounded-xl transition-colors"
+                      :class="
+                        member.status === 'suspended'
+                          ? 'bg-[#22C55E]/15 text-[#22C55E] hover:bg-[#22C55E]/25'
+                          : 'bg-amber-500/15 text-amber-700 hover:bg-amber-500/25'
+                      "
+                      :title="member.status === 'suspended' ? 'Reactivar acceso' : 'Pausar/Suspender colaborador'"
+                    >
+                      <span class="material-symbols-outlined text-[16px]">
+                        {{ member.status === 'suspended' ? 'play_arrow' : 'pause' }}
+                      </span>
+                    </button>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Regular Employee View (RBAC: Private personal telemetry only, no teammate emails or org metrics) -->
+        <div
+          v-else
+          class="bg-surface-container-lowest rounded-3xl p-5 lg:p-6 border border-outline-variant/30 shadow-xs flex flex-col gap-4"
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-tertiary/15 text-tertiary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[24px] icon-filled">verified_user</span>
+            </div>
+            <div>
+              <h2 class="text-sm font-black uppercase tracking-wider text-on-surface">
+                Mi Licencia Corporativa
+              </h2>
+              <p class="text-xs text-on-surface-variant font-medium">
+                Tu empresa <strong class="text-on-surface">{{ organization.name }}</strong> te otorga corazones infinitos (SuriPro) para tu entrenamiento diario.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="p-3.5 rounded-2xl bg-surface-container-low border border-outline-variant/30">
+              <span class="text-[10px] font-black uppercase text-on-surface-variant block">Tu XP</span>
+              <span class="text-xl font-black text-primary mt-0.5 block">{{ (userStore.profile.xp || 0).toLocaleString() }}</span>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-surface-container-low border border-outline-variant/30">
+              <span class="text-[10px] font-black uppercase text-on-surface-variant block">Tu Precisión</span>
+              <span class="text-xl font-black text-on-surface mt-0.5 block">{{ userStore.profile.accuracyRate || 0 }}%</span>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-surface-container-low border border-outline-variant/30">
+              <span class="text-[10px] font-black uppercase text-on-surface-variant block">Tu Racha</span>
+              <span class="text-xl font-black text-on-surface mt-0.5 block">{{ userStore.profile.streakDays || 0 }}d</span>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-surface-container-low border border-outline-variant/30">
+              <span class="text-[10px] font-black uppercase text-on-surface-variant block">Lecciones</span>
+              <span class="text-xl font-black text-tertiary mt-0.5 block">{{ userStore.profile.completedLessons?.length || 0 }}</span>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-3">
+            <router-link
+              to="/tabs/leaderboard?scope=company"
+              class="px-4 py-2.5 rounded-2xl bg-tertiary text-white text-xs font-black flex items-center gap-1.5 shadow-xs"
+            >
+              <span class="material-symbols-outlined text-[16px] icon-filled">trophy</span>
+              <span>Ver Liga Privada del Equipo</span>
+            </router-link>
+            <router-link
+              to="/tabs/learn"
+              class="px-4 py-2.5 rounded-2xl btn-tactile-primary text-xs font-black flex items-center gap-1.5"
+            >
+              <span class="material-symbols-outlined text-[16px]">play_arrow</span>
+              <span>Continuar Entrenamiento</span>
+            </router-link>
           </div>
         </div>
       </template>

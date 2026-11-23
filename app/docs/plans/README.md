@@ -9,6 +9,7 @@ Esta carpeta almacena todos los **Planes de Ingeniería y Desarrollo** utilizado
 <!-- PLANS_TABLE_START -->
 | Versión | Fecha | Estado | Resumen del Avance | Documento del Plan |
 |---|---|---|---|---|
+| **v0.12.0** | 2026-11-23 | Completado | Personalizacion adaptativa, B2B real con RBAC, WCAG 2.1 AA, PWA, lazy-loading y pruebas Vitest | [PLAN_v0.12.0.md](./PLAN_v0.12.0.md) |
 | **v0.11.0** | 2026-11-23 | Completado | Endurecimiento P0 de seguridad, estabilidad en minijuegos, vidas y login dual | [PLAN_v0.11.0.md](./PLAN_v0.11.0.md) |
 | **v0.10.0** | 2026-10-19 | Completado | Adicion de Cursos 5 y 6 con 2 nuevos videojuegos y contador de rachas dinamico por dia | [PLAN_v0.10.0.md](./PLAN_v0.10.0.md) |
 | **v0.9.2** | 2026-10-19 | Completado | Diseno 100% responsive sin desbordamiento de texto en Consola SOC en tiempo real | [PLAN_v0.9.2.md](./PLAN_v0.9.2.md) |

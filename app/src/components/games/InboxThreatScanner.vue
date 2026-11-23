@@ -200,10 +200,9 @@ function selectVerdict(verdict: InboxVerdict) {
             </span>
           </div>
           <span
-            class="ml-1 text-[10px] px-1 py-0.5 rounded font-bold uppercase"
-            :class="exercise.link.isSuspicious ? 'bg-error text-white' : 'bg-shield-green text-white'"
+            class="ml-1 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase bg-primary/20 text-primary-fixed shrink-0"
           >
-            {{ exercise.link.isSuspicious ? 'Sospechoso' : 'Seguro' }}
+            Destino real
           </span>
         </div>
 

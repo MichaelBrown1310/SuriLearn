@@ -4,6 +4,8 @@ import { Chart, registerables } from 'chart.js';
 import { UserProfile, Organization } from '../../types/gamification';
 
 import { useTheme } from '../../composables/useTheme';
+import { getLocalDateString } from '../../composables/useFirestore';
+import { computeRealWeeklyTeamActivity } from '../../utils/gamificationEngine';
 
 Chart.register(...registerables);
 
@@ -97,24 +99,53 @@ const riskSegments = computed(() => {
 });
 
 // ==========================================
-// 3. WEEKLY ACTIVITY CALCULATION
+// 3. REAL WEEKLY ACTIVITY & CSV EXPORT
 // ==========================================
 
 const weeklyActivityData = computed(() => {
-  const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-  
-  // Aggregate real XP or simulated active distribution for the week
-  // We distribute total team XP or lesson counts across days with natural curve
-  const baseAvgXp = Math.max(25, Math.round(props.members.reduce((acc, m) => acc + (m.xp || 0), 0) / 7));
-
-  // Multipliers for typical corporate training days (Tuesdays/Thursdays peak)
-  const multipliers = [0.8, 1.4, 1.1, 1.5, 1.2, 0.4, 0.3];
-
-  return {
-    labels: days,
-    values: multipliers.map((m) => Math.round(baseAvgXp * m)),
-  };
+  return computeRealWeeklyTeamActivity(props.members);
 });
+
+const weeklyDeltaLabel = computed(() => {
+  const { totalSessionsThisWeek, prevWeekTotal, deltaPercent } = weeklyActivityData.value;
+  if (deltaPercent !== null) {
+    const sign = deltaPercent > 0 ? '+' : '';
+    return `${sign}${deltaPercent}% vs semana pasada (${prevWeekTotal} prev.)`;
+  }
+  return `${totalSessionsThisWeek} ${totalSessionsThisWeek === 1 ? 'sesión' : 'sesiones'} esta semana`;
+});
+
+function exportTeamReportCsv() {
+  const headers = ['Nombre', 'Correo', 'Rol', 'Estado', 'XP', 'Precision_%', 'Nivel_Riesgo', 'Lecciones', 'Racha_Dias'];
+  const rows = props.members.map((m) => {
+    const acc = m.accuracyRate ?? 0;
+    const riskLabel = acc >= 80 ? 'Zona Segura' : acc >= 60 ? 'Precaución' : 'En Riesgo';
+    const lessons = Array.isArray(m.completedLessons) ? m.completedLessons.length : 0;
+    const cols = [
+      m.displayName || 'Centinela',
+      m.email || '',
+      m.role || 'sme_member',
+      m.status || 'active',
+      String(m.xp || 0),
+      String(acc),
+      riskLabel,
+      String(lessons),
+      String(m.streakDays || 0),
+    ];
+    return cols.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',');
+  });
+
+  const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `reporte-surilearn-${props.organization.id}-${getLocalDateString()}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 // ==========================================
 // 4. CHART RENDERING & LIFECYCLE
@@ -175,7 +206,7 @@ function initCharts() {
     });
   }
 
-  // 2. Bar Chart (Weekly Team Performance)
+  // 2. Bar Chart (Real Weekly Team Sessions)
   if (weeklyActivityCanvas.value) {
     const { labels, values } = weeklyActivityData.value;
     weeklyChartInstance = new Chart(weeklyActivityCanvas.value, {
@@ -184,7 +215,7 @@ function initCharts() {
         labels,
         datasets: [
           {
-            label: 'XP de Entrenamiento',
+            label: 'Colaboradores Activos',
             data: values,
             backgroundColor: '#E1A653',
             hoverBackgroundColor: '#5F4030',
@@ -203,7 +234,10 @@ function initCharts() {
           },
           tooltip: {
             callbacks: {
-              label: (context) => ` ${context.raw} XP acumulados`,
+              label: (context) => {
+                const count = Number(context.raw) || 0;
+                return ` ${count} ${count === 1 ? 'sesión activa' : 'sesiones activas'}`;
+              },
             },
           },
         },
@@ -227,6 +261,7 @@ function initCharts() {
               color: gridColor,
             },
             ticks: {
+              precision: 0,
               font: {
                 family: 'inherit',
                 size: 10,
@@ -447,13 +482,18 @@ onBeforeUnmount(() => {
                 Rendimiento Semanal del Equipo
               </h3>
               <p class="text-[11px] text-on-surface-variant font-medium">
-                Puntos de entrenamiento por día (Semana en curso)
+                Sesiones activas reales por día (Semana en curso)
               </p>
             </div>
           </div>
-          <span class="text-[11px] font-black text-tertiary px-2 py-0.5 rounded-full bg-tertiary/10">
-            Semanal
-          </span>
+          <button
+            type="button"
+            class="text-[11px] font-black text-tertiary px-2.5 py-1 rounded-full bg-tertiary/10 hover:bg-tertiary/20 transition-colors flex items-center gap-1"
+            @click="exportTeamReportCsv"
+          >
+            <span class="material-symbols-outlined text-[14px]">download</span>
+            <span>Exportar CSV</span>
+          </button>
         </div>
 
         <!-- Bar Canvas Container -->
@@ -461,14 +501,14 @@ onBeforeUnmount(() => {
           <canvas ref="weeklyActivityCanvas"></canvas>
         </div>
 
-        <!-- Footer Metric / Insight -->
-        <div class="pt-3 border-t border-outline-variant/30 flex items-center justify-between text-xs text-on-surface-variant">
+        <!-- Footer Metric / Insight (Real Telemetry) -->
+        <div class="pt-3 border-t border-outline-variant/30 flex items-center justify-between gap-2 text-xs text-on-surface-variant flex-wrap">
           <span class="flex items-center gap-1 font-bold">
             <span class="material-symbols-outlined text-[15px] text-primary">insights</span>
-            Mayor adopción: <strong>Jueves y Martes</strong>
+            Día pico: <strong class="text-on-surface">{{ weeklyActivityData.peakDayLabel }}</strong>
           </span>
           <span class="text-[11px] font-extrabold text-primary">
-            +18% vs semana pasada
+            {{ weeklyDeltaLabel }}
           </span>
         </div>
       </div>

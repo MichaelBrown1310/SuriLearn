@@ -9,7 +9,14 @@ import HeaderHud from '../components/common/HeaderHud.vue';
 import OutOfHeartsModal from '../components/common/OutOfHeartsModal.vue';
 import SuspendedAccountModal from '../components/common/SuspendedAccountModal.vue';
 import UnitTheoryModal from '../components/common/UnitTheoryModal.vue';
-import { LearningNode, LearningUnit, LeagueLeaderboardEntry } from '../types/gamification';
+import DiagnosticModal from '../components/common/DiagnosticModal.vue';
+import {
+  LearningNode,
+  LearningUnit,
+  LeagueLeaderboardEntry,
+  DAILY_GOAL_CONFIGS,
+  DailyGoalType,
+} from '../types/gamification';
 import { getSuriImage } from '../utils/suriAssets';
 import { buildAllLearningUnits } from '../data/curriculum';
 
@@ -21,6 +28,8 @@ const suriImg = getSuriImage('idle');
 const isOutOfHeartsModalOpen = ref<boolean>(false);
 const isSuspendedModalOpen = ref<boolean>(false);
 const isTheoryModalOpen = ref<boolean>(false);
+const isDiagnosticModalOpen = ref<boolean>(false);
+const diagnosticDismissed = ref<boolean>(false);
 const isClaimingChest = ref<boolean>(false);
 const isClaimingDailyQuest = ref<boolean>(false);
 const selectedUnitIndex = ref<number>(0);
@@ -336,19 +345,45 @@ function handleOutOfHeartsShop() {
   router.push('/tabs/shop');
 }
 
+const dailyGoalConfig = computed(() => {
+  const key = (userStore.currentDailyGoal || 'constante') as DailyGoalType;
+  return DAILY_GOAL_CONFIGS[key] || DAILY_GOAL_CONFIGS.constante;
+});
+const dailyCompletedToday = computed(() => gamificationStore.dailyLessonsCompletedToday);
+const isDailyGoalReached = computed(() => dailyCompletedToday.value >= dailyGoalConfig.value.lessonsPerDay);
+const dailyQuestRewardId = computed(() => `daily_mission_${todayDateStr}`);
+const diagnosticProfile = computed(() => userStore.profile.diagnosticProfile);
+
+function handleDiagnosticCourseSelected(courseIndex: number) {
+  if (courseIndex >= 0 && courseIndex < allUnits.value.length) {
+    selectedUnitIndex.value = courseIndex;
+  }
+}
+
 function handleOutOfHeartsReinforce() {
   isOutOfHeartsModalOpen.value = false;
   gamificationStore.isReinforcementMode = true;
+  if (gamificationStore.failedExerciseCount > 0) {
+    router.push('/lesson/error-review');
+    return;
+  }
   const reinforceLessonId =
     gamificationStore.state.completedLessons?.[0] || 'inbox-scanner-1';
   router.push(`/lesson/${reinforceLessonId}`);
 }
 
 async function claimDailyQuest() {
-  if (userStore.isRewardClaimed('daily_quest_phish_trap') || isClaimingDailyQuest.value) return;
+  if (!isDailyGoalReached.value) {
+    gamificationStore.showToast(
+      `Completa ${dailyGoalConfig.value.lessonsPerDay} lección(es) hoy para reclamar esta meta (${dailyCompletedToday.value}/${dailyGoalConfig.value.lessonsPerDay}).`,
+      false
+    );
+    return;
+  }
+  if (userStore.isRewardClaimed(dailyQuestRewardId.value) || isClaimingDailyQuest.value) return;
   isClaimingDailyQuest.value = true;
   try {
-    await userStore.claimChestReward('daily_quest_phish_trap', 20, 10);
+    await userStore.claimChestReward(dailyQuestRewardId.value, 25, 10);
   } finally {
     isClaimingDailyQuest.value = false;
   }
@@ -364,8 +399,79 @@ async function claimDailyQuest() {
     <main class="view-master-container flex-1 w-full pb-12 flex flex-col gap-6">
       <!-- Layout de 2 Columnas para Pantallas >= 992px -->
       <div class="flex flex-col lg:flex-row gap-8 items-start w-full">
-        <!-- Columna Principal (65% en >= 992px): Selector de 6 Cursos + Árbol de lecciones -->
+        <!-- Columna Principal (65% en >= 992px): Diagnóstico Adaptativo + Selector de 6 Cursos + Árbol de lecciones -->
         <div class="w-full lg:w-[65%] flex flex-col gap-5">
+          <!-- Adaptive Diagnostic / Personalized Route Banner -->
+          <div
+            v-if="diagnosticProfile?.completed"
+            class="w-full bg-surface-container-low rounded-2xl p-3.5 border border-primary/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-[22px] icon-filled">tune</span>
+              </div>
+              <div class="min-w-0">
+                <span class="text-[10px] font-black uppercase tracking-wider text-primary block">
+                  Ruta Personalizada · Nivel {{ diagnosticProfile.levelLabel }}
+                </span>
+                <p class="text-xs font-extrabold text-on-surface truncate">
+                  Recomendado: {{ diagnosticProfile.recommendedCourseTitle }}
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                class="px-3 py-1.5 rounded-xl bg-primary/15 text-primary text-xs font-black hover:bg-primary/25 transition-colors"
+                @click="selectedUnitIndex = diagnosticProfile.recommendedCourseIndex"
+              >
+                Ir al curso
+              </button>
+              <button
+                type="button"
+                class="px-2.5 py-1.5 rounded-xl bg-surface-container-lowest text-on-surface-variant text-xs font-bold border border-outline-variant/40 hover:text-on-surface"
+                @click="isDiagnosticModalOpen = true"
+              >
+                Rehacer
+              </button>
+            </div>
+          </div>
+
+          <div
+            v-else-if="!diagnosticDismissed"
+            class="w-full bg-gradient-to-r from-primary/15 via-surface-container-high to-tertiary/10 rounded-2xl p-4 border border-primary/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-primary text-[#291800] flex items-center justify-center shrink-0 shadow-xs">
+                <span class="material-symbols-outlined text-[22px] icon-filled">explore</span>
+              </div>
+              <div class="min-w-0">
+                <span class="text-[10px] font-black uppercase tracking-wider text-primary block">
+                  Personaliza Tu Entrenamiento
+                </span>
+                <p class="text-xs font-extrabold text-on-surface leading-snug">
+                  Haz el diagnóstico rápido de 4 preguntas para descubrir qué curso priorizar.
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                class="px-3.5 py-2 rounded-xl btn-tactile-primary text-xs font-black"
+                @click="isDiagnosticModalOpen = true"
+              >
+                Hacer Diagnóstico
+              </button>
+              <button
+                type="button"
+                class="px-2.5 py-2 rounded-xl text-xs font-bold text-on-surface-variant hover:text-on-surface"
+                @click="diagnosticDismissed = true"
+              >
+                Luego
+              </button>
+            </div>
+          </div>
+
           <!-- Selector Rápido de los 6 Cursos / Módulos -->
           <div class="w-full bg-surface-container-lowest p-3 rounded-3xl border border-outline-variant/40 shadow-xs">
             <div class="flex flex-wrap items-center justify-between gap-1 px-1 mb-2.5">
@@ -474,7 +580,7 @@ async function claimDailyQuest() {
             </div>
           </div>
 
-          <!-- Daily Quest Chip Banner -->
+          <!-- Daily Quest Chip Banner (Tied to Real Daily Goal) -->
           <div class="w-full">
             <div class="bg-surface-container-lowest rounded-2xl p-3.5 shadow-xs flex items-center justify-between gap-3 border border-outline-variant/30">
               <div class="flex items-center gap-3 min-w-0">
@@ -483,23 +589,40 @@ async function claimDailyQuest() {
                 </div>
                 <div class="min-w-0">
                   <div class="flex items-center gap-1.5">
-                    <span class="text-[10px] uppercase tracking-wider text-secondary font-black">Misión Diaria</span>
-                    <span class="bg-surface-container-high text-on-surface text-[10px] font-bold px-1.5 py-0.2 rounded-full">1/1</span>
+                    <span class="text-[10px] uppercase tracking-wider text-secondary font-black">
+                      Meta Diaria ({{ dailyGoalConfig.title }})
+                    </span>
+                    <span
+                      class="text-[10px] font-bold px-2 py-0.2 rounded-full"
+                      :class="isDailyGoalReached ? 'bg-shield-green/20 text-shield-green' : 'bg-surface-container-high text-on-surface'"
+                    >
+                      {{ Math.min(dailyCompletedToday, dailyGoalConfig.lessonsPerDay) }}/{{ dailyGoalConfig.lessonsPerDay }}
+                    </span>
                   </div>
-                  <p class="text-xs text-on-surface truncate font-extrabold mt-0.5">Estudia la teoría y supera 1 videojuego hoy</p>
+                  <p class="text-xs text-on-surface truncate font-extrabold mt-0.5">
+                    Supera {{ dailyGoalConfig.lessonsPerDay }} {{ dailyGoalConfig.lessonsPerDay === 1 ? 'lección' : 'lecciones' }} hoy ({{ dailyGoalConfig.minutesPerDay }} min/día)
+                  </p>
                 </div>
               </div>
               <button
                 type="button"
-                class="shrink-0 bg-tertiary text-on-tertiary text-xs font-black px-3.5 py-1.5 rounded-full shadow-xs active:scale-95 transition-transform flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed"
-                :disabled="userStore.isRewardClaimed('daily_quest_phish_trap') || isClaimingDailyQuest"
+                class="shrink-0 bg-tertiary text-on-tertiary text-xs font-black px-3.5 py-1.5 rounded-full shadow-xs active:scale-95 transition-transform flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="!isDailyGoalReached || userStore.isRewardClaimed(dailyQuestRewardId) || isClaimingDailyQuest"
                 @click="claimDailyQuest"
               >
                 <span class="material-symbols-outlined text-[15px] icon-filled">
-                  {{ userStore.isRewardClaimed('daily_quest_phish_trap') ? 'check_circle' : 'redeem' }}
+                  {{ userStore.isRewardClaimed(dailyQuestRewardId) ? 'check_circle' : 'redeem' }}
                 </span>
                 <span>
-                  {{ userStore.isRewardClaimed('daily_quest_phish_trap') ? 'Reclamado' : (isClaimingDailyQuest ? 'Reclamando...' : 'Reclamar') }}
+                  {{
+                    userStore.isRewardClaimed(dailyQuestRewardId)
+                      ? 'Reclamado'
+                      : isClaimingDailyQuest
+                        ? 'Reclamando...'
+                        : isDailyGoalReached
+                          ? 'Reclamar +25 Bits'
+                          : 'En progreso'
+                  }}
                 </span>
               </button>
             </div>
@@ -621,9 +744,14 @@ async function claimDailyQuest() {
                   @click="handleNodeClick(node)"
                 >
                   <div class="absolute -top-5 flex items-center gap-0.5 bg-surface-container-lowest px-2 py-0.5 rounded-full shadow-xs border border-outline-variant/30 z-20">
-                    <span class="material-symbols-outlined text-[13px] text-primary icon-filled">star</span>
-                    <span class="material-symbols-outlined text-[14px] text-primary icon-filled">star</span>
-                    <span class="material-symbols-outlined text-[13px] text-primary icon-filled">star</span>
+                    <span
+                      v-for="starIdx in 3"
+                      :key="starIdx"
+                      class="material-symbols-outlined text-[13px] icon-filled"
+                      :class="starIdx <= (node.stars || 3) ? 'text-primary' : 'text-outline-variant/40'"
+                    >
+                      star
+                    </span>
                   </div>
 
                   <button
@@ -866,7 +994,7 @@ async function claimDailyQuest() {
             </div>
 
             <p class="text-xs text-on-surface-variant leading-tight">
-              División <strong>Liga {{ gamificationStore.state.currentLeague || 'Bronce' }}</strong>. Los 7 primeros ascienden al finalizar la semana.
+              División <strong>Liga {{ gamificationStore.state.currentLeague || 'Bronce' }}</strong>. Los 5 primeros ascienden al finalizar la semana.
             </p>
 
             <!-- Quick Mini Leaderboard List (Real Firestore Users) -->
@@ -916,7 +1044,45 @@ async function claimDailyQuest() {
             </div>
           </div>
 
-          <!-- Widget 3: Consejo Diario de Suri -->
+          <!-- Widget 3: Centro de Errores (Repaso Dirigido) -->
+          <div class="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/30 shadow-xs flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-[22px] text-error icon-filled">healing</span>
+                <h3 class="text-sm font-black uppercase tracking-wider text-on-surface">Centro de Errores</h3>
+              </div>
+              <span
+                class="text-[11px] font-black px-2.5 py-0.5 rounded-full"
+                :class="gamificationStore.failedExerciseCount > 0 ? 'bg-error/15 text-error' : 'bg-shield-green/15 text-shield-green'"
+              >
+                {{
+                  gamificationStore.failedExerciseCount > 0
+                    ? `${gamificationStore.failedExerciseCount} pendientes`
+                    : 'Sin fallos'
+                }}
+              </span>
+            </div>
+
+            <p class="text-xs text-on-surface-variant leading-relaxed">
+              {{
+                gamificationStore.failedExerciseCount > 0
+                  ? 'Refuerza los escenarios donde cometiste errores recientes para blindar tus puntos débiles.'
+                  : 'Tu historial de errores está limpio. También puedes hacer un repaso rápido sin perder vidas.'
+              }}
+            </p>
+
+            <button
+              type="button"
+              class="w-full py-2.5 px-4 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition-all"
+              :class="gamificationStore.failedExerciseCount > 0 ? 'bg-error text-white hover:bg-error/90 shadow-xs' : 'bg-surface-container-high text-on-surface hover:bg-surface-container'"
+              @click="router.push('/lesson/error-review')"
+            >
+              <span class="material-symbols-outlined text-[16px]">target</span>
+              <span>{{ gamificationStore.failedExerciseCount > 0 ? 'Practicar Errores Reales' : 'Repaso Táctico Rápido' }}</span>
+            </button>
+          </div>
+
+          <!-- Widget 4: Consejo Diario de Suri -->
           <div class="bg-gradient-to-br from-surface-container-high via-surface-container to-surface-container-low p-5 rounded-3xl border border-outline-variant/30 shadow-xs relative overflow-hidden flex flex-col gap-3">
             <div class="flex items-center justify-between">
               <span class="text-[10px] font-black uppercase tracking-wider bg-primary/20 text-primary px-2.5 py-0.5 rounded-full">
@@ -975,6 +1141,13 @@ async function claimDailyQuest() {
     <SuspendedAccountModal
       :is-open="isSuspendedModalOpen"
       @close="isSuspendedModalOpen = false"
+    />
+
+    <!-- Adaptive Diagnostic Modal -->
+    <DiagnosticModal
+      :is-open="isDiagnosticModalOpen"
+      @close="isDiagnosticModalOpen = false"
+      @select-course="handleDiagnosticCourseSelected"
     />
   </div>
 </template>

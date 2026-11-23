@@ -36,8 +36,8 @@ const suriImageUrl = computed(() => {
     >
       <!-- Bottom Sheet Drawer -->
       <div
-        class="w-full max-w-lg mx-auto rounded-t-3xl shadow-2xl p-space-lg flex flex-col transition-all"
-        :class="isCorrect ? 'bg-surface-container-lowest' : 'bg-[#fff5f5] border-t-4 border-error'"
+        class="w-full max-w-lg mx-auto rounded-t-3xl shadow-2xl p-space-lg flex flex-col transition-all bg-surface-container-lowest"
+        :class="isCorrect ? 'border-t-2 border-primary/25' : 'border-t-4 border-error'"
       >
         <!-- Drawer drag notch -->
         <div class="w-12 h-1.5 bg-outline-variant/60 rounded-full mx-auto mb-space-md"></div>
@@ -87,7 +87,7 @@ const suriImageUrl = computed(() => {
         <!-- Pedagogical 3-Step Feedback Card (Crucial for Learning on Mistake) -->
         <div
           v-if="!isCorrect && feedback"
-          class="bg-white rounded-2xl p-space-md shadow-sm border border-error/20 flex flex-col gap-2.5 mb-space-md text-left"
+          class="bg-surface-container-low rounded-2xl p-space-md shadow-sm border border-error/25 flex flex-col gap-2.5 mb-space-md text-left"
         >
           <!-- Step 1: Empathy with the deception -->
           <div class="flex items-start gap-2">
@@ -99,7 +99,7 @@ const suriImageUrl = computed(() => {
           </div>
 
           <!-- Step 2: Technical Objective Indicator -->
-          <div class="flex items-start gap-2 bg-[#fee2e2]/40 p-2 rounded-xl border border-error/15">
+          <div class="flex items-start gap-2 bg-error/10 p-2 rounded-xl border border-error/20">
             <span class="text-base">🔍</span>
             <div class="flex-1 text-xs text-on-surface leading-snug">
               <strong class="text-error block font-bold">2. El Indicador Técnico:</strong>
@@ -114,6 +114,11 @@ const suriImageUrl = computed(() => {
               <strong class="text-primary block font-bold">3. Consejo Centinela:</strong>
               {{ feedback.preventiveTip }}
             </div>
+          </div>
+
+          <div class="pt-1 border-t border-outline-variant/25 flex items-center gap-1.5 text-[10px] font-bold text-error">
+            <span class="material-symbols-outlined text-[14px]">healing</span>
+            <span>Guardado automáticamente en tu Centro de Errores para repaso</span>
           </div>
         </div>
 
@@ -151,7 +156,7 @@ const suriImageUrl = computed(() => {
           "
           @click="emit('continue')"
         >
-          <span>{{ isCorrect ? 'Continuar Misión' : 'Entendido, volver a intentar' }}</span>
+          <span>{{ isCorrect ? 'Continuar Misión' : 'Entendido, continuar' }}</span>
           <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
         </button>
       </div>

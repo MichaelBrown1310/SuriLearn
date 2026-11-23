@@ -42,12 +42,20 @@ const crackTimeDisplayText = computed(() => {
   return `${years.toLocaleString()} años`;
 });
 
+const usedTokenIds = computed(() => new Set(assembledTokens.value.map((t) => t.id)));
+
 const isTargetAchieved = computed(() => {
-  return calculatedCrackYears.value >= props.exercise.targetCrackYears;
+  const meetsEntropy = totalEntropyBits.value >= (props.exercise.minEntropyRequired || 0);
+  const meetsYears = calculatedCrackYears.value >= props.exercise.targetCrackYears;
+  return meetsEntropy && meetsYears;
 });
 
+function isTokenUsed(tokenId: string): boolean {
+  return usedTokenIds.value.has(tokenId);
+}
+
 function addToken(token: PasswordToken) {
-  if (props.disabled) return;
+  if (props.disabled || isTokenUsed(token.id)) return;
   assembledTokens.value.push(token);
 }
 
@@ -149,8 +157,11 @@ function handleConfirm() {
           ></div>
         </div>
 
-        <div class="flex items-center justify-between text-[11px] text-on-surface-variant">
-          <span>Meta: > {{ exercise.targetCrackYears }} años de resistencia</span>
+        <div class="flex items-center justify-between text-[11px] text-on-surface-variant gap-2 flex-wrap">
+          <span>
+            Entropía: <strong class="text-on-surface">{{ totalEntropyBits }} / {{ exercise.minEntropyRequired }} bits</strong>
+            · Meta: > {{ exercise.targetCrackYears }} años
+          </span>
           <span :class="isTargetAchieved ? 'text-shield-green font-extrabold flex items-center gap-0.5' : 'text-error font-bold'">
             <span class="material-symbols-outlined text-[14px]">{{ isTargetAchieved ? 'lock' : 'lock_open' }}</span>
             {{ isTargetAchieved ? 'Bóveda Blindada' : 'Clave Vulnerable' }}
@@ -176,11 +187,16 @@ function handleConfirm() {
             v-for="token in exercise.availableTokens"
             :key="token.id"
             type="button"
-            class="px-3 py-2 bg-surface-container-low hover:bg-surface-container border border-outline-variant/40 rounded-xl text-xs font-mono font-bold text-on-surface active:scale-95 transition-all shadow-xs"
-            :disabled="disabled"
+            class="px-3 py-2 border rounded-xl text-xs font-mono font-bold transition-all shadow-xs flex items-center gap-1"
+            :class="
+              isTokenUsed(token.id)
+                ? 'bg-primary/15 border-primary/40 text-primary opacity-60 cursor-not-allowed'
+                : 'bg-surface-container-low hover:bg-surface-container border-outline-variant/40 text-on-surface active:scale-95'
+            "
+            :disabled="disabled || isTokenUsed(token.id)"
             @click="addToken(token)"
           >
-            <span>+ {{ token.text }}</span>
+            <span>{{ isTokenUsed(token.id) ? '✓' : '+' }} {{ token.text }}</span>
           </button>
         </div>
       </div>

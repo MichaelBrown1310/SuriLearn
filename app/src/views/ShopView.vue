@@ -364,9 +364,9 @@ const isPro = computed(() => userStore.isPro);
               <span class="material-symbols-outlined text-[18px]">smart_toy</span>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="font-extrabold text-white text-xs">Roadmaps con IA Gemini</p>
+              <p class="font-extrabold text-white text-xs">Diagnóstico Adaptativo</p>
               <p class="text-[11px] text-stone-300 mt-0.5 leading-snug">
-                Diagnósticos adaptativos según el vector de ataque más vulnerable.
+                Ruta recomendada personalizada según las áreas más vulnerables detectadas.
               </p>
             </div>
           </div>
@@ -390,9 +390,9 @@ const isPro = computed(() => userStore.isPro);
               <span class="material-symbols-outlined text-[18px]">verified</span>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="font-extrabold text-white text-xs">Certificados Verificables</p>
+              <p class="font-extrabold text-white text-xs">Insignias y Progreso Verificado</p>
               <p class="text-[11px] text-stone-300 mt-0.5 leading-snug">
-                Acredita competencias ante tu empresa o en tu perfil profesional.
+                Acredita competencias ante tu empresa con historial y métricas reales.
               </p>
             </div>
           </div>

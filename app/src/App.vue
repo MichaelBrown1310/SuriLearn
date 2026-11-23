@@ -3,6 +3,7 @@ import { onMounted } from 'vue';
 import { useUserStore } from './stores/useUserStore';
 import { useGamificationStore } from './stores/useGamificationStore';
 import ToastNotification from './components/common/ToastNotification.vue';
+import SuspendedAccountModal from './components/common/SuspendedAccountModal.vue';
 
 const userStore = useUserStore();
 const gamificationStore = useGamificationStore();
@@ -17,6 +18,10 @@ onMounted(async () => {
   <div class="min-h-screen bg-surface font-sans text-on-surface antialiased">
     <router-view />
     <ToastNotification />
+    <SuspendedAccountModal
+      :is-open="userStore.isAuthenticated && userStore.isSuspended"
+      :global-block="true"
+    />
   </div>
 </template>
 

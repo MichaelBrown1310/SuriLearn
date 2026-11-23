@@ -1,6 +1,6 @@
 # 🛡️ SuriLearn — Plataforma Gamificada de Ciberseguridad (B2C + PYMES B2B)
 
-> **Versión Actual:** `v0.11.0` (Pre-1.0 · Endurecimiento Crítico P0)  
+> **Versión Actual:** `v0.12.0` (Pre-1.0 · P0 + P1 + P2 Completados · PWA & Pruebas Automatizadas)  
 > **Propuesta de Valor:** *Una plataforma de aprendizaje de ciberseguridad gamificada que transforma la capacitación tradicional en una experiencia interactiva, progresiva y personalizada, dirigida tanto a usuarios individuales como a organizaciones que buscan fortalecer las competencias de seguridad de sus empleados.*
 
 ---
@@ -13,8 +13,8 @@ Este monorepo reúne los **3 pilares completos del proyecto**:
 
 | Carpeta | Contenido | Tecnología / Entregables |
 |---|---|---|
-| [`app/`](./app/) | **Aplicación Web Gamificada (`v0.11.0`)** | Vue 3, TypeScript (`strict: true`), Pinia, Tailwind CSS, Chart.js, Firebase Auth/Firestore, Stripe Checkout + Cloud Functions v2 |
-| [`promo-video/`](./promo-video/) | **Video Promocional Animado (1080p @ 30fps)** | Remotion (`4.0.539`), React 19, Tailwind CSS v4, escenas animadas + renders `.mp4` / `.png` |
+| [`app/`](./app/) | **Aplicación Web Progresiva PWA (`v0.12.0`)** | Vue 3, TypeScript (`strict: true`), Pinia, Tailwind CSS (WCAG 2.1 AA), Chart.js, Vitest (`15/15`), Firebase Auth/Firestore, Stripe Checkout + Cloud Functions v2 |
+| [`promo-video/`](./promo-video/) | **Video Promocional Animado (1080p @ 30fps)** | Remotion (`4.0.539`), React 19, Tailwind CSS v4, escenas actualizadas a `v0.12.0` + renders `.mp4` / `.png` |
 | [`docs-negocio/`](./docs-negocio/) | **Emprendimiento, Validación y Modelado** | Business Model Canvas, Estudio Estadístico ($n=50$), Análisis Financiero, Buyer Personas, Mapa de Empatía, Diagramas UML/BPMN/ER y Mockups HD |
 
 ---
@@ -73,13 +73,12 @@ La plataforma incluye **6 cursos completos (`21 lecciones` + `6 cofres`)** con u
 
 ## ⚙️ Funcionalidades Principales
 
-- ❤️ **Gamificación y Economía**: 5 vidas con regeneración pasiva cada 4h, **Modo Refuerzo** a 0 vidas (+1 vida al obtener 100%), cofres atómicos anti-exploit (`runTransaction`), rachas diarias dinámicas por fecha local con multiplicadores `x1.0`–`x2.0`, tienda de Bits y Modo Oscuro **Dark Sentinel**.
-- 🏆 **Ligas en Tiempo Real**: Ranking global por liga y **Liga Privada Empresarial** sincronizados con `onSnapshot`.
-- 🏢 **Panel Corporativo PYME (B2B Multi-Tenant)**: Creación de organizaciones, códigos de invitación de 6 caracteres, control de asientos (`Micro-PYME` 10, `Growth PYME` 30, `Enterprise` 100), métricas **Chart.js**, detección de colaboradores en riesgo (`<60%` acierto o inactividad >7 días), suspensión/reactivación y desvinculación.
-- 🔒 **Endurecimiento P0 (`v0.11.0`)**:
-  - Autenticación dual (**Email/Contraseña** + **Google OAuth**) con traducción de errores y guards `requiresAuth` / `guestOnly` en Vue Router.
-  - Reglas **Zero Trust** reales en [`app/firestore.rules`](./app/firestore.rules) (sin reglas globales abiertas).
-  - Secretos y verificación de pagos Stripe movidos al servidor (`vite.config.ts` dev middleware + [`app/functions/`](./app/functions/) Cloud Functions v2), cerrando el bypass de activación por parámetros de URL.
+- 🎯 **Personalización Adaptativa (`v0.12.0`)**: Diagnóstico inicial de 4 preguntas (`DiagnosticModal.vue`) que detecta perfil y brechas para recomendar curso, **Centro de Errores** real (`/lesson/error-review`) con repaso dirigido de fallos previos, selector editable de Meta Diaria (`3 / 5 / 10 min`) y seguimiento diario real.
+- ❤️ **Gamificación y Economía**: 5 vidas con regeneración pasiva cada 4h, **Modo Refuerzo** a 0 vidas, aprobación mínima (`≥60%`) con `1–3` estrellas persistentes, cofres atómicos (`runTransaction`), rachas diarias con multiplicadores `x1.0`–`x2.0` y consumo real de *Congelador de Racha*, boosts `2X XP` persistidos, medallas dinámicas, notificaciones `ToastNotification.vue` y **Dark Sentinel WCAG 2.1 AA**.
+- 🏆 **Ligas en Tiempo Real**: Ranking global con promoción automática por XP (`Bronce → Plata → Oro → Diamante → Supremo`), cuenta regresiva semanal real y **Liga Privada Empresarial** sincronizados con `onSnapshot`.
+- 🏢 **Panel Corporativo PYME (B2B + RBAC)**: Creación de organizaciones (`micro_pyme` 10, `growth_pyme` 30, `enterprise` 100), código transaccional (`runTransaction`), aislamiento RBAC entre Administradores CISO y Colaboradores, analítica semanal real (`activeDates`) + **Exportar CSV**, detección `"En Riesgo"` y suspensión preventiva en tiempo real (`onSnapshot`).
+- 📱 **PWA, Rendimiento y Calidad (`v0.12.0`)**: Instalable (`manifest.webmanifest` + Service Worker `sw.js`), lazy-loading completo de rutas y `manualChunks` (`71.67 kB` de entrada), manejo global de errores y **15 pruebas unitarias Vitest** automatizadas.
+- 🔒 **Endurecimiento P0 (`v0.11.0`)**: Autenticación dual (**Email/Contraseña** + **Google OAuth**), guards `requiresAuth` / `guestOnly`, reglas **Zero Trust** en [`app/firestore.rules`](./app/firestore.rules), y secrets/verificación de Stripe exclusivamente server-side (`vite.config.ts` / [`app/functions/`](./app/functions/)).
 
 ---
 
@@ -92,8 +91,9 @@ npm install
 cp .env.example .env   # Configura tus claves Firebase y STRIPE_SECRET_KEY (sin prefijo VITE_)
 npm run dev            # Levanta la app + endpoints locales de Stripe en http://localhost:3000
 ```
-Compilación y verificación estricta de tipos:
+Pruebas, verificación estricta de tipos y compilación PWA:
 ```bash
+npm test
 node ./node_modules/vue-tsc/bin/vue-tsc.js --noEmit
 npm run build
 ```
@@ -120,11 +120,11 @@ npm run dev            # Abre Remotion Studio
 ```text
 SuriLearn/
 ├── README.md                  # Documentación principal del ecosistema SuriLearn
-├── CHANGELOG.md               # Historial cronológico de versiones (v0.1.0 -> v0.11.0)
+├── CHANGELOG.md               # Historial cronológico de versiones (v0.1.0 -> v0.12.0)
 ├── .gitignore                 # Exclusiones de secretos (.env), node_modules, dist y temporales
-├── app/                       # SPA Vue 3 + TypeScript + Firebase + Stripe + Cloud Functions
+├── app/                       # PWA Vue 3 + TypeScript + Vitest + Firebase + Stripe + Cloud Functions
 │   ├── README.md              # Documentación técnica de la aplicación
-│   ├── docs/                  # SRS, Informe Técnico, Design System y Planes v0.1.0–v0.11.0
+│   ├── docs/                  # SRS, Informe Técnico, Design System y Planes v0.1.0 - v0.12.0
 │   ├── functions/             # Cloud Functions v2 para Stripe B2C/B2B y Webhooks
 │   ├── prototypes/            # Prototipos HTML/PNG de Stitch UI
 │   ├── src/                   # Código fuente (vistas, minijuegos, stores, composables)
@@ -146,6 +146,7 @@ SuriLearn/
 
 ---
 
-## 🧭 Hoja de Ruta (Post-P0)
-- **Prioridad 1 (Personalización y B2B Avanzado)**: Evaluación diagnóstica adaptativa, Centro de Errores táctico, certificados verificables, analítica semanal basada en `activeDates` reales, aislamiento RBAC en vistas B2B, ascenso automático de ligas y mejoras WCAG 2.1 AA.
-- **Prioridad 2 (Empaquetado y Calidad)**: Lazy-loading completo de rutas, suite de pruebas unitarias/E2E, soporte PWA/Capacitor y actualización del video promocional a los 6 cursos y 11 motores.
+## 🧭 Siguientes Fases Planeadas (Hacia `v1.0.0`)
+- **Cloud Functions en Producción (Plan Blaze)** y webhook firmado con `STRIPE_WEBHOOK_SECRET` en Firebase.
+- **Certificados PDF/QR verificables**, asignación de módulos obligatorios por departamento e integración IA Gemini en servidor.
+- **Re-renderizado de video Remotion (`promo-video/`)** para actualizar el archivo `.mp4` con las escenas de `v0.12.0`.

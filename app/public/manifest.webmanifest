@@ -1,0 +1,20 @@
+{
+  "name": "SuriLearn — Centinela de Ciberseguridad",
+  "short_name": "SuriLearn",
+  "description": "Plataforma gamificada de aprendizaje de ciberseguridad para usuarios individuales y PYMES.",
+  "start_url": "/welcome",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFF8F1",
+  "theme_color": "#5F4030",
+  "lang": "es",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/suri-idle.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

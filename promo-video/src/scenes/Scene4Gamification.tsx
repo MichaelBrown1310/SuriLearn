@@ -144,7 +144,7 @@ export const Scene4Gamification: React.FC = () => {
             <Flame className="w-8 h-8 fill-amber-400" />
           </div>
           <span className="text-4xl font-black font-mono text-amber-300">
-            14 DÍAS
+            15 DÍAS
           </span>
           <p className="text-xs font-bold text-amber-400/90 uppercase tracking-wider mt-1">
             Multiplicador x2.0 🔥
@@ -171,7 +171,7 @@ export const Scene4Gamification: React.FC = () => {
             5 / 5 VIDAS
           </span>
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">
-            Modo Refuerzo Activo
+            Centro de Errores Activo
           </p>
           <p className="text-[10px] text-rose-400/80 mt-2 font-mono">
             Recupera +1 vida con 100% de precisión
@@ -193,11 +193,11 @@ export const Scene4Gamification: React.FC = () => {
             LIGA ORO
           </span>
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">
-            Ranking PYME B2B
+            Ligas Globales & B2B
           </p>
           <div className="mt-3 flex items-center gap-1.5 text-emerald-400 text-xs font-bold font-mono">
             <TrendingUp className="w-4 h-4" />
-            <span>Top 5% de tu industria</span>
+            <span>Top 5 asciende de división</span>
           </div>
         </div>
       </div>

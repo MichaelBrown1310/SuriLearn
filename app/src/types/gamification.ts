@@ -25,6 +25,9 @@ export const GAMIFICATION_RULES = {
     BITS_UNIT_COMPLETED: 50,
     BITS_7_DAY_STREAK: 100,
   },
+  PROGRESSION: {
+    MIN_PASS_ACCURACY: 60,
+  },
   // Streak Multipliers
   STREAK_TIERS: [
     { minDays: 1, maxDays: 3, multiplier: 1.0, label: 'Iniciación' },
@@ -91,6 +94,18 @@ export const DAILY_GOAL_CONFIGS: Record<DailyGoalType, DailyGoalConfig> = {
 // 3. USER PROFILE & GAMIFICATION STATE
 // ==========================================
 
+export interface DiagnosticProfile {
+  completed: boolean;
+  completedAt: string;
+  score: number;
+  totalQuestions: number;
+  levelLabel: 'Inicial' | 'Intermedio' | 'Avanzado';
+  recommendedCourseIndex: number;
+  recommendedCourseTitle: string;
+  weakAreas: string[];
+  profileType: 'individual' | 'employee' | 'tech';
+}
+
 export interface UserProfile {
   uid: string;
   email: string;
@@ -112,6 +127,14 @@ export interface UserProfile {
   bits?: number;
   streakDays?: number;
   hasStreakFreeze?: boolean;
+  xpBoostMultiplier?: number;
+  xpBoostLessonsRemaining?: number;
+  failedExerciseIds?: string[];
+  dailyLessonsCompleted?: number;
+  dailyLessonsDate?: string;
+  lessonStars?: Record<string, number>;
+  diagnosticProfile?: DiagnosticProfile | null;
+  notificationsEnabled?: boolean;
   createdAt: any;
   lastLoginAt?: any;
   claimedRewards?: string[]; // IDs of claimed chests/bonuses (e.g. 'unit_1_completion_chest')
@@ -172,7 +195,11 @@ export interface UserGamificationState {
   totalLessonsCompleted: number;
   completedLessons: string[];
   claimedRewards?: string[];
-  
+  failedExerciseIds?: string[];
+  dailyLessonsCompleted?: number;
+  dailyLessonsDate?: string;
+  lessonStars?: Record<string, number>;
+
   // Temporary Boosters
   xpBoostMultiplier: number; // 1 = normal, 2 = 2X Boost active
   xpBoostLessonsRemaining: number;

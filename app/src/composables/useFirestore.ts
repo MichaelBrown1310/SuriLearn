@@ -44,7 +44,20 @@ import {
   OrganizationPlan,
 } from '../types/gamification';
 import { Exercise, LessonSessionSummary } from '../types/exercises';
-import { buildLearningUnit, buildAllLearningUnits, LESSON_EXERCISES_MAP } from '../data/curriculum';
+import {
+  buildLearningUnit,
+  buildAllLearningUnits,
+  LESSON_EXERCISES_MAP,
+  getExercisesByIds,
+} from '../data/curriculum';
+import { getSuriImage } from '../utils/suriAssets';
+import {
+  applyStreakTransition,
+  computeDynamicBadges,
+  computeLeagueFromXp,
+  computeLessonOutcome,
+  computePassiveHeartRefill,
+} from '../utils/gamificationEngine';
 
 // ==========================================
 // IN-MEMORY TTL CACHE ENGINE
@@ -311,61 +324,6 @@ const SEED_SHOP_ITEMS: ShopItem[] = [
   },
 ];
 
-const SEED_BADGES: Badge[] = [
-  {
-    id: 'b_phish_hunter',
-    code: 'phish_hunter',
-    title: 'Cazador Phishing',
-    subtitle: 'Nivel 3',
-    iconUrl: 'phishing',
-    level: 3,
-    maxLevel: 5,
-    isUnlocked: true,
-    unlockedAt: '2026-09-10T10:00:00Z',
-    progressCurrent: 18,
-    progressTarget: 25,
-  },
-  {
-    id: 'b_vault_master',
-    code: 'vault_master',
-    title: 'Bóveda Blindada',
-    subtitle: '0 claves débiles',
-    iconUrl: 'lock',
-    level: 1,
-    maxLevel: 3,
-    isUnlocked: true,
-    unlockedAt: '2026-09-15T15:30:00Z',
-    progressCurrent: 1,
-    progressTarget: 1,
-  },
-  {
-    id: 'b_early_alarm',
-    code: 'early_alarm',
-    title: 'Alerta Temprana',
-    subtitle: '5 reportes clave',
-    iconUrl: 'notification_important',
-    level: 2,
-    maxLevel: 4,
-    isUnlocked: true,
-    unlockedAt: '2026-09-20T18:00:00Z',
-    progressCurrent: 5,
-    progressTarget: 10,
-  },
-  {
-    id: 'b_weekly_sentry',
-    code: 'weekly_sentry',
-    title: 'Vigilante Semanal',
-    subtitle: 'Bloqueado',
-    iconUrl: 'military_tech',
-    level: 0,
-    maxLevel: 3,
-    isUnlocked: false,
-    unlockedAt: null,
-    progressCurrent: 4,
-    progressTarget: 7,
-  },
-];
-
 export function getLocalDateString(d: Date = new Date()): string {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -408,39 +366,16 @@ export function useFirestore() {
     state: UserGamificationState,
     isPro: boolean
   ): { state: UserGamificationState; hasUpdated: boolean } {
-    if (isPro) {
-      if (state.hearts !== GAMIFICATION_RULES.HEARTS.MAX_CAPACITY) {
-        state.hearts = GAMIFICATION_RULES.HEARTS.MAX_CAPACITY;
-        return { state, hasUpdated: true };
-      }
-      return { state, hasUpdated: false };
-    }
-
-    if (state.hearts >= GAMIFICATION_RULES.HEARTS.MAX_CAPACITY) {
-      return { state, hasUpdated: false };
-    }
-
-    const lastRefillTime = new Date(state.lastHeartRefill).getTime();
-    const now = Date.now();
-    const elapsedMs = Math.max(0, now - lastRefillTime);
-    const intervalsPassed = Math.floor(elapsedMs / GAMIFICATION_RULES.HEARTS.REFILL_INTERVAL_MS);
-
-    if (intervalsPassed > 0) {
-      const restoredHearts = Math.min(
-        GAMIFICATION_RULES.HEARTS.MAX_CAPACITY - state.hearts,
-        intervalsPassed
-      );
-      state.hearts += restoredHearts;
-
-      // Update lastHeartRefill advancing it by the consumed intervals
-      const newRefillTime = new Date(
-        lastRefillTime + intervalsPassed * GAMIFICATION_RULES.HEARTS.REFILL_INTERVAL_MS
-      ).toISOString();
-      state.lastHeartRefill = state.hearts === GAMIFICATION_RULES.HEARTS.MAX_CAPACITY ? new Date().toISOString() : newRefillTime;
-
+    const refill = computePassiveHeartRefill(
+      state.hearts,
+      state.lastHeartRefill,
+      isPro
+    );
+    if (refill.hasUpdated) {
+      state.hearts = refill.hearts;
+      state.lastHeartRefill = refill.lastHeartRefill;
       return { state, hasUpdated: true };
     }
-
     return { state, hasUpdated: false };
   }
 
@@ -479,6 +414,8 @@ export function useFirestore() {
           activeDates = Array.from(new Set([...activeDates, todayStr]));
         }
 
+        const xpValue = typeof data.xp === 'number' ? data.xp : 0;
+        const computedLeague = data.currentLeague || computeLeagueFromXp(xpValue).name;
         const profileData: UserProfile = {
           uid,
           displayName: data.displayName || user.displayName || 'Centinela',
@@ -487,10 +424,19 @@ export function useFirestore() {
           photoURL: user.photoURL || data.avatarUrl || null,
           hearts: typeof data.hearts === 'number' ? data.hearts : 5,
           lastHeartRefill,
-          xp: typeof data.xp === 'number' ? data.xp : 0,
+          xp: xpValue,
           bits: typeof data.bits === 'number' ? data.bits : 0,
           streakDays,
-          currentLeague: data.currentLeague || 'Bronce',
+          hasStreakFreeze: typeof data.hasStreakFreeze === 'boolean' ? data.hasStreakFreeze : false,
+          xpBoostMultiplier: typeof data.xpBoostMultiplier === 'number' ? data.xpBoostMultiplier : 1,
+          xpBoostLessonsRemaining: typeof data.xpBoostLessonsRemaining === 'number' ? data.xpBoostLessonsRemaining : 0,
+          failedExerciseIds: Array.isArray(data.failedExerciseIds) ? data.failedExerciseIds : [],
+          dailyLessonsCompleted: typeof data.dailyLessonsCompleted === 'number' ? data.dailyLessonsCompleted : 0,
+          dailyLessonsDate: typeof data.dailyLessonsDate === 'string' ? data.dailyLessonsDate : '',
+          lessonStars: data.lessonStars && typeof data.lessonStars === 'object' ? data.lessonStars : {},
+          diagnosticProfile: data.diagnosticProfile || null,
+          notificationsEnabled: typeof data.notificationsEnabled === 'boolean' ? data.notificationsEnabled : true,
+          currentLeague: computedLeague,
           accuracyRate: typeof data.accuracyRate === 'number' ? data.accuracyRate : 0,
           completedLessons,
           claimedRewards: Array.isArray(data.claimedRewards) ? data.claimedRewards : [],
@@ -529,6 +475,15 @@ export function useFirestore() {
           xp: 0,
           bits: 0,
           streakDays: 0,
+          hasStreakFreeze: false,
+          xpBoostMultiplier: 1,
+          xpBoostLessonsRemaining: 0,
+          failedExerciseIds: [],
+          dailyLessonsCompleted: 0,
+          dailyLessonsDate: '',
+          lessonStars: {},
+          diagnosticProfile: null,
+          notificationsEnabled: true,
           lastActiveDate: '',
           activeDates: [],
           currentLeague: 'Bronce',
@@ -557,6 +512,15 @@ export function useFirestore() {
           xp: 0,
           bits: 0,
           streakDays: 0,
+          hasStreakFreeze: false,
+          xpBoostMultiplier: 1,
+          xpBoostLessonsRemaining: 0,
+          failedExerciseIds: [],
+          dailyLessonsCompleted: 0,
+          dailyLessonsDate: '',
+          lessonStars: {},
+          diagnosticProfile: null,
+          notificationsEnabled: true,
           currentLeague: 'Bronce',
           accuracyRate: 0,
           completedLessons: [],
@@ -630,6 +594,7 @@ export function useFirestore() {
         const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : (data.createdAt || new Date().toISOString());
         const lastHeartRefill = data.lastHeartRefill?.toDate ? data.lastHeartRefill.toDate().toISOString() : (data.lastHeartRefill || new Date().toISOString());
 
+        const xpVal = typeof data.xp === 'number' ? data.xp : 0;
         const profileData: UserProfile = {
           uid,
           displayName: data.displayName || 'Centinela',
@@ -638,15 +603,23 @@ export function useFirestore() {
           photoURL: data.photoURL || data.avatarUrl || null,
           hearts: typeof data.hearts === 'number' ? data.hearts : 5,
           lastHeartRefill,
-          xp: typeof data.xp === 'number' ? data.xp : 0,
+          xp: xpVal,
           bits: typeof data.bits === 'number' ? data.bits : 0,
           streakDays: typeof data.streakDays === 'number' ? data.streakDays : 0,
-          currentLeague: data.currentLeague || 'Bronce',
+          currentLeague: data.currentLeague || computeLeagueFromXp(xpVal).name,
           accuracyRate: typeof data.accuracyRate === 'number' ? data.accuracyRate : 0,
           completedLessons: Array.isArray(data.completedLessons) ? data.completedLessons : [],
           claimedRewards: Array.isArray(data.claimedRewards) ? data.claimedRewards : [],
           isPro: typeof data.isPro === 'boolean' ? data.isPro : false,
           hasStreakFreeze: typeof data.hasStreakFreeze === 'boolean' ? data.hasStreakFreeze : false,
+          xpBoostMultiplier: typeof data.xpBoostMultiplier === 'number' ? data.xpBoostMultiplier : 1,
+          xpBoostLessonsRemaining: typeof data.xpBoostLessonsRemaining === 'number' ? data.xpBoostLessonsRemaining : 0,
+          failedExerciseIds: Array.isArray(data.failedExerciseIds) ? data.failedExerciseIds : [],
+          dailyLessonsCompleted: typeof data.dailyLessonsCompleted === 'number' ? data.dailyLessonsCompleted : 0,
+          dailyLessonsDate: typeof data.dailyLessonsDate === 'string' ? data.dailyLessonsDate : '',
+          lessonStars: data.lessonStars && typeof data.lessonStars === 'object' ? data.lessonStars : {},
+          diagnosticProfile: data.diagnosticProfile || null,
+          notificationsEnabled: typeof data.notificationsEnabled === 'boolean' ? data.notificationsEnabled : true,
           companyName: data.companyName || '',
           organizationId: data.organizationId || undefined,
           dailyGoal: (data.dailyGoal as DailyGoalType) || 'constante',
@@ -656,6 +629,7 @@ export function useFirestore() {
           status: data.status || 'active',
           suspendedAt: data.suspendedAt?.toDate ? data.suspendedAt.toDate().toISOString() : (data.suspendedAt || null),
           lastActiveDate: data.lastActiveDate?.toDate ? data.lastActiveDate.toDate().toISOString() : (data.lastActiveDate || data.lastLoginAt || new Date().toISOString()),
+          activeDates: Array.isArray(data.activeDates) ? data.activeDates : [],
         };
 
         setCached(cacheKey, profileData);
@@ -777,7 +751,7 @@ export function useFirestore() {
 
           const hearts = typeof data.hearts === 'number' ? data.hearts : 5;
           const accuracyRate = typeof data.accuracyRate === 'number' ? data.accuracyRate : 0;
-          const currentLeague = data.currentLeague || 'Bronce';
+          const currentLeague = data.currentLeague || computeLeagueFromXp(xp).name;
           const lastHeartRefill = data.lastHeartRefill?.toDate
             ? data.lastHeartRefill.toDate().toISOString()
             : (data.lastHeartRefill || new Date().toISOString());
@@ -804,6 +778,10 @@ export function useFirestore() {
             totalLessonsCompleted: completedLessons.length,
             completedLessons,
             claimedRewards: Array.isArray(data.claimedRewards) ? data.claimedRewards : [],
+            failedExerciseIds: Array.isArray(data.failedExerciseIds) ? data.failedExerciseIds : [],
+            dailyLessonsCompleted: typeof data.dailyLessonsCompleted === 'number' ? data.dailyLessonsCompleted : 0,
+            dailyLessonsDate: typeof data.dailyLessonsDate === 'string' ? data.dailyLessonsDate : '',
+            lessonStars: data.lessonStars && typeof data.lessonStars === 'object' ? data.lessonStars : {},
             xpBoostMultiplier: data.xpBoostMultiplier || 1,
             xpBoostLessonsRemaining: data.xpBoostLessonsRemaining || 0,
           };
@@ -827,6 +805,10 @@ export function useFirestore() {
             totalLessonsCompleted: 0,
             completedLessons: [],
             claimedRewards: [],
+            failedExerciseIds: [],
+            dailyLessonsCompleted: 0,
+            dailyLessonsDate: '',
+            lessonStars: {},
             xpBoostMultiplier: 1,
             xpBoostLessonsRemaining: 0,
           };
@@ -854,6 +836,10 @@ export function useFirestore() {
               totalLessonsCompleted: 0,
               completedLessons: [],
               claimedRewards: [],
+              failedExerciseIds: [],
+              dailyLessonsCompleted: 0,
+              dailyLessonsDate: '',
+              lessonStars: {},
               xpBoostMultiplier: 1,
               xpBoostLessonsRemaining: 0,
             };
@@ -914,6 +900,12 @@ export function useFirestore() {
         lastActiveDate: updated.lastActiveDate,
         activeDates: updated.activeDates || [],
         hasStreakFreeze: updated.hasStreakFreeze,
+        xpBoostMultiplier: updated.xpBoostMultiplier ?? 1,
+        xpBoostLessonsRemaining: updated.xpBoostLessonsRemaining ?? 0,
+        failedExerciseIds: updated.failedExerciseIds || [],
+        dailyLessonsCompleted: updated.dailyLessonsCompleted ?? 0,
+        dailyLessonsDate: updated.dailyLessonsDate || '',
+        lessonStars: updated.lessonStars || {},
       }, { merge: true });
     } catch (err) {
       console.warn('[useFirestore] Firestore saveGamificationState queued locally:', err);
@@ -923,14 +915,29 @@ export function useFirestore() {
   /**
    * Fetch Learning Units & Nodes (All 6 Courses)
    */
-  async function getLearningUnits(completedLessons: string[] = [], claimedRewards: string[] = []): Promise<LearningUnit[]> {
-    return buildAllLearningUnits(completedLessons, claimedRewards);
+  async function getLearningUnits(
+    completedLessons: string[] = [],
+    claimedRewards: string[] = [],
+    lessonStars: Record<string, number> = {}
+  ): Promise<LearningUnit[]> {
+    return buildAllLearningUnits(completedLessons, claimedRewards, lessonStars);
   }
 
   /**
-   * Fetch Exercises for a specific Lesson
+   * Fetch Exercises for a specific Lesson (or targeted Error Review Hub)
    */
-  async function getLessonExercises(lessonId: string): Promise<Exercise[]> {
+  async function getLessonExercises(lessonId: string, failedIds: string[] = []): Promise<Exercise[]> {
+    if (lessonId === 'error-review') {
+      const targeted = getExercisesByIds(failedIds);
+      if (targeted.length > 0) {
+        return targeted.slice(0, 5);
+      }
+      return [
+        ...(LESSON_EXERCISES_MAP['inbox-scanner-1']?.slice(0, 2) || []),
+        ...(LESSON_EXERCISES_MAP['url-inspector-1']?.slice(0, 1) || []),
+      ];
+    }
+
     // Legacy mapping support:
     let resolvedId = lessonId;
     if (lessonId === 'lesson_01') resolvedId = 'inbox-scanner-1';
@@ -998,7 +1005,7 @@ export function useFirestore() {
         avatarUrl === 'suri-idle.png' ||
         (!avatarUrl.startsWith('http') && !avatarUrl.startsWith('data:') && !avatarUrl.startsWith('/'))
       ) {
-        avatarUrl = '/src/assets/images/suri/suri-idle.png';
+        avatarUrl = getSuriImage('idle');
       }
 
       return {
@@ -1202,7 +1209,7 @@ export function useFirestore() {
           uid: d.id,
           displayName: data.displayName || 'Centinela',
           email: data.email || '',
-          avatarUrl: data.avatarUrl || data.photoURL || '/src/assets/images/suri/suri-idle.png',
+          avatarUrl: data.avatarUrl || data.photoURL || getSuriImage('idle'),
           photoURL: data.photoURL || null,
           hearts: typeof data.hearts === 'number' ? data.hearts : 5,
           xp: typeof data.xp === 'number' ? data.xp : 0,
@@ -1221,7 +1228,8 @@ export function useFirestore() {
           role: data.role || 'sme_member',
           status: data.status || 'active',
           suspendedAt: data.suspendedAt?.toDate ? data.suspendedAt.toDate().toISOString() : (data.suspendedAt || null),
-          lastActiveDate: data.lastActiveDate?.toDate ? data.lastActiveDate.toDate().toISOString() : (data.lastActiveDate || data.lastLoginAt?.toDate?.()?.toISOString?.() || data.lastLoginAt || new Date().toISOString()),
+          lastActiveDate: normalizeLocalDateString(data.lastActiveDate || data.lastLoginAt) || '',
+          activeDates: Array.isArray(data.activeDates) ? data.activeDates : [],
         };
       });
     } catch (err) {
@@ -1243,29 +1251,58 @@ export function useFirestore() {
         return { success: false, message: 'Código de invitación no encontrado. Verifica con tu administrador.' };
       }
 
-      if (org.usedSeats >= org.maxSeats) {
+      const orgRef = doc(db, 'organizations', org.id);
+      const userRef = doc(db, 'users', uid);
+
+      const txResult = await runTransaction(db, async (transaction) => {
+        const orgSnap = await transaction.get(orgRef);
+        if (!orgSnap.exists()) {
+          return { status: 'missing' as const };
+        }
+        const orgData = orgSnap.data();
+        const usedSeats = typeof orgData.usedSeats === 'number' ? orgData.usedSeats : 0;
+        const maxSeats = typeof orgData.maxSeats === 'number' ? orgData.maxSeats : 10;
+
+        const userSnap = await transaction.get(userRef);
+        const existingOrgId = userSnap.exists() ? userSnap.data().organizationId : null;
+        if (existingOrgId === org.id) {
+          return { status: 'already_member' as const };
+        }
+        if (usedSeats >= maxSeats) {
+          return { status: 'full' as const, usedSeats, maxSeats };
+        }
+
+        // Firestore rules allow joining users to increment ONLY usedSeats by +1
+        transaction.update(orgRef, {
+          usedSeats: usedSeats + 1,
+        });
+        transaction.update(userRef, {
+          organizationId: org.id,
+          companyName: orgData.name || org.name,
+          role: 'sme_member',
+          isPro: true,
+        });
+
+        return { status: 'joined' as const, newUsedSeats: usedSeats + 1 };
+      });
+
+      if (txResult.status === 'missing') {
+        return { success: false, message: 'La organización especificada no existe.' };
+      }
+      if (txResult.status === 'already_member') {
+        return { success: false, message: `Ya perteneces al equipo de ${org.name}.` };
+      }
+      if (txResult.status === 'full') {
         return {
           success: false,
-          message: `La organización ${org.name} ha alcanzado el límite de puestos (${org.usedSeats}/${org.maxSeats}).`,
+          message: `La organización ${org.name} ha alcanzado el límite de puestos (${txResult.usedSeats}/${txResult.maxSeats}).`,
         };
       }
 
-      // Update user in Firestore
-      const userRef = doc(db, 'users', uid);
-      await updateDoc(userRef, {
-        organizationId: org.id,
-        companyName: org.name,
-        role: 'sme_member',
-        isPro: true,
-      });
+      org.usedSeats = txResult.newUsedSeats;
+      memoryCache.delete(`user_profile_${uid}`);
+      localStorage.removeItem(`user_profile_${uid}`);
 
-      // Increment seat count in organization
-      const orgRef = doc(db, 'organizations', org.id);
-      await updateDoc(orgRef, {
-        usedSeats: increment(1),
-      }).catch(() => {});
-
-      org.usedSeats += 1;
       return {
         success: true,
         message: `¡Te has unido exitosamente al equipo de ${org.name}! 🛡️`,
@@ -1330,8 +1367,11 @@ export function useFirestore() {
       industry?: string;
     }
   ): Promise<Organization> {
-    const orgId = data.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15) || 'org_' + Date.now().toString(36);
-    const inviteCode = (data.name.slice(0, 3).toUpperCase() + Math.floor(100 + Math.random() * 900)).slice(0, 6);
+    const slug = data.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 14) || 'org';
+    const suffix = Date.now().toString(36).slice(-4);
+    const orgId = `${slug}_${suffix}`;
+    const prefix = slug.toUpperCase().padEnd(3, 'S').slice(0, 3);
+    const inviteCode = `${prefix}${Math.floor(100 + Math.random() * 900)}`;
 
     const newOrg: Organization = {
       id: orgId,
@@ -1341,7 +1381,7 @@ export function useFirestore() {
       plan: data.plan || 'micro_pyme',
       maxSeats: data.maxSeats || 10,
       usedSeats: 1,
-      subscriptionStatus: 'active',
+      subscriptionStatus: data.plan && data.plan !== 'micro_pyme' ? 'active' : 'trialing',
       inviteCode,
       createdAt: new Date().toISOString(),
       industry: data.industry || 'Servicios PYME',
@@ -1363,6 +1403,41 @@ export function useFirestore() {
     });
 
     return newOrg;
+  }
+
+  /**
+   * Real-time listener on /users/{uid} for immediate suspension & org-status enforcement (RN-08)
+   */
+  function subscribeToUserProfile(
+    uid: string,
+    onUpdate: (partial: Partial<UserProfile>) => void
+  ): Unsubscribe {
+    const userRef = doc(db, 'users', uid);
+    return onSnapshot(
+      userRef,
+      (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        const xpVal = typeof data.xp === 'number' ? data.xp : 0;
+        onUpdate({
+          status: data.status || 'active',
+          suspendedAt: data.suspendedAt?.toDate ? data.suspendedAt.toDate().toISOString() : (data.suspendedAt || null),
+          role: data.role || 'individual',
+          organizationId: data.organizationId || undefined,
+          companyName: data.companyName || '',
+          isPro: typeof data.isPro === 'boolean' ? data.isPro : false,
+          currentLeague: data.currentLeague || computeLeagueFromXp(xpVal).name,
+          dailyGoal: (data.dailyGoal as DailyGoalType) || 'constante',
+          notificationsEnabled: typeof data.notificationsEnabled === 'boolean' ? data.notificationsEnabled : true,
+          diagnosticProfile: data.diagnosticProfile || null,
+          failedExerciseIds: Array.isArray(data.failedExerciseIds) ? data.failedExerciseIds : [],
+          lessonStars: data.lessonStars && typeof data.lessonStars === 'object' ? data.lessonStars : {},
+        });
+      },
+      (err) => {
+        console.warn('[useFirestore] subscribeToUserProfile snapshot error:', err);
+      }
+    );
   }
 
   /**
@@ -1446,79 +1521,59 @@ export function useFirestore() {
   }
 
   /**
-   * Fetch Badges
+   * Compute Dynamic Badges based on user's actual verified progress (0 unlocked for 0-XP accounts)
    */
-  async function getBadges(uid: string): Promise<Badge[]> {
-    const cacheKey = `badges_${uid}`;
-    const cached = getCached<Badge[]>(cacheKey, TTL_STATIC_CONTENT);
-    if (cached) return cached;
-
-    setCached(cacheKey, SEED_BADGES);
-    return SEED_BADGES;
+  async function getBadges(
+    uid: string,
+    gamState?: Pick<UserGamificationState, 'completedLessons' | 'xp' | 'streakDays' | 'accuracyRate' | 'failedExerciseIds'>
+  ): Promise<Badge[]> {
+    if (gamState) {
+      return computeDynamicBadges(gamState);
+    }
+    const state = uid ? await getGamificationState(uid) : null;
+    if (!state) {
+      return computeDynamicBadges({
+        completedLessons: [],
+        xp: 0,
+        streakDays: 0,
+        accuracyRate: 0,
+        failedExerciseIds: [],
+      });
+    }
+    return computeDynamicBadges(state);
   }
 
   /**
-   * Process Lesson Completion: applies rewards, streak calculations, completedLessons update, and saves state
+   * Process Lesson Completion: enforces >=60% pass accuracy, calculates stars, streak freeze consumption,
+   * daily goal progress, XP boosts, and automatic league promotion.
    */
   async function recordLessonCompletion(
     uid: string,
     summary: LessonSessionSummary,
     isPro: boolean
-  ): Promise<UserGamificationState> {
+  ): Promise<{
+    state: UserGamificationState;
+    passed: boolean;
+    earnedXp: number;
+    earnedBits: number;
+    stars: number;
+    leaguePromoted: boolean;
+    newLeague: string;
+  }> {
     const currentState = await getGamificationState(uid, isPro);
-
-    // Calculate XP with streak multiplier and perfect bonus (+15 base XP as requested)
-    const streakMultiplier = calculateStreakMultiplier(currentState.streakDays);
-    const boostMultiplier = currentState.xpBoostLessonsRemaining > 0 ? currentState.xpBoostMultiplier : 1;
-
-    let earnedXp: number = summary.earnedXp ?? GAMIFICATION_RULES.ECONOMY.XP_LESSON_BASE; // 15
-    if (summary.isPerfectScore && !summary.earnedXp) {
-      earnedXp += GAMIFICATION_RULES.ECONOMY.XP_PERFECT_BONUS; // +5
-    }
-    earnedXp = Math.round(earnedXp * streakMultiplier * boostMultiplier);
-
-    const earnedBits = summary.earnedBits ?? GAMIFICATION_RULES.ECONOMY.BITS_LESSON_COMPLETED; // 10
-
-    // Update streak based on local calendar date (YYYY-MM-DD)
     const today = getLocalDateString();
     const yesterdayDate = new Date();
     yesterdayDate.setDate(yesterdayDate.getDate() - 1);
     const yesterday = getLocalDateString(yesterdayDate);
     const prevDate = normalizeLocalDateString(currentState.lastActiveDate);
 
-    let newStreak = currentState.streakDays;
-    if (currentState.streakDays === 0) {
-      newStreak = 1;
-    } else if (prevDate === today) {
-      newStreak = Math.max(1, currentState.streakDays);
-    } else if (prevDate === yesterday || currentState.hasStreakFreeze) {
-      newStreak = currentState.streakDays + 1;
-    } else {
-      newStreak = 1;
-    }
-
-    const updatedActiveDates = Array.from(
-      new Set([...(Array.isArray(currentState.activeDates) ? currentState.activeDates : []), today])
-    );
-
-    // Check 7-day streak bonus
-    let streakBitsBonus = 0;
-    if (newStreak > 0 && newStreak % 7 === 0 && prevDate !== today) {
-      streakBitsBonus = GAMIFICATION_RULES.ECONOMY.BITS_7_DAY_STREAK;
-    }
-
-    // Add completed lessonId to completedLessons array
-    const currentCompleted = Array.isArray(currentState.completedLessons)
-      ? [...currentState.completedLessons]
-      : [];
-    if (summary.lessonId && !currentCompleted.includes(summary.lessonId)) {
-      currentCompleted.push(summary.lessonId);
-    }
-
     // Accuracy calculation
     const sessionAccuracy = summary.totalExercises > 0
       ? Math.round((summary.correctAnswersCount / summary.totalExercises) * 100)
       : 100;
+    const outcome = computeLessonOutcome(sessionAccuracy);
+
+    const isErrorReview = summary.lessonId === 'error-review';
     const newAccuracyRate = currentState.totalLessonsCompleted > 0
       ? Math.round(
           (currentState.accuracyRate * currentState.totalLessonsCompleted + sessionAccuracy) /
@@ -1526,22 +1581,108 @@ export function useFirestore() {
         )
       : sessionAccuracy;
 
+    if (!outcome.passed) {
+      // Failed attempt (< 60%): award small practice XP, do NOT mark completed or advance daily goal
+      const practiceXp = 5;
+      const newXp = currentState.xp + practiceXp;
+      const newLevel = Math.floor(newXp / 400) + 1;
+      const updatedState: UserGamificationState = {
+        ...currentState,
+        xp: newXp,
+        level: newLevel,
+        levelTitle:
+          newLevel === 1
+            ? 'Centinela Nivel 1 · Recluta de Perímetro'
+            : `Centinela Nivel ${newLevel} · Vigilante de Manada`,
+        accuracyRate: newAccuracyRate,
+        accuracyPercentage: newAccuracyRate,
+        hearts: summary.heartsRemaining ?? currentState.hearts,
+      };
+      await saveGamificationState(uid, updatedState);
+      return {
+        state: updatedState,
+        passed: false,
+        earnedXp: practiceXp,
+        earnedBits: 0,
+        stars: 0,
+        leaguePromoted: false,
+        newLeague: updatedState.currentLeague,
+      };
+    }
+
+    // Passed (>= 60%): apply streak multiplier, boost multiplier, freeze consumption & league promotion
+    const streakTransition = applyStreakTransition({
+      currentStreak: currentState.streakDays,
+      lastActiveDate: prevDate,
+      activeDates: currentState.activeDates || [],
+      hasStreakFreeze: !!currentState.hasStreakFreeze,
+      today,
+      yesterday,
+    });
+
+    const streakMultiplier = calculateStreakMultiplier(streakTransition.streakDays);
+    const hasBoost = (currentState.xpBoostLessonsRemaining || 0) > 0;
+    const boostMultiplier = hasBoost ? Math.max(1, currentState.xpBoostMultiplier || 2) : 1;
+
+    let baseXp: number = summary.earnedXp ?? GAMIFICATION_RULES.ECONOMY.XP_LESSON_BASE;
+    if (summary.isPerfectScore && !summary.earnedXp) {
+      baseXp += GAMIFICATION_RULES.ECONOMY.XP_PERFECT_BONUS;
+    }
+    const earnedXp = Math.round(baseXp * streakMultiplier * boostMultiplier);
+    const earnedBits =
+      (summary.earnedBits ?? GAMIFICATION_RULES.ECONOMY.BITS_LESSON_COMPLETED) +
+      streakTransition.streakBitsBonus;
+
+    // Update completedLessons and lessonStars (skip for virtual error-review mode)
+    const currentCompleted = Array.isArray(currentState.completedLessons)
+      ? [...currentState.completedLessons]
+      : [];
+    const currentStars = { ...(currentState.lessonStars || {}) };
+
+    if (!isErrorReview && summary.lessonId) {
+      if (!currentCompleted.includes(summary.lessonId)) {
+        currentCompleted.push(summary.lessonId);
+      }
+      currentStars[summary.lessonId] = Math.max(
+        currentStars[summary.lessonId] || 0,
+        outcome.stars
+      );
+    }
+
+    const dailyLessonsCompleted =
+      currentState.dailyLessonsDate === today
+        ? (currentState.dailyLessonsCompleted || 0) + 1
+        : 1;
+
+    const newXp = currentState.xp + earnedXp;
+    const previousLeague = currentState.currentLeague || 'Bronce';
+    const nextLeagueInfo = computeLeagueFromXp(newXp);
+    const leaguePromoted = nextLeagueInfo.name !== previousLeague;
+
+    const remainingBoostLessons = Math.max(0, (currentState.xpBoostLessonsRemaining || 0) - 1);
+    const nextBoostMultiplier = remainingBoostLessons > 0 ? boostMultiplier : 1;
+
     const updatedState: UserGamificationState = {
       ...currentState,
-      xp: currentState.xp + earnedXp,
-      bits: currentState.bits + earnedBits + streakBitsBonus,
-      streakDays: newStreak,
-      lastActiveDate: today,
-      activeDates: updatedActiveDates,
+      xp: newXp,
+      bits: currentState.bits + earnedBits,
+      streakDays: streakTransition.streakDays,
+      lastActiveDate: streakTransition.lastActiveDate,
+      activeDates: streakTransition.activeDates,
+      hasStreakFreeze: streakTransition.hasStreakFreeze,
       totalLessonsCompleted: currentCompleted.length,
       completedLessons: currentCompleted,
+      lessonStars: currentStars,
+      dailyLessonsCompleted,
+      dailyLessonsDate: today,
       accuracyRate: newAccuracyRate,
       accuracyPercentage: newAccuracyRate,
       hearts: summary.heartsRemaining ?? currentState.hearts,
-      xpBoostLessonsRemaining: Math.max(0, currentState.xpBoostLessonsRemaining - 1),
+      currentLeague: nextLeagueInfo.name,
+      xpBoostMultiplier: nextBoostMultiplier,
+      xpBoostLessonsRemaining: remainingBoostLessons,
     };
 
-    // Calculate level progression (400 XP per level)
     updatedState.level = Math.floor(updatedState.xp / 400) + 1;
     updatedState.levelTitle =
       updatedState.level === 1
@@ -1549,7 +1690,53 @@ export function useFirestore() {
         : `Centinela Nivel ${updatedState.level} · Vigilante de Manada`;
 
     await saveGamificationState(uid, updatedState);
-    return updatedState;
+    return {
+      state: updatedState,
+      passed: true,
+      earnedXp,
+      earnedBits,
+      stars: outcome.stars,
+      leaguePromoted,
+      newLeague: updatedState.currentLeague,
+    };
+  }
+
+  /**
+   * Persists a failed exercise ID into the user's Error Review Hub list
+   */
+  async function recordFailedExercise(uid: string, exerciseId: string): Promise<string[]> {
+    if (!uid || !exerciseId) return [];
+    const current = await getGamificationState(uid);
+    const existing = Array.isArray(current.failedExerciseIds) ? current.failedExerciseIds : [];
+    const nextList = Array.from(new Set([exerciseId, ...existing])).slice(0, 30);
+    await saveGamificationState(uid, { failedExerciseIds: nextList });
+    const profKey = `user_profile_${uid}`;
+    const cachedProf = getCached<UserProfile>(profKey, TTL_USER_STATE);
+    if (cachedProf) {
+      cachedProf.failedExerciseIds = nextList;
+      setCached(profKey, cachedProf);
+      localStorage.setItem(profKey, JSON.stringify(cachedProf));
+    }
+    return nextList;
+  }
+
+  /**
+   * Removes resolved exercise IDs from the Error Review Hub after mastery
+   */
+  async function resolveFailedExercises(uid: string, exerciseIds: string[]): Promise<string[]> {
+    if (!uid || !Array.isArray(exerciseIds) || exerciseIds.length === 0) return [];
+    const current = await getGamificationState(uid);
+    const resolvedSet = new Set(exerciseIds);
+    const nextList = (current.failedExerciseIds || []).filter((id) => !resolvedSet.has(id));
+    await saveGamificationState(uid, { failedExerciseIds: nextList });
+    const profKey = `user_profile_${uid}`;
+    const cachedProf = getCached<UserProfile>(profKey, TTL_USER_STATE);
+    if (cachedProf) {
+      cachedProf.failedExerciseIds = nextList;
+      setCached(profKey, cachedProf);
+      localStorage.setItem(profKey, JSON.stringify(cachedProf));
+    }
+    return nextList;
   }
 
   /**
@@ -1640,6 +1827,10 @@ export function useFirestore() {
       bits: updates.bits,
       ...(updates.hearts !== undefined ? { hearts: updates.hearts } : {}),
       ...(updates.hasStreakFreeze !== undefined ? { hasStreakFreeze: updates.hasStreakFreeze } : {}),
+      ...(updates.xpBoostMultiplier !== undefined ? { xpBoostMultiplier: updates.xpBoostMultiplier } : {}),
+      ...(updates.xpBoostLessonsRemaining !== undefined
+        ? { xpBoostLessonsRemaining: updates.xpBoostLessonsRemaining }
+        : {}),
     });
 
     const updatedState = await getGamificationState(uid, isPro);
@@ -1805,6 +1996,7 @@ export function useFirestore() {
     ensureUserDocument,
     getUserProfile,
     saveUserProfile,
+    subscribeToUserProfile,
     getGamificationState,
     saveGamificationState,
     getLearningUnits,
@@ -1824,6 +2016,8 @@ export function useFirestore() {
     getShopCatalog,
     getBadges,
     recordLessonCompletion,
+    recordFailedExercise,
+    resolveFailedExercises,
     purchaseItem,
     claimReward,
   };

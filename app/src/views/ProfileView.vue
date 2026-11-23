@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '../stores/useUserStore';
 import { useGamificationStore } from '../stores/useGamificationStore';
 import { useTheme } from '../composables/useTheme';
 import HeaderHud from '../components/common/HeaderHud.vue';
+import DiagnosticModal from '../components/common/DiagnosticModal.vue';
+import { DAILY_GOAL_CONFIGS, DailyGoalType } from '../types/gamification';
 import { getSuriImage } from '../utils/suriAssets';
 
 const router = useRouter();
@@ -13,7 +15,38 @@ const gamificationStore = useGamificationStore();
 const { isDark, toggleDark } = useTheme();
 
 const suriImg = getSuriImage('idle');
-const alertsActive = ref<boolean>(true);
+const alertsActive = ref<boolean>(userStore.profile.notificationsEnabled ?? true);
+const isDiagnosticModalOpen = ref<boolean>(false);
+const showGoalPicker = ref<boolean>(false);
+
+watch(
+  () => userStore.profile.notificationsEnabled,
+  (val) => {
+    if (typeof val === 'boolean') {
+      alertsActive.value = val;
+    }
+  }
+);
+
+const currentGoalConfig = computed(() => {
+  const key = (userStore.currentDailyGoal || 'constante') as DailyGoalType;
+  return DAILY_GOAL_CONFIGS[key] || DAILY_GOAL_CONFIGS.constante;
+});
+
+async function handleSelectDailyGoal(goal: DailyGoalType) {
+  await userStore.setDailyGoal(goal);
+  showGoalPicker.value = false;
+}
+
+async function handleToggleAlerts() {
+  const next = !alertsActive.value;
+  alertsActive.value = next;
+  await userStore.setNotificationsEnabled(next);
+}
+
+function handleDiagnosticSelected() {
+  router.push('/tabs/learn');
+}
 
 const userAvatarSrc = computed(() => {
   const url = userStore.profile.avatarUrl || userStore.profile.photoURL;
@@ -111,17 +144,17 @@ async function handleLogout() {
           <div class="flex flex-col min-w-0">
             <div class="flex items-center gap-2 truncate">
               <span class="text-sm font-black text-on-surface truncate">
-                {{ userStore.currentOrganization?.name || userStore.profile.companyName || 'Organización PYME' }}
+                {{ userStore.hasOrganization ? (userStore.currentOrganization?.name || userStore.profile.companyName || 'Organización PYME') : 'Plan Personal / B2B PYME' }}
               </span>
               <span
                 class="text-[9px] font-black px-2 py-0.5 rounded-full uppercase"
-                :class="userStore.isSmeAdmin ? 'bg-primary text-white' : 'bg-tertiary text-white'"
+                :class="userStore.isSmeAdmin ? 'bg-primary text-white' : (userStore.hasOrganization ? 'bg-tertiary text-white' : 'bg-surface-container-highest text-on-surface')"
               >
-                {{ userStore.isSmeAdmin ? 'Admin PYME' : 'Colaborador' }}
+                {{ userStore.isSmeAdmin ? 'Admin PYME' : (userStore.hasOrganization ? 'Colaborador PYME' : 'Cuenta Individual') }}
               </span>
             </div>
             <span class="text-xs text-on-surface-variant font-medium truncate mt-0.5">
-              {{ userStore.hasOrganization ? 'Supervisa el índice de salud digital, colaboradores y ligas privadas corporativas' : 'Vincula tu cuenta con el código de 6 caracteres de tu empresa' }}
+              {{ userStore.hasOrganization ? 'Supervisa tu equipo, métricas corporativas y ligas privadas de empresa' : 'Entrenamiento individual activo · O vincula tu empresa con un código de 6 caracteres' }}
             </span>
           </div>
         </div>
@@ -293,18 +326,45 @@ async function handleLogout() {
               </span>
             </div>
 
-            <!-- Daily Goal Option -->
-            <div class="flex items-center justify-between p-3 rounded-xl hover:bg-surface-container-low transition-colors cursor-pointer">
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-primary shrink-0">
-                  <span class="material-symbols-outlined text-[20px]">timer</span>
+            <!-- Daily Goal Option (Functional Selector) -->
+            <div class="flex flex-col rounded-xl bg-surface-container-lowest">
+              <div
+                class="flex items-center justify-between p-3 rounded-xl hover:bg-surface-container-low transition-colors cursor-pointer"
+                @click="showGoalPicker = !showGoalPicker"
+              >
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-primary shrink-0">
+                    <span class="material-symbols-outlined text-[20px]">timer</span>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-on-surface">Meta diaria de entrenamiento</p>
+                    <p class="text-[10px] text-on-surface-variant truncate">
+                      {{ currentGoalConfig.title }} · {{ currentGoalConfig.description }}
+                    </p>
+                  </div>
                 </div>
-                <div class="min-w-0">
-                  <p class="text-xs font-bold text-on-surface">Meta diaria de entrenamiento</p>
-                  <p class="text-[10px] text-on-surface-variant truncate">5 min / día (Ritmo Constante de Guardia)</p>
-                </div>
+                <span class="material-symbols-outlined text-outline text-[18px] shrink-0">
+                  {{ showGoalPicker ? 'expand_less' : 'chevron_right' }}
+                </span>
               </div>
-              <span class="material-symbols-outlined text-outline text-[18px] shrink-0">chevron_right</span>
+
+              <div v-if="showGoalPicker" class="px-3 pb-3 grid grid-cols-3 gap-2">
+                <button
+                  v-for="cfg in Object.values(DAILY_GOAL_CONFIGS)"
+                  :key="cfg.id"
+                  type="button"
+                  class="p-2 rounded-xl border text-center transition-all"
+                  :class="
+                    userStore.currentDailyGoal === cfg.id
+                      ? 'bg-primary/15 border-primary text-primary'
+                      : 'bg-surface-container-low border-outline-variant/40 text-on-surface-variant hover:text-on-surface'
+                  "
+                  @click="handleSelectDailyGoal(cfg.id)"
+                >
+                  <span class="block text-xs font-black">{{ cfg.title }}</span>
+                  <span class="block text-[10px] font-bold">{{ cfg.minutesPerDay }} min · {{ cfg.lessonsPerDay }} lecc.</span>
+                </button>
+              </div>
             </div>
 
             <!-- Alerts Toggle Option -->
@@ -315,14 +375,15 @@ async function handleLogout() {
                 </div>
                 <div class="min-w-0">
                   <p class="text-xs font-bold text-on-surface">Alertas y racha diaria</p>
-                  <p class="text-[10px] text-on-surface-variant truncate">Recordatorios inteligentes de Suri</p>
+                  <p class="text-[10px] text-on-surface-variant truncate">Recordatorios de entrenamiento guardados</p>
                 </div>
               </div>
               <button
                 type="button"
+                aria-label="Alternar alertas de racha diaria"
                 class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out p-0.5"
                 :class="alertsActive ? 'bg-tertiary' : 'bg-surface-dim'"
-                @click="alertsActive = !alertsActive"
+                @click="handleToggleAlerts"
               >
                 <span
                   class="inline-block h-5 w-5 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out"
@@ -332,8 +393,38 @@ async function handleLogout() {
             </div>
           </div>
 
-          <!-- Card 2: Membresía & Sesión -->
-          <div class="bg-surface-container-lowest rounded-2xl p-4 shadow-xs border border-outline-variant/30 flex flex-col justify-between gap-4">
+          <!-- Card 2: Personalización, Membresía & Sesión -->
+          <div class="bg-surface-container-lowest rounded-2xl p-4 shadow-xs border border-outline-variant/30 flex flex-col justify-between gap-3">
+            <!-- Personalization Shortcuts: Diagnostic & Error Review -->
+            <div class="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                class="p-2.5 rounded-xl bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 text-left flex items-center gap-2 transition-colors"
+                @click="isDiagnosticModalOpen = true"
+              >
+                <span class="material-symbols-outlined text-[18px] text-primary icon-filled">tune</span>
+                <div class="min-w-0">
+                  <span class="block text-xs font-black text-on-surface truncate">Diagnóstico</span>
+                  <span class="block text-[10px] text-on-surface-variant truncate">
+                    {{ userStore.profile.diagnosticProfile?.levelLabel || 'Ajustar ruta' }}
+                  </span>
+                </div>
+              </button>
+
+              <router-link
+                to="/lesson/error-review"
+                class="p-2.5 rounded-xl bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 text-left flex items-center gap-2 transition-colors"
+              >
+                <span class="material-symbols-outlined text-[18px] text-error icon-filled">healing</span>
+                <div class="min-w-0">
+                  <span class="block text-xs font-black text-on-surface truncate">Centro Errores</span>
+                  <span class="block text-[10px] text-on-surface-variant truncate">
+                    {{ gamificationStore.failedExerciseCount }} por repasar
+                  </span>
+                </div>
+              </router-link>
+            </div>
+
             <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low">
               <div class="flex items-center gap-3 min-w-0">
                 <div class="w-9 h-9 rounded-xl bg-primary-fixed flex items-center justify-center text-primary shrink-0">
@@ -349,7 +440,7 @@ async function handleLogout() {
                     </span>
                   </div>
                   <p class="text-[10px] text-on-surface-variant truncate mt-0.5">
-                    {{ userStore.isPro ? 'Corazones dorados y diagnósticos IA activos' : 'Vidas limitadas (5/5) y lecciones base' }}
+                    {{ userStore.isPro ? 'Corazones ilimitados, diagnóstico adaptativo y centro de errores activos' : 'Vidas limitadas (5/5) y lecciones base' }}
                   </p>
                 </div>
               </div>
@@ -374,5 +465,11 @@ async function handleLogout() {
         </div>
       </div>
     </main>
+
+    <DiagnosticModal
+      :is-open="isDiagnosticModalOpen"
+      @close="isDiagnosticModalOpen = false"
+      @select-course="handleDiagnosticSelected"
+    />
   </div>
 </template>

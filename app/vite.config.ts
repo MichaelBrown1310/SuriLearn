@@ -306,6 +306,18 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, './src'),
       },
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+            charts: ['chart.js'],
+            'vue-vendor': ['vue', 'vue-router', 'pinia'],
+            curriculum: [path.resolve(__dirname, './src/data/curriculum.ts')],
+          },
+        },
+      },
+    },
     server: {
       port: 3000,
       host: true,

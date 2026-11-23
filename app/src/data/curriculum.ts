@@ -3000,7 +3000,8 @@ export function getNextLessonId(currentLessonId: string): string | null {
 function buildDynamicUnitNodes(
   baseNodes: LearningNode[],
   completedSet: Set<string>,
-  claimedSet: Set<string>
+  claimedSet: Set<string>,
+  lessonStars: Record<string, number> = {}
 ): { nodes: LearningNode[]; progressPercentage: number } {
   const dynamicNodes: LearningNode[] = baseNodes.map((baseNode, index) => {
     if (baseNode.type === 'reward_chest') {
@@ -3040,10 +3041,12 @@ function buildDynamicUnitNodes(
     // Lesson Node
     const isCompleted = completedSet.has(baseNode.id);
     if (isCompleted) {
+      const savedStars = lessonStars[baseNode.id];
+      const stars = typeof savedStars === 'number' ? Math.max(1, Math.min(3, savedStars)) : 3;
       return {
         ...baseNode,
         status: 'completed' as const,
-        stars: 3,
+        stars,
       };
     }
 
@@ -3095,17 +3098,18 @@ function buildDynamicUnitNodes(
  */
 export function buildAllLearningUnits(
   completedLessons: string[] = [],
-  claimedRewards: string[] = []
+  claimedRewards: string[] = [],
+  lessonStars: Record<string, number> = {}
 ): LearningUnit[] {
   const completedSet = new Set(completedLessons.map(normalizeLegacyLessonId));
   const claimedSet = new Set(claimedRewards);
 
-  const u1 = buildDynamicUnitNodes(UNIT_1_NODES, completedSet, claimedSet);
-  const u2 = buildDynamicUnitNodes(UNIT_2_NODES, completedSet, claimedSet);
-  const u3 = buildDynamicUnitNodes(UNIT_3_NODES, completedSet, claimedSet);
-  const u4 = buildDynamicUnitNodes(UNIT_4_NODES, completedSet, claimedSet);
-  const u5 = buildDynamicUnitNodes(UNIT_5_NODES, completedSet, claimedSet);
-  const u6 = buildDynamicUnitNodes(UNIT_6_NODES, completedSet, claimedSet);
+  const u1 = buildDynamicUnitNodes(UNIT_1_NODES, completedSet, claimedSet, lessonStars);
+  const u2 = buildDynamicUnitNodes(UNIT_2_NODES, completedSet, claimedSet, lessonStars);
+  const u3 = buildDynamicUnitNodes(UNIT_3_NODES, completedSet, claimedSet, lessonStars);
+  const u4 = buildDynamicUnitNodes(UNIT_4_NODES, completedSet, claimedSet, lessonStars);
+  const u5 = buildDynamicUnitNodes(UNIT_5_NODES, completedSet, claimedSet, lessonStars);
+  const u6 = buildDynamicUnitNodes(UNIT_6_NODES, completedSet, claimedSet, lessonStars);
 
   return [
     {
@@ -3193,4 +3197,31 @@ export function buildLearningUnit(
 export function getLessonNode(lessonId: string): LearningNode | undefined {
   const resolvedId = normalizeLegacyLessonId(lessonId);
   return ALL_BASE_NODES.find((n) => n.id === resolvedId);
+}
+
+/**
+ * Resolves exercises by their IDs across all 6 courses (used by the Error Review Hub)
+ */
+export function getExercisesByIds(ids: string[]): Exercise[] {
+  if (!Array.isArray(ids) || ids.length === 0) return [];
+  const allById = new Map<string, Exercise>();
+  for (const lessonId of LESSON_SEQUENCE) {
+    const list = LESSON_EXERCISES_MAP[lessonId] || [];
+    for (const ex of list) {
+      if (!allById.has(ex.id)) {
+        allById.set(ex.id, ex);
+      }
+    }
+  }
+  const resolved: Exercise[] = [];
+  const seen = new Set<string>();
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    const found = allById.get(id);
+    if (found) {
+      resolved.push(found);
+      seen.add(id);
+    }
+  }
+  return resolved;
 }

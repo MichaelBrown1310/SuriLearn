@@ -6,6 +6,51 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 <!-- CHANGELOG_ENTRIES_START -->
 
+## [v0.12.0] - 2026-11-23
+
+- **Resumen**: Personalizacion adaptativa, B2B real con RBAC, WCAG 2.1 AA, PWA, lazy-loading y pruebas Vitest
+- **Plan de Desarrollo**: [docs/plans/PLAN_v0.12.0.md](./docs/plans/PLAN_v0.12.0.md)
+- **Archivos impactados**:
+  - `M README.md`
+  - `M docs/DOCUMENTO_PROYECTO_TI_SURILEARN.md`
+  - `M index.html`
+  - `M package-lock.json`
+  - `M package.json`
+  - `M src/App.vue`
+  - `M src/components/common/LessonVictoryModal.vue`
+  - `M src/components/common/SuriFeedbackModal.vue`
+  - `M src/components/common/SuspendedAccountModal.vue`
+  - `M src/components/games/InboxThreatScanner.vue`
+  - `M src/components/games/PasswordVaultBuilder.vue`
+  - `M src/components/games/PermissionGatekeeper.vue`
+  - `M src/components/organization/AdminAnalytics.vue`
+  - `M src/composables/useFirestore.ts`
+  - `M src/data/curriculum.ts`
+  - `M src/main.ts`
+  - `M src/router/index.ts`
+  - `M src/stores/useGamificationStore.ts`
+  - `M src/stores/useUserStore.ts`
+  - `M src/style.css`
+  - `M src/theme/variables.css`
+  - `M src/types/gamification.ts`
+  - `M src/views/LeaderboardView.vue`
+  - `M src/views/LearnView.vue`
+  - `M src/views/LessonView.vue`
+  - `M src/views/OrganizationDashboardView.vue`
+  - `M src/views/ProfileView.vue`
+  - `M src/views/ShopView.vue`
+  - `M tailwind.config.js`
+  - `M vite.config.ts`
+  - `?? docs/plans/PLAN_v0.12.0.md`
+  - `?? public/manifest.webmanifest`
+  - `?? public/sw.js`
+  - `?? src/__tests__/`
+  - `?? src/components/common/DiagnosticModal.vue`
+  - `?? src/utils/authErrors.ts`
+  - `?? src/utils/gamificationEngine.ts`
+  - `?? vitest.config.ts`
+
+
 ## [v0.11.0] - 2026-11-23
 
 - **Resumen**: Endurecimiento P0 de seguridad, estabilidad en minijuegos, vidas y login dual

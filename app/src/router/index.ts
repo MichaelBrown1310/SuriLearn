@@ -1,15 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../firebase/config';
-import WelcomeView from '../views/WelcomeView.vue';
-import LoginView from '../views/LoginView.vue';
-import RegisterOnboardingView from '../views/RegisterOnboardingView.vue';
-import TabsLayout from '../views/TabsLayout.vue';
-import LearnView from '../views/LearnView.vue';
-import LeaderboardView from '../views/LeaderboardView.vue';
-import ShopView from '../views/ShopView.vue';
-import ProfileView from '../views/ProfileView.vue';
-import LessonView from '../views/LessonView.vue';
 
 let authResolved = false;
 
@@ -42,30 +33,30 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/welcome',
     name: 'Welcome',
-    component: WelcomeView,
+    component: () => import('../views/WelcomeView.vue'),
     meta: { guestOnly: true },
   },
   {
     path: '/login',
     name: 'Login',
-    component: LoginView,
+    component: () => import('../views/LoginView.vue'),
     meta: { guestOnly: true },
   },
   {
     path: '/register',
     name: 'Register',
-    component: RegisterOnboardingView,
+    component: () => import('../views/RegisterOnboardingView.vue'),
     meta: { guestOnly: true },
   },
   {
     path: '/onboarding',
     name: 'Onboarding',
-    component: RegisterOnboardingView,
+    component: () => import('../views/RegisterOnboardingView.vue'),
     meta: { guestOnly: true },
   },
   {
     path: '/tabs',
-    component: TabsLayout,
+    component: () => import('../views/TabsLayout.vue'),
     meta: { requiresAuth: true },
     children: [
       {
@@ -75,22 +66,22 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'learn',
         name: 'Learn',
-        component: LearnView,
+        component: () => import('../views/LearnView.vue'),
       },
       {
         path: 'leaderboard',
         name: 'Leaderboard',
-        component: LeaderboardView,
+        component: () => import('../views/LeaderboardView.vue'),
       },
       {
         path: 'shop',
         name: 'Shop',
-        component: ShopView,
+        component: () => import('../views/ShopView.vue'),
       },
       {
         path: 'profile',
         name: 'Profile',
-        component: ProfileView,
+        component: () => import('../views/ProfileView.vue'),
       },
       {
         path: 'organization',
@@ -114,7 +105,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/lesson/:id',
     name: 'Lesson',
-    component: LessonView,
+    component: () => import('../views/LessonView.vue'),
     meta: { requiresAuth: true },
   },
   {

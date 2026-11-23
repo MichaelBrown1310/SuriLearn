@@ -13,13 +13,12 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { useUserStore } from './useUserStore';
-import { useFirestore } from '../composables/useFirestore';
+import { useFirestore, getLocalDateString } from '../composables/useFirestore';
 import {
   UserGamificationState,
   GAMIFICATION_RULES,
   calculateStreakMultiplier,
   ShopItemCode,
-  LeagueDivision,
   LeagueLeaderboardEntry,
   LearningUnit,
   Badge,
@@ -49,6 +48,10 @@ export const useGamificationStore = defineStore('gamification', () => {
     totalLessonsCompleted: 0,
     completedLessons: [],
     claimedRewards: [],
+    failedExerciseIds: [],
+    dailyLessonsCompleted: 0,
+    dailyLessonsDate: '',
+    lessonStars: {},
     xpBoostMultiplier: 1,
     xpBoostLessonsRemaining: 0,
   });
@@ -82,6 +85,13 @@ export const useGamificationStore = defineStore('gamification', () => {
   });
   const streakMultiplier = computed(() => calculateStreakMultiplier(streakDays.value));
   const hasStreakFreeze = computed(() => !!state.value.hasStreakFreeze);
+
+  const dailyLessonsCompletedToday = computed(() => {
+    const today = getLocalDateString();
+    return state.value.dailyLessonsDate === today ? state.value.dailyLessonsCompleted || 0 : 0;
+  });
+
+  const failedExerciseCount = computed(() => (state.value.failedExerciseIds || []).length);
 
   const canStartLesson = computed(() => {
     return hasInfiniteHearts.value || state.value.hearts > 0 || isReinforcementMode.value;
@@ -144,15 +154,25 @@ export const useGamificationStore = defineStore('gamification', () => {
       userStore.profile.activeDates = gamState.activeDates ?? [];
       userStore.profile.hearts = gamState.hearts ?? 5;
       userStore.profile.accuracyRate = gamState.accuracyRate ?? 0;
+      userStore.profile.currentLeague = gamState.currentLeague || 'Bronce';
+      userStore.profile.hasStreakFreeze = gamState.hasStreakFreeze;
+      userStore.profile.failedExerciseIds = gamState.failedExerciseIds || [];
+      userStore.profile.dailyLessonsCompleted = gamState.dailyLessonsCompleted || 0;
+      userStore.profile.dailyLessonsDate = gamState.dailyLessonsDate || '';
+      userStore.profile.lessonStars = gamState.lessonStars || {};
 
       const claimed = userStore.profile.claimedRewards || gamState.claimedRewards || [];
       const [learningUnits, leaderData, badgeData] = await Promise.all([
-        firestore.getLearningUnits(gamState.completedLessons || [], claimed),
+        firestore.getLearningUnits(
+          gamState.completedLessons || [],
+          claimed,
+          gamState.lessonStars || {}
+        ),
         firestore.getLeaderboard(
-          userStore.profile.currentLeague || 'Bronce',
+          gamState.currentLeague || userStore.profile.currentLeague || 'Bronce',
           userId
         ),
-        firestore.getBadges(userId),
+        firestore.getBadges(userId, gamState),
       ]);
 
       units.value = learningUnits;
@@ -225,16 +245,46 @@ export const useGamificationStore = defineStore('gamification', () => {
     return false;
   }
 
+  async function recordExerciseFailure(exerciseId: string): Promise<void> {
+    if (!exerciseId) return;
+    const current = Array.isArray(state.value.failedExerciseIds) ? state.value.failedExerciseIds : [];
+    const nextList = Array.from(new Set([exerciseId, ...current])).slice(0, 30);
+    state.value.failedExerciseIds = nextList;
+    userStore.profile.failedExerciseIds = nextList;
+    if (userStore.profile.uid) {
+      await firestore.recordFailedExercise(userStore.profile.uid, exerciseId);
+    }
+  }
+
+  async function clearResolvedErrors(exerciseIds: string[]): Promise<void> {
+    if (!Array.isArray(exerciseIds) || exerciseIds.length === 0) return;
+    const resolved = new Set(exerciseIds);
+    const nextList = (state.value.failedExerciseIds || []).filter((id) => !resolved.has(id));
+    state.value.failedExerciseIds = nextList;
+    userStore.profile.failedExerciseIds = nextList;
+    if (userStore.profile.uid) {
+      await firestore.resolveFailedExercises(userStore.profile.uid, exerciseIds);
+    }
+  }
+
   /**
-   * Completes normal lesson, updates XP, Bits, Streak, and persists to Firestore
+   * Completes normal lesson, enforces >=60% accuracy, updates XP, Bits, Streak, League and persists to Firestore
    */
-  async function completeLesson(summary: LessonSessionSummary): Promise<void> {
+  async function completeLesson(summary: LessonSessionSummary): Promise<{
+    passed: boolean;
+    earnedXp: number;
+    earnedBits: number;
+    stars: number;
+    leaguePromoted: boolean;
+    newLeague: string;
+  }> {
     try {
-      const updatedState = await firestore.recordLessonCompletion(
+      const result = await firestore.recordLessonCompletion(
         userStore.profile.uid,
         summary,
         userStore.isPro
       );
+      const updatedState = result.state;
       state.value = updatedState;
 
       // Sync userStore profile
@@ -246,14 +296,47 @@ export const useGamificationStore = defineStore('gamification', () => {
       userStore.profile.activeDates = updatedState.activeDates ?? [];
       userStore.profile.hearts = updatedState.hearts ?? 5;
       userStore.profile.accuracyRate = updatedState.accuracyRate ?? 0;
+      userStore.profile.currentLeague = updatedState.currentLeague || 'Bronce';
+      userStore.profile.hasStreakFreeze = updatedState.hasStreakFreeze;
+      userStore.profile.dailyLessonsCompleted = updatedState.dailyLessonsCompleted || 0;
+      userStore.profile.dailyLessonsDate = updatedState.dailyLessonsDate || '';
+      userStore.profile.lessonStars = updatedState.lessonStars || {};
 
-      // Refresh dynamic learning tree so next node is immediately unlocked and active
+      // Refresh badges and dynamic learning tree
+      badges.value = await firestore.getBadges(userStore.profile.uid, updatedState);
       const claimed = userStore.profile.claimedRewards || state.value.claimedRewards || [];
-      units.value = await firestore.getLearningUnits(updatedState.completedLessons || [], claimed);
+      units.value = await firestore.getLearningUnits(
+        updatedState.completedLessons || [],
+        claimed,
+        updatedState.lessonStars || {}
+      );
 
-      showToast(`¡Misión completada! +${summary.earnedXp} XP · +${summary.earnedBits} Bits`, true);
+      if (!result.passed) {
+        showToast('Necesitas ≥60% de precisión para aprobar la lección. +5 XP de práctica.', false);
+      } else if (result.leaguePromoted) {
+        showToast(`¡Ascendiste a Liga ${result.newLeague}! +${result.earnedXp} XP · +${result.earnedBits} Bits 🏆`, true);
+      } else {
+        showToast(`¡Misión completada! +${result.earnedXp} XP · +${result.earnedBits} Bits`, true);
+      }
+
+      return {
+        passed: result.passed,
+        earnedXp: result.earnedXp,
+        earnedBits: result.earnedBits,
+        stars: result.stars,
+        leaguePromoted: result.leaguePromoted,
+        newLeague: result.newLeague,
+      };
     } catch (err) {
       console.warn('[useGamificationStore] Error completing lesson:', err);
+      return {
+        passed: true,
+        earnedXp: summary.earnedXp ?? 15,
+        earnedBits: summary.earnedBits ?? 10,
+        stars: 2,
+        leaguePromoted: false,
+        newLeague: state.value.currentLeague || 'Bronce',
+      };
     }
   }
 
@@ -266,7 +349,11 @@ export const useGamificationStore = defineStore('gamification', () => {
 
   async function refreshLearningUnits(): Promise<void> {
     const claimed = userStore.profile.claimedRewards || state.value.claimedRewards || [];
-    units.value = await firestore.getLearningUnits(state.value.completedLessons || [], claimed);
+    units.value = await firestore.getLearningUnits(
+      state.value.completedLessons || [],
+      claimed,
+      state.value.lessonStars || {}
+    );
   }
 
   /**
@@ -316,6 +403,8 @@ export const useGamificationStore = defineStore('gamification', () => {
     streakDays,
     streakMultiplier,
     hasStreakFreeze,
+    dailyLessonsCompletedToday,
+    failedExerciseCount,
     canStartLesson,
     timeUntilNextHeart,
     formattedHeartTimer,
@@ -325,6 +414,8 @@ export const useGamificationStore = defineStore('gamification', () => {
     deductHeart,
     restoreHeart,
     completeReinforcementSession,
+    recordExerciseFailure,
+    clearResolvedErrors,
     completeLesson,
     claimChest,
     refreshLearningUnits,

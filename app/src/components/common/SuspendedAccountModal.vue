@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
+import { useUserStore } from '../../stores/useUserStore';
 import { getSuriImage } from '../../utils/suriAssets';
 
 const props = defineProps<{
   isOpen: boolean;
+  globalBlock?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -11,11 +13,18 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
+const userStore = useUserStore();
 const suriSleeping = getSuriImage('sleeping');
 
 function handleReturn() {
   emit('close');
   router.replace('/tabs/learn');
+}
+
+async function handleLogout() {
+  emit('close');
+  await userStore.logout();
+  router.replace('/welcome');
 }
 </script>
 
@@ -41,7 +50,7 @@ function handleReturn() {
 
       <!-- Warning Heading -->
       <div class="flex flex-col gap-1">
-        <h3 class="text-base font-black text-[#5F4030]">
+        <h3 class="text-base font-black text-on-surface">
           Cuenta Corporativa en Pausa
         </h3>
         <p class="text-xs font-semibold text-on-surface-variant leading-relaxed">
@@ -57,10 +66,21 @@ function handleReturn() {
         </span>
       </div>
 
-      <!-- Return Action -->
+      <!-- Return / Logout Action -->
       <button
+        v-if="globalBlock"
+        type="button"
+        @click="handleLogout"
+        class="w-full py-3 rounded-2xl bg-error text-white font-black text-xs hover:bg-error/90 transition-all shadow-md flex items-center justify-center gap-1.5"
+      >
+        <span class="material-symbols-outlined text-[16px]">logout</span>
+        <span>Cerrar Sesión Activa</span>
+      </button>
+      <button
+        v-else
+        type="button"
         @click="handleReturn"
-        class="w-full py-3 rounded-2xl bg-primary text-white font-black text-xs hover:bg-primary/90 transition-all shadow-md flex items-center justify-center gap-1.5"
+        class="w-full py-3 rounded-2xl btn-tactile-primary font-black text-xs transition-all shadow-md flex items-center justify-center gap-1.5"
       >
         <span class="material-symbols-outlined text-[16px]">arrow_back</span>
         <span>Entendido, volver a inicio</span>

@@ -41,16 +41,32 @@ const isSuspendedModalOpen = ref<boolean>(false);
 const isCurrentCorrect = ref<boolean>(false);
 const isSessionFinished = ref<boolean>(false);
 const lastSessionSummary = ref<LessonSessionSummary | null>(null);
+const lastSessionOutcome = ref<{
+  passed: boolean;
+  earnedXp: number;
+  earnedBits: number;
+  stars: number;
+  leaguePromoted: boolean;
+  newLeague: string;
+} | null>(null);
+const correctIdsInSession = ref<string[]>([]);
 const isShowingTheory = ref<boolean>(true);
 
 const suriImg = getSuriImage('idle');
 
-const currentLessonNode = computed(() => getLessonNode(lessonId.value));
-const nextLessonId = computed(() => getNextLessonId(lessonId.value));
+const isErrorReview = computed(() => lessonId.value === 'error-review');
+const currentLessonNode = computed(() => (isErrorReview.value ? undefined : getLessonNode(lessonId.value)));
+const nextLessonId = computed(() => (isErrorReview.value ? null : getNextLessonId(lessonId.value)));
 const nextLessonNode = computed(() => (nextLessonId.value ? getLessonNode(nextLessonId.value) : null));
+const currentUnitLabel = computed(() => {
+  if (isErrorReview.value) return 'Centro de Errores · Repaso Dirigido';
+  const unitId = currentLessonNode.value?.unitId || 'unit_01';
+  const num = Number(unitId.replace('unit_', '')) || 1;
+  return `Curso ${num} · Lección Superada`;
+});
 
 const hasTheorySlides = computed(() => {
-  return (currentLessonNode.value?.theorySlides?.length || 0) > 0;
+  return !isErrorReview.value && (currentLessonNode.value?.theorySlides?.length || 0) > 0;
 });
 
 const currentExercise = computed(() => {
@@ -83,7 +99,11 @@ onMounted(async () => {
     isOutOfHeartsModalOpen.value = true;
     return;
   }
-  exercises.value = await firestore.getLessonExercises(lessonId.value);
+  exercises.value = await firestore.getLessonExercises(
+    lessonId.value,
+    gamificationStore.state.failedExerciseIds || []
+  );
+  correctIdsInSession.value = [];
   isShowingTheory.value = hasTheorySlides.value;
 });
 
@@ -94,11 +114,13 @@ watch(
       lessonId.value = newId as string;
       currentExerciseIndex.value = 0;
       mistakesCount.value = 0;
+      correctIdsInSession.value = [];
       isModalOpen.value = false;
       showVictoryModal.value = false;
       isOutOfHeartsModalOpen.value = false;
       isSessionFinished.value = false;
       lastSessionSummary.value = null;
+      lastSessionOutcome.value = null;
 
       if (
         gamificationStore.hearts <= 0 &&
@@ -109,7 +131,10 @@ watch(
         return;
       }
 
-      exercises.value = await firestore.getLessonExercises(lessonId.value);
+      exercises.value = await firestore.getLessonExercises(
+        lessonId.value,
+        gamificationStore.state.failedExerciseIds || []
+      );
       isShowingTheory.value = hasTheorySlides.value;
     }
   }
@@ -160,9 +185,17 @@ function handleBooleanSubmit(isSuccess: boolean) {
 
 async function processVerdict(isCorrect: boolean) {
   isCurrentCorrect.value = isCorrect;
+  const exId = currentExercise.value?.id;
 
-  if (!isCorrect) {
+  if (isCorrect) {
+    if (exId && !correctIdsInSession.value.includes(exId)) {
+      correctIdsInSession.value.push(exId);
+    }
+  } else {
     mistakesCount.value += 1;
+    if (exId) {
+      gamificationStore.recordExerciseFailure(exId).catch(() => {});
+    }
     await gamificationStore.deductHeart();
 
     // Block immediately if user has no hearts left (and is not Pro or Reinforcement)
@@ -189,7 +222,7 @@ async function handleModalContinue() {
     // Lesson Complete!
     isSessionFinished.value = true;
     const isPerfect = mistakesCount.value === 0;
-    const baseXp = currentLessonNode.value?.expReward || 15;
+    const baseXp = isErrorReview.value ? 15 : (currentLessonNode.value?.expReward || 15);
     const earnedXp = isPerfect ? baseXp + 5 : baseXp;
     const earnedBits = currentLessonNode.value?.isVideoGame ? 20 : 10;
     const totalEx = exercises.value.length || 1;
@@ -213,13 +246,43 @@ async function handleModalContinue() {
     lastSessionSummary.value = summary;
 
     if (gamificationStore.isReinforcementMode) {
-      await gamificationStore.completeReinforcementSession(isPerfect);
+      const restored = await gamificationStore.completeReinforcementSession(isPerfect);
+      lastSessionOutcome.value = {
+        passed: restored,
+        earnedXp: restored ? 10 : 5,
+        earnedBits: 0,
+        stars: restored ? 3 : 1,
+        leaguePromoted: false,
+        newLeague: gamificationStore.state.currentLeague || 'Bronce',
+      };
+      if (restored && correctIdsInSession.value.length > 0) {
+        await gamificationStore.clearResolvedErrors(correctIdsInSession.value);
+      }
     } else {
-      await gamificationStore.completeLesson(summary);
+      const outcome = await gamificationStore.completeLesson(summary);
+      lastSessionOutcome.value = outcome;
+      if (outcome.passed && correctIdsInSession.value.length > 0) {
+        await gamificationStore.clearResolvedErrors(correctIdsInSession.value);
+      }
     }
 
     showVictoryModal.value = true;
   }
+}
+
+async function handleRetryLesson() {
+  showVictoryModal.value = false;
+  currentExerciseIndex.value = 0;
+  mistakesCount.value = 0;
+  correctIdsInSession.value = [];
+  isModalOpen.value = false;
+  isSessionFinished.value = false;
+  lastSessionSummary.value = null;
+  lastSessionOutcome.value = null;
+  exercises.value = await firestore.getLessonExercises(
+    lessonId.value,
+    gamificationStore.state.failedExerciseIds || []
+  );
 }
 
 function handleNextLesson(nextId: string) {
@@ -289,6 +352,9 @@ onUnmounted(() => {
             <span class="text-[10px] font-extrabold uppercase tracking-wider text-secondary truncate min-w-0">
               <template v-if="isShowingTheory && hasTheorySlides">
                 📘 Fase 1: Briefing Teórico ({{ currentLessonNode?.title }})
+              </template>
+              <template v-else-if="isErrorReview">
+                🛡️ Centro de Errores · Repaso {{ currentExerciseIndex + 1 }} de {{ exercises.length }}
               </template>
               <template v-else>
                 🎮 Fase 2: Misión {{ currentExerciseIndex + 1 }} de {{ exercises.length }}
@@ -469,20 +535,26 @@ onUnmounted(() => {
       @continue="handleModalContinue"
     />
 
-    <!-- Celebratory Lesson Victory Modal -->
+    <!-- Celebratory Lesson Victory / Retry Modal -->
     <LessonVictoryModal
       :is-open="showVictoryModal"
       :lesson-id="lessonId"
-      :lesson-title="currentLessonNode?.title"
+      :lesson-title="isErrorReview ? 'Centro de Errores' : currentLessonNode?.title"
+      :unit-label="currentUnitLabel"
       :next-lesson-id="nextLessonId"
       :next-lesson-title="nextLessonNode?.title"
-      :earned-xp="lastSessionSummary?.earnedXp ?? 15"
-      :earned-bits="lastSessionSummary?.earnedBits ?? 10"
+      :earned-xp="lastSessionOutcome?.earnedXp ?? lastSessionSummary?.earnedXp ?? 15"
+      :earned-bits="lastSessionOutcome?.earnedBits ?? lastSessionSummary?.earnedBits ?? 10"
       :accuracy-percentage="accuracyPercentage"
       :is-perfect-score="mistakesCount === 0"
       :hearts-remaining="gamificationStore.hearts"
+      :passed="lastSessionOutcome?.passed ?? true"
+      :stars="lastSessionOutcome?.stars ?? 3"
+      :league-promoted="lastSessionOutcome?.leaguePromoted ?? false"
+      :new-league="lastSessionOutcome?.newLeague"
       @next-lesson="handleNextLesson"
       @go-to-map="handleGoToMap"
+      @retry="handleRetryLesson"
     />
 
     <!-- Full-screen Out of Hearts Blocking Modal -->
