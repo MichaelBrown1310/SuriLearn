@@ -49,7 +49,11 @@ export type ExerciseType =
   | 'cyber_hangman'
   | 'cyber_snake'
   | 'cyber_memory'
-  | 'threat_whack';
+  | 'threat_whack'
+  | 'cyber_wordsearch'
+  | 'cyber_minesweeper'
+  | 'cyber_breakout'
+  | 'cyber_invaders';
 
 export interface BaseExercise {
   id: string;
@@ -478,7 +482,67 @@ export interface ThreatWhackExercise extends BaseExercise {
 }
 
 // ==========================================
-// 15. UNIFIED EXERCISE UNION & LESSON RUNTIME
+// 15. CLASSIC ARCADE GAMES PRO (CURSO 8)
+// (`cyber_wordsearch`, `cyber_minesweeper`, `cyber_breakout`, `cyber_invaders`)
+// ==========================================
+
+export interface CyberWordSearchTarget {
+  word: string; // Pure uppercase ASCII A-Z
+  startRow: number;
+  startCol: number;
+  endRow: number;
+  endCol: number;
+  clue: string;
+  explanation: string;
+}
+
+export interface CyberWordSearchExercise extends BaseExercise {
+  type: 'cyber_wordsearch';
+  grid: string[]; // Square matrix rows (uppercase A-Z)
+  targets: CyberWordSearchTarget[];
+  maxHints: number;
+}
+
+export interface CyberMinesweeperExercise extends BaseExercise {
+  type: 'cyber_minesweeper';
+  gridSize: number;
+  mineCount: number;
+  maxShields: number;
+  threatLabels: string[];
+}
+
+export interface CyberBreakoutRow {
+  label: string;
+  hp: number;
+  colorHex: string;
+  tip: string;
+}
+
+export interface CyberBreakoutExercise extends BaseExercise {
+  type: 'cyber_breakout';
+  cols: number;
+  rows: CyberBreakoutRow[];
+  maxShields: number;
+  ballSpeed: number;
+}
+
+export interface CyberInvaderType {
+  label: string;
+  colorHex: string;
+  points: number;
+  tip: string;
+}
+
+export interface CyberInvadersExercise extends BaseExercise {
+  type: 'cyber_invaders';
+  rows: number;
+  cols: number;
+  maxShields: number;
+  invaderTypes: CyberInvaderType[];
+}
+
+// ==========================================
+// 16. UNIFIED EXERCISE UNION & LESSON RUNTIME
 // ==========================================
 
 export type Exercise =
@@ -496,7 +560,11 @@ export type Exercise =
   | CyberHangmanExercise
   | CyberSnakeExercise
   | CyberMemoryExercise
-  | ThreatWhackExercise;
+  | ThreatWhackExercise
+  | CyberWordSearchExercise
+  | CyberMinesweeperExercise
+  | CyberBreakoutExercise
+  | CyberInvadersExercise;
 
 export interface ExerciseResult {
   exerciseId: string;

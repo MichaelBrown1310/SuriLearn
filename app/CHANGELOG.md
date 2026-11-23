@@ -6,6 +6,31 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 <!-- CHANGELOG_ENTRIES_START -->
 
+## [v0.14.0] - 2026-11-23
+
+- **Resumen**: Paleta SuriLearn en juegos previos, mejoras jugables y 4 nuevos juegos clasicos (Curso 8)
+- **Plan de Desarrollo**: [docs/plans/PLAN_v0.14.0.md](./docs/plans/PLAN_v0.14.0.md)
+- **Archivos impactados**:
+  - `M README.md`
+  - `M docs/DOCUMENTO_PROYECTO_TI_SURILEARN.md`
+  - `M src/__tests__/curriculum.spec.ts`
+  - `M src/components/games/CodePatcherGame.vue`
+  - `M src/components/games/CyberSnakeGame.vue`
+  - `M src/components/games/FirewallDefenseGame.vue`
+  - `M src/components/games/ForensicInvestigatorGame.vue`
+  - `M src/components/games/IncidentCommandGame.vue`
+  - `M src/components/games/NetworkMazeGame.vue`
+  - `M src/data/curriculum.ts`
+  - `M src/types/exercises.ts`
+  - `M src/views/LearnView.vue`
+  - `M src/views/LessonView.vue`
+  - `?? docs/plans/PLAN_v0.14.0.md`
+  - `?? src/components/games/CyberBreakoutGame.vue`
+  - `?? src/components/games/CyberInvadersGame.vue`
+  - `?? src/components/games/CyberMinesweeperGame.vue`
+  - `?? src/components/games/CyberWordSearchGame.vue`
+
+
 ## [v0.13.0] - 2026-11-23
 
 - **Resumen**: Zona Arcade Clasica (Ahorcado, Culebrita, Memorama, Atrapa al Hacker) y animaciones vivas de Suri

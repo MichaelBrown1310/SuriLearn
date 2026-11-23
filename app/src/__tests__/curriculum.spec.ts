@@ -8,11 +8,11 @@ import {
 import { SURI_IMAGES } from '../utils/suriAssets';
 import type { SuriPose } from '../types/exercises';
 
-describe('Curriculum & Minigame Integrity (7 Courses / 25 Lessons / 15 Engines)', () => {
-  it('exposes exactly 7 courses and 25 sequenced lessons', () => {
+describe('Curriculum & Minigame Integrity (8 Courses / 29 Lessons / 19 Engines)', () => {
+  it('exposes exactly 8 courses and 29 sequenced lessons', () => {
     const units = buildAllLearningUnits([], []);
-    expect(units).toHaveLength(7);
-    expect(LESSON_SEQUENCE).toHaveLength(25);
+    expect(units).toHaveLength(8);
+    expect(LESSON_SEQUENCE).toHaveLength(29);
   });
 
   it('validates exercises in every lesson without broken structural links', () => {
@@ -61,6 +61,45 @@ describe('Curriculum & Minigame Integrity (7 Courses / 25 Lessons / 15 Engines)'
             ex.spawnPool.some((i) => !i.isThreat),
             `No benign items in ${ex.id}`
           ).toBe(true);
+        }
+        if (ex.type === 'cyber_wordsearch') {
+          expect(ex.grid.length, `Wordsearch grid empty in ${ex.id}`).toBeGreaterThanOrEqual(6);
+          const rowLen = ex.grid[0].length;
+          expect(rowLen, `Wordsearch row length too small in ${ex.id}`).toBeGreaterThanOrEqual(6);
+          for (const row of ex.grid) {
+            expect(row.length, `Uneven wordsearch row in ${ex.id}`).toBe(rowLen);
+          }
+          for (const t of ex.targets) {
+            const dr = Math.sign(t.endRow - t.startRow);
+            const dc = Math.sign(t.endCol - t.startCol);
+            const len = Math.max(Math.abs(t.endRow - t.startRow), Math.abs(t.endCol - t.startCol)) + 1;
+            let extracted = '';
+            for (let k = 0; k < len; k++) {
+              extracted += ex.grid[t.startRow + dr * k][t.startCol + dc * k];
+            }
+            expect(extracted, `Broken wordsearch coordinates for ${t.word} in ${ex.id}`).toBe(t.word);
+          }
+        }
+        if (ex.type === 'cyber_minesweeper') {
+          expect(ex.gridSize, `Minesweeper grid too small in ${ex.id}`).toBeGreaterThanOrEqual(5);
+          expect(ex.mineCount, `Invalid mineCount in ${ex.id}`).toBeGreaterThan(0);
+          expect(ex.mineCount, `Too many mines in ${ex.id}`).toBeLessThan(ex.gridSize * ex.gridSize - 1);
+          expect(ex.maxShields, `Invalid maxShields in ${ex.id}`).toBeGreaterThanOrEqual(1);
+        }
+        if (ex.type === 'cyber_breakout') {
+          expect(ex.cols, `Breakout cols too small in ${ex.id}`).toBeGreaterThanOrEqual(4);
+          expect(ex.rows.length, `Too few breakout rows in ${ex.id}`).toBeGreaterThanOrEqual(2);
+          for (const row of ex.rows) {
+            expect(row.hp, `Invalid brick hp in ${ex.id}`).toBeGreaterThanOrEqual(1);
+          }
+        }
+        if (ex.type === 'cyber_invaders') {
+          expect(ex.rows, `Invaders rows too small in ${ex.id}`).toBeGreaterThanOrEqual(2);
+          expect(ex.cols, `Invaders cols too small in ${ex.id}`).toBeGreaterThanOrEqual(3);
+          expect(
+            ex.invaderTypes.length,
+            `Insufficient invaderTypes for rows in ${ex.id}`
+          ).toBeGreaterThanOrEqual(ex.rows);
         }
       }
     }

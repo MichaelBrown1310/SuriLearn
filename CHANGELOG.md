@@ -6,6 +6,17 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 <!-- CHANGELOG_ENTRIES_START -->
 
+## [v0.14.0] - 2026-11-23
+
+- **Resumen**: Paleta oficial SuriLearn en juegos previos, mejoras jugables (60fps/swipe/inicio-pausa) y 4 nuevos juegos clásicos (Curso 8)
+- **Plan de Desarrollo**: [docs/plans/PLAN_v0.14.0.md](./app/docs/plans/PLAN_v0.14.0.md)
+- **Archivos impactados**:
+  - `M README.md`, `CHANGELOG.md`, `app/README.md`, `app/docs/DOCUMENTO_PROYECTO_TI_SURILEARN.md`, `app/CHANGELOG.md`, `app/package.json`
+  - `A app/docs/plans/PLAN_v0.14.0.md`
+  - `M app/src/components/games/FirewallDefenseGame.vue`, `NetworkMazeGame.vue`, `IncidentCommandGame.vue`, `CodePatcherGame.vue`, `ForensicInvestigatorGame.vue`, `CyberSnakeGame.vue` (paleta SuriLearn homologada, `<SuriMascotAnimated>` y mejoras jugables)
+  - `A app/src/components/games/CyberWordSearchGame.vue`, `CyberMinesweeperGame.vue`, `CyberBreakoutGame.vue`, `CyberInvadersGame.vue`
+  - `M app/src/data/curriculum.ts` (8 cursos / 29 lecciones / 19 motores), `app/src/types/exercises.ts`, `app/src/views/LessonView.vue`, `LearnView.vue`, `app/src/__tests__/curriculum.spec.ts` (`16/16` pruebas)
+
 ## [v0.13.0] - 2026-11-23
 
 - **Resumen**: Zona Arcade Clásica (Curso 7: Ahorcado, Culebrita, Memorama, Atrapa al Hacker) y animaciones reactivas de Suri

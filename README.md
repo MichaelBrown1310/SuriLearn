@@ -1,6 +1,6 @@
 # 🛡️ SuriLearn — Plataforma Gamificada de Ciberseguridad (B2C + PYMES B2B)
 
-> **Versión Actual:** `v0.13.0` (Pre-1.0 · P0 + P1 + P2 + Zona Arcade Clásica & Animaciones de Suri)  
+> **Versión Actual:** `v0.14.0` (Pre-1.0 · P0 + P1 + P2 + 2 Zonas Arcade & Paleta SuriLearn Homologada)  
 > **Propuesta de Valor:** *Una plataforma de aprendizaje de ciberseguridad gamificada que transforma la capacitación tradicional en una experiencia interactiva, progresiva y personalizada, dirigida tanto a usuarios individuales como a organizaciones que buscan fortalecer las competencias de seguridad de sus empleados.*
 
 ---
@@ -13,7 +13,7 @@ Este monorepo reúne los **3 pilares completos del proyecto**:
 
 | Carpeta | Contenido | Tecnología / Entregables |
 |---|---|---|
-| [`app/`](./app/) | **Aplicación Web Progresiva PWA (`v0.13.0`)** | Vue 3, TypeScript (`strict: true`), Pinia, Tailwind CSS (WCAG 2.1 AA), Chart.js, Vitest (`16/16`), Firebase Auth/Firestore, Stripe Checkout + Cloud Functions v2 |
+| [`app/`](./app/) | **Aplicación Web Progresiva PWA (`v0.14.0`)** | Vue 3, TypeScript (`strict: true`), Pinia, Tailwind CSS (WCAG 2.1 AA), Chart.js, Vitest (`16/16`), Firebase Auth/Firestore, Stripe Checkout + Cloud Functions v2 |
 | [`promo-video/`](./promo-video/) | **Video Promocional Animado (1080p @ 30fps)** | Remotion (`4.0.539`), React 19, Tailwind CSS v4, escenas actualizadas a `v0.12.0` + renders `.mp4` / `.png` |
 | [`docs-negocio/`](./docs-negocio/) | **Emprendimiento, Validación y Modelado** | Business Model Canvas, Estudio Estadístico ($n=50$), Análisis Financiero, Buyer Personas, Mapa de Empatía, Diagramas UML/BPMN/ER y Mockups HD |
 
@@ -24,7 +24,7 @@ Este monorepo reúne los **3 pilares completos del proyecto**:
 ```mermaid
 flowchart LR
     subgraph Cliente ["Frontend Vue 3 SPA (Sin secretos)"]
-        UI["Vistas: Learn · Lesson (15 juegos) · Shop · Leagues · OrgDashboard"]
+        UI["Vistas: Learn · Lesson (19 juegos) · Shop · Leagues · OrgDashboard"]
         Toast["ToastNotification.vue (Global)"]
         Guards["Vue Router Guards (requiresAuth / guestOnly)"]
         StripeClient["stripeService.ts (/api/*)"]
@@ -53,9 +53,9 @@ flowchart LR
 
 ---
 
-## 🎮 Currículo y Suite de 15 Motores Interactivos
+## 🎮 Currículo y Suite de 19 Motores Interactivos
 
-La plataforma incluye **7 cursos completos (`25 lecciones` + `7 cofres`)** con un **Sistema Teórico Dual** (**Códice del Curso** en `UnitTheoryModal.vue` + **Briefing Pre-Misión** en `LessonTheoryBriefing.vue`) y **15 motores de juego desacoplados**:
+La plataforma incluye **8 cursos completos (`29 lecciones` + `8 cofres`)** con un **Sistema Teórico Dual** (**Códice del Curso** en `UnitTheoryModal.vue` + **Briefing Pre-Misión** en `LessonTheoryBriefing.vue`) y **19 motores de juego desacoplados**:
 
 ### Cursos Disponibles
 1. **Curso 1 (`unit_01`) — Anatomía del Phishing e Ingeniería Social** *(5 lecciones)*: Cabeceras SMTP (SPF/DKIM), typosquatting DNS, fraude del CEO (BEC), adjuntos `.pdf.exe`/`.xlsm` y triaje contrarreloj.
@@ -65,11 +65,13 @@ La plataforma incluye **7 cursos completos (`25 lecciones` + `7 cofres`)** con u
 5. **Curso 5 (`unit_05`) — Seguridad Web OWASP & Blindaje DevSecOps** *(3 lecciones)*: Parcheo en vivo contra SQL Injection, XSS, IDOR, Command Injection y JWT `none`.
 6. **Curso 6 (`unit_06`) — Forense Digital, Threat Hunting & Anti-IA** *(3 lecciones)*: Caza de procesos maliciosos en memoria RAM (PID/PPID, sockets C2) y dictamen de causa raíz (IoC).
 7. **Curso 7 (`unit_07`) — Zona Arcade Centinela (Juegos Clásicos)** *(4 lecciones)*: Mecánicas retro entretenidas aplicadas a ciberseguridad (Ahorcado técnico, Culebrita Firewall, Memorama Amenaza↔Defensa y Atrapa al Hacker).
+8. **Curso 8 (`unit_08`) — Zona Arcade Pro — Acción & Ingenio** *(4 lecciones)*: Sopa de Letras Centinela (`8×8`), Buscaminas de Malware (`6×6`), Rompe-Malware Arcade (`60fps`) e Invasores del Spam (`60fps`).
 
-### 15 Motores de Minijuegos y Videojuegos (`app/src/components/games/`)
+### 19 Motores de Minijuegos y Videojuegos (`app/src/components/games/`)
 - **6 Minijuegos Core**: `InboxThreatScanner`, `UrlInspector`, `PasswordVaultBuilder`, `SocialEngineeringChat`, `PermissionGatekeeper`, `RapidTriageRadar`.
-- **5 Videojuegos Avanzados**: `FirewallDefenseGame` (3 carriles en tiempo real), `NetworkMazeGame` (laberinto táctico 2D), `IncidentCommandGame` (consola SOC), `CodePatcherGame` (hotfix DevSecOps) y `ForensicInvestigatorGame` (laboratorio CSI en RAM).
+- **5 Videojuegos Avanzados (Paleta SuriLearn `v0.14.0`)**: `FirewallDefenseGame` (3 carriles a `60fps` con bonus de puntería), `NetworkMazeGame` (Madriguera 2.5D con rastro y swipe), `IncidentCommandGame` (consola SOC), `CodePatcherGame` (hotfix DevSecOps) y `ForensicInvestigatorGame` (laboratorio CSI en RAM).
 - **4 Juegos Clásicos Arcade (`v0.13.0`)**: `CyberHangmanGame` (Ahorcado Ciberdefensor), `CyberSnakeGame` (Culebrita Firewall), `CyberMemoryGame` (Memorama de Pares) y `ThreatWhackGame` (Atrapa al Hacker en puertos).
+- **4 Juegos Clásicos Zona Arcade Pro (`v0.14.0`)**: `CyberWordSearchGame` (Sopa de Letras), `CyberMinesweeperGame` (Buscaminas de Malware), `CyberBreakoutGame` (Rompe-Malware Canvas `60fps`) y `CyberInvadersGame` (Invasores del Spam Canvas `60fps`).
 
 ---
 
@@ -79,7 +81,7 @@ La plataforma incluye **7 cursos completos (`25 lecciones` + `7 cofres`)** con u
 - ❤️ **Gamificación y Economía**: 5 vidas con regeneración pasiva cada 4h, **Modo Refuerzo** a 0 vidas, aprobación mínima (`≥60%`) con `1–3` estrellas persistentes, cofres atómicos (`runTransaction`), rachas diarias con multiplicadores `x1.0`–`x2.0` y consumo real de *Congelador de Racha*, boosts `2X XP` persistidos, medallas dinámicas, notificaciones `ToastNotification.vue` y **Dark Sentinel WCAG 2.1 AA**.
 - 🏆 **Ligas en Tiempo Real**: Ranking global con promoción automática por XP (`Bronce → Plata → Oro → Diamante → Supremo`), cuenta regresiva semanal real y **Liga Privada Empresarial** sincronizados con `onSnapshot`.
 - 🏢 **Panel Corporativo PYME (B2B + RBAC)**: Creación de organizaciones (`micro_pyme` 10, `growth_pyme` 30, `enterprise` 100), código transaccional (`runTransaction`), aislamiento RBAC entre Administradores CISO y Colaboradores, analítica semanal real (`activeDates`) + **Exportar CSV**, detección `"En Riesgo"` y suspensión preventiva en tiempo real (`onSnapshot`).
-- 📱 **PWA, Mascota Animada y Calidad (`v0.13.0`)**: Instalable (`manifest.webmanifest` + Service Worker `sw.js`), lazy-loading completo de rutas y `manualChunks` (`71.96 kB` de entrada), mascota **Suri reactiva con 11 poses y animaciones continuas** (`SuriMascotAnimated.vue`), manejo global de errores y **16 pruebas unitarias Vitest** automatizadas.
+- 📱 **PWA, Mascota Animada y Calidad (`v0.14.0`)**: Instalable (`manifest.webmanifest` + Service Worker `sw.js`), lazy-loading completo de rutas y `manualChunks` (`71.96 kB` de entrada), mascota **Suri reactiva con 11 poses y animaciones continuas** (`SuriMascotAnimated.vue`), paleta oficial unificada en los 19 motores, manejo global de errores y **16 pruebas unitarias Vitest** automatizadas.
 - 🔒 **Endurecimiento P0 (`v0.11.0`)**: Autenticación dual (**Email/Contraseña** + **Google OAuth**), guards `requiresAuth` / `guestOnly`, reglas **Zero Trust** en [`app/firestore.rules`](./app/firestore.rules), y secrets/verificación de Stripe exclusivamente server-side (`vite.config.ts` / [`app/functions/`](./app/functions/)).
 
 ---
@@ -122,11 +124,11 @@ npm run dev            # Abre Remotion Studio
 ```text
 SuriLearn/
 ├── README.md                  # Documentación principal del ecosistema SuriLearn
-├── CHANGELOG.md               # Historial cronológico de versiones (v0.1.0 -> v0.13.0)
+├── CHANGELOG.md               # Historial cronológico de versiones (v0.1.0 -> v0.14.0)
 ├── .gitignore                 # Exclusiones de secretos (.env), node_modules, dist y temporales
 ├── app/                       # PWA Vue 3 + TypeScript + Vitest + Firebase + Stripe + Cloud Functions
 │   ├── README.md              # Documentación técnica de la aplicación
-│   ├── docs/                  # SRS, Informe Técnico, Design System y Planes v0.1.0 - v0.13.0
+│   ├── docs/                  # SRS, Informe Técnico, Design System y Planes v0.1.0 - v0.14.0
 │   ├── functions/             # Cloud Functions v2 para Stripe B2C/B2B y Webhooks
 │   ├── prototypes/            # Prototipos HTML/PNG de Stitch UI
 │   ├── src/                   # Código fuente (vistas, minijuegos, stores, composables)

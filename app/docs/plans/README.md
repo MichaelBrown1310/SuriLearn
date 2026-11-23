@@ -9,6 +9,7 @@ Esta carpeta almacena todos los **Planes de Ingeniería y Desarrollo** utilizado
 <!-- PLANS_TABLE_START -->
 | Versión | Fecha | Estado | Resumen del Avance | Documento del Plan |
 |---|---|---|---|---|
+| **v0.14.0** | 2026-11-23 | Completado | Paleta SuriLearn en juegos previos, mejoras jugables y 4 nuevos juegos clasicos (Curso 8) | [PLAN_v0.14.0.md](./PLAN_v0.14.0.md) |
 | **v0.13.0** | 2026-11-23 | Completado | Zona Arcade Clasica (Ahorcado, Culebrita, Memorama, Atrapa al Hacker) y animaciones vivas de Suri | [PLAN_v0.13.0.md](./PLAN_v0.13.0.md) |
 | **v0.12.0** | 2026-11-23 | Completado | Personalizacion adaptativa, B2B real con RBAC, WCAG 2.1 AA, PWA, lazy-loading y pruebas Vitest | [PLAN_v0.12.0.md](./PLAN_v0.12.0.md) |
 | **v0.11.0** | 2026-11-23 | Completado | Endurecimiento P0 de seguridad, estabilidad en minijuegos, vidas y login dual | [PLAN_v0.11.0.md](./PLAN_v0.11.0.md) |

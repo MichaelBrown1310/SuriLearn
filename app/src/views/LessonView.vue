@@ -26,6 +26,10 @@ import CyberHangmanGame from '../components/games/CyberHangmanGame.vue';
 import CyberSnakeGame from '../components/games/CyberSnakeGame.vue';
 import CyberMemoryGame from '../components/games/CyberMemoryGame.vue';
 import ThreatWhackGame from '../components/games/ThreatWhackGame.vue';
+import CyberWordSearchGame from '../components/games/CyberWordSearchGame.vue';
+import CyberMinesweeperGame from '../components/games/CyberMinesweeperGame.vue';
+import CyberBreakoutGame from '../components/games/CyberBreakoutGame.vue';
+import CyberInvadersGame from '../components/games/CyberInvadersGame.vue';
 import { getNextLessonId, getLessonNode } from '../data/curriculum';
 
 const route = useRoute();
@@ -564,6 +568,42 @@ onUnmounted(() => {
         <!-- 15. CLASSIC ARCADE (Curso 7): Atrapa al Hacker -->
         <ThreatWhackGame
           v-else-if="currentExercise.type === 'threat_whack'"
+          :key="currentExercise.id"
+          :exercise="currentExercise"
+          :disabled="isModalOpen"
+          @submit="handleBooleanSubmit"
+        />
+
+        <!-- 16. CLASSIC ARCADE PRO (Curso 8): Sopa de Letras Centinela -->
+        <CyberWordSearchGame
+          v-else-if="currentExercise.type === 'cyber_wordsearch'"
+          :key="currentExercise.id"
+          :exercise="currentExercise"
+          :disabled="isModalOpen"
+          @submit="handleBooleanSubmit"
+        />
+
+        <!-- 17. CLASSIC ARCADE PRO (Curso 8): Buscaminas de Malware -->
+        <CyberMinesweeperGame
+          v-else-if="currentExercise.type === 'cyber_minesweeper'"
+          :key="currentExercise.id"
+          :exercise="currentExercise"
+          :disabled="isModalOpen"
+          @submit="handleBooleanSubmit"
+        />
+
+        <!-- 18. CLASSIC ARCADE PRO (Curso 8): Rompe-Malware Arcade -->
+        <CyberBreakoutGame
+          v-else-if="currentExercise.type === 'cyber_breakout'"
+          :key="currentExercise.id"
+          :exercise="currentExercise"
+          :disabled="isModalOpen"
+          @submit="handleBooleanSubmit"
+        />
+
+        <!-- 19. CLASSIC ARCADE PRO (Curso 8): Invasores del Spam -->
+        <CyberInvadersGame
+          v-else-if="currentExercise.type === 'cyber_invaders'"
           :key="currentExercise.id"
           :exercise="currentExercise"
           :disabled="isModalOpen"

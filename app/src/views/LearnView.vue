@@ -212,7 +212,7 @@ const weekDays = computed(() => {
 });
 
 onMounted(async () => {
-  if (gamificationStore.units.length < 7) {
+  if (gamificationStore.units.length < 8) {
     await gamificationStore.loadGamificationData();
   }
 
@@ -253,7 +253,7 @@ function isChestClaimed(node: LearningNode): boolean {
 const allUnits = computed<LearningUnit[]>(() => {
   const claimed = userStore.profile.claimedRewards || gamificationStore.state.claimedRewards || [];
   const baseList =
-    gamificationStore.units.length >= 7
+    gamificationStore.units.length >= 8
       ? gamificationStore.units
       : buildAllLearningUnits(
           gamificationStore.state.completedLessons || [],
@@ -477,12 +477,12 @@ async function claimDailyQuest() {
             </div>
           </div>
 
-          <!-- Selector Rápido de los 7 Cursos / Módulos -->
+          <!-- Selector Rápido de los 8 Cursos / Módulos -->
           <div class="w-full bg-surface-container-lowest p-3 rounded-3xl border border-outline-variant/40 shadow-xs">
             <div class="flex flex-wrap items-center justify-between gap-1 px-1 mb-2.5">
               <span class="text-[11px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-[16px] icon-filled">hub</span>
-                <span>7 Cursos · Incluyendo Zona Arcade Clásica</span>
+                <span>8 Cursos · Incluye 2 Zonas Arcade</span>
               </span>
               <span class="text-[10px] font-bold text-on-surface-variant">
                 Selecciona un módulo para explorar su teoría y videojuegos
@@ -498,7 +498,7 @@ async function claimDailyQuest() {
                 :class="
                   selectedUnitIndex === idx
                     ? 'bg-primary text-white border-primary shadow-[0_3px_0_#b87b2e]'
-                    : u.unitNumber === 7
+                    : u.unitNumber === 7 || u.unitNumber === 8
                       ? 'bg-tertiary/10 text-on-surface border-tertiary/40 hover:border-tertiary'
                       : 'bg-surface-container-low text-on-surface border-outline-variant/40 hover:border-primary/50'
                 "
@@ -509,11 +509,17 @@ async function claimDailyQuest() {
                     Curso {{ u.unitNumber }}
                   </span>
                   <span
-                    v-if="u.unitNumber === 7"
+                    v-if="u.unitNumber === 7 || u.unitNumber === 8"
                     class="text-[9px] font-black px-1.5 py-0.2 rounded-full uppercase"
-                    :class="selectedUnitIndex === idx ? 'bg-white/25 text-white' : 'bg-tertiary text-white'"
+                    :class="
+                      selectedUnitIndex === idx
+                        ? 'bg-white/25 text-white'
+                        : u.unitNumber === 8
+                          ? 'bg-primary text-[#291800]'
+                          : 'bg-tertiary text-white'
+                    "
                   >
-                    ¡Clásicos!
+                    {{ u.unitNumber === 8 ? '¡Nuevos!' : '¡Clásicos!' }}
                   </span>
                   <span v-else class="material-symbols-outlined text-[16px] icon-filled">
                     {{ u.icon || 'shield' }}
@@ -533,7 +539,9 @@ async function claimDailyQuest() {
                               ? 'DevSecOps & Parcheo'
                               : u.unitNumber === 6
                                 ? 'Forense & Threat Hunting'
-                                : 'Zona Arcade 🎮'
+                                : u.unitNumber === 7
+                                  ? 'Zona Arcade 🎮'
+                                  : 'Arcade Acción 🕹️'
                   }}
                 </span>
                 <div class="flex items-center justify-between text-[10px] font-black mt-0.5 opacity-90">

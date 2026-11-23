@@ -44,6 +44,11 @@ export const LESSON_SEQUENCE = [
   'arcade-snake-1',
   'arcade-memory-1',
   'arcade-whack-1',
+  // Curso 8: Zona Arcade Pro (Acción & Ingenio)
+  'arcade-wordsearch-1',
+  'arcade-minesweeper-1',
+  'arcade-breakout-1',
+  'arcade-invaders-1',
 ] as const;
 
 export type LessonId = (typeof LESSON_SEQUENCE)[number];
@@ -400,6 +405,45 @@ export const UNIT_THEORY_GUIDES: Record<string, UnitTheoryGuide> = {
       'Cada ataque tiene una defensa precisa: identifica primero el vector y aplica la contramedida adecuada.',
       'Bloquea las conexiones sospechosas sin desconectar tráfico legítimo esencial.',
       'Practicar mecánicas cortas a diario consolida el instinto preventivo.',
+    ],
+  },
+
+  unit_08: {
+    subtitle: 'Juegos clásicos retro de ingenio, deducción y reflejos de defensa en tiempo real',
+    frameworkBadge: 'Zona Arcade Pro · Acción & Ingenio',
+    estimatedStudyMinutes: 12,
+    overview:
+      'Refuerza tu agilidad mental combinando cuatro clásicos atemporales —Sopa de Letras Centinela, Buscaminas de Malware, Rompe-Malware Arcade e Invasores del Spam— adaptados con la estética oficial de SuriLearn.',
+    sections: [
+      {
+        title: '1. Ingenio y Deducción Preventiva (Sopa y Buscaminas)',
+        icon: 'grid_on',
+        summary:
+          'Localizar conceptos clave y auditar sectores de red por probabilidad enseña a detectar amenazas latentes sin provocar interrupciones.',
+        keyPoints: [
+          'En la Sopa de Letras identificas controles y ataques críticos dentro de la matriz.',
+          'En el Buscaminas de Malware interpretas pistas numéricas de adyacencia antes de auditar o marcar casillas.',
+        ],
+        realWorldCase:
+          'Las auditorías preventivas sistemáticas reducen en más de un 60% la probabilidad de ejecutar cargas sospechosas en equipos de oficina.',
+      },
+      {
+        title: '2. Reacción Táctica en Tiempo Real (Rompe-Malware e Invasores)',
+        icon: 'rocket_launch',
+        summary:
+          'Entrena tu coordinación y velocidad de bloqueo contra oleadas coordinadas de spam, ransomware y redes botnet.',
+        keyPoints: [
+          'Mantén la barrera Firewall activa en Rompe-Malware para destruir cargas cifradas.',
+          'Defiende los muros perimetrales en Invasores del Spam neutralizando amenazas antes de que crucen la línea.',
+        ],
+        realWorldCase:
+          'Una defensa en capas (firewall perimetral + filtrado anti-spam + detección rápida) frena campañas masivas en segundos.',
+      },
+    ],
+    goldenRules: [
+      'Analiza las señales numéricas y pistas antes de hacer clic en entornos desconocidos.',
+      'Protege siempre las capas perimetrales antes de que la amenaza alcance tus activos.',
+      'Aprender practicando mantiene alta la retención ante ataques reales.',
     ],
   },
 };
@@ -1387,6 +1431,157 @@ const UNIT_7_NODES: LearningNode[] = [
   },
 ];
 
+const UNIT_8_NODES: LearningNode[] = [
+  {
+    id: 'arcade-wordsearch-1',
+    unitId: 'unit_08',
+    order: 1,
+    title: 'Arcade: Sopa de Letras Centinela',
+    subtitle: 'Localiza controles críticos escondidos en la matriz 8x8',
+    type: 'lesson',
+    status: 'active',
+    stars: 0,
+    icon: 'grid_on',
+    lanePosition: 'left',
+    expReward: 30,
+    estimatedMinutes: 4,
+    gameTypeLabel: '🔤 Sopa de Letras',
+    isVideoGame: true,
+    theorySlides: [
+      {
+        id: 'u8_l1_s1',
+        badge: 'Zona Arcade Pro · Vocabulario',
+        title: 'Sopa de Letras Centinela: Identifica Defensas y Amenazas',
+        icon: 'grid_on',
+        standardRef: 'Glosario NIST + OWASP',
+        content:
+          'Desliza o toca desde la primera hasta la última letra (horizontal o vertical) para marcar las 5 palabras clave de ciberseguridad ocultas en la matriz.',
+        trapExample:
+          'Buscar en diagonal: en esta misión las palabras están ubicadas solo en filas y columnas rectas.',
+        safeExample:
+          'Revisar primero los bordes superior, inferior y columna izquierda, y aprovechar las 2 pistas gratuitas de Suri.',
+        suriTip:
+          'Cada término encontrado explica por qué es vital para defender la madriguera.',
+      },
+    ],
+  },
+  {
+    id: 'arcade-minesweeper-1',
+    unitId: 'unit_08',
+    order: 2,
+    title: 'Arcade: Buscaminas de Malware',
+    subtitle: 'Audita sectores limpios deduciendo dónde hay cargas ocultas',
+    type: 'lesson',
+    status: 'active',
+    stars: 0,
+    icon: 'radar',
+    lanePosition: 'center',
+    expReward: 35,
+    estimatedMinutes: 5,
+    gameTypeLabel: '💣 Buscaminas Táctico',
+    isVideoGame: true,
+    theorySlides: [
+      {
+        id: 'u8_l2_s1',
+        badge: 'Zona Arcade Pro · Deducción',
+        title: 'Buscaminas de Malware: Auditoría por Pistas Numéricas',
+        icon: 'radar',
+        standardRef: 'Análisis de Riesgo',
+        content:
+          'Tu primer toque siempre es seguro. Cada número indica exactamente cuántas amenazas están escondidas alrededor de esa casilla. Usa 🚩 Marcar para señalar sospechosas sin activarlas.',
+        trapExample:
+          'Abrir casillas al azar sin leer los números 1, 2 o 3 adyacentes.',
+        safeExample:
+          'Alternar entre 🔍 Auditar y 🚩 Marcar para despejar todas las zonas limpias cuidando tus 2 escudos.',
+        suriTip:
+          'En computadora también puedes marcar o desmarcar rápido con clic derecho.',
+      },
+    ],
+  },
+  {
+    id: 'arcade-breakout-1',
+    unitId: 'unit_08',
+    order: 3,
+    title: 'Arcade: Rompe-Malware',
+    subtitle: 'Rebota el pulso cian de Suri para destruir bloques infectados',
+    type: 'lesson',
+    status: 'active',
+    stars: 0,
+    icon: 'sports_tennis',
+    lanePosition: 'right',
+    expReward: 35,
+    estimatedMinutes: 4,
+    gameTypeLabel: '🧱 Rompe-Bloques Arcade',
+    isVideoGame: true,
+    theorySlides: [
+      {
+        id: 'u8_l3_s1',
+        badge: 'Zona Arcade Pro · Reflejos',
+        title: 'Rompe-Malware Arcade: Rebote y Defensa Activa',
+        icon: 'sports_tennis',
+        standardRef: 'Defensa en Capas',
+        content:
+          'Controla la barra de Arena Ocre de Suri deslizando el dedo, moviendo el mouse o con las flechas ← / → para destruir todos los bloques de RANSOM, SPYWARE y PHISH.',
+        trapExample:
+          'Dejar caer el pulso cian por los bordes sin anticipar el ángulo de rebote.',
+        safeExample:
+          'Golpear con los extremos de la barra para dirigir el pulso hacia la fila superior resistente.',
+        suriTip:
+          'La fila superior de RANSOM requiere 2 impactos para quedar neutralizada por completo.',
+      },
+    ],
+  },
+  {
+    id: 'arcade-invaders-1',
+    unitId: 'unit_08',
+    order: 4,
+    title: 'Arcade: Invasores del Spam',
+    subtitle: 'Defiende las barreras Firewall frente a la oleada botnet',
+    type: 'lesson',
+    status: 'active',
+    stars: 0,
+    icon: 'rocket_launch',
+    lanePosition: 'center',
+    expReward: 40,
+    estimatedMinutes: 4,
+    gameTypeLabel: '👾 Invasores Arcade',
+    isVideoGame: true,
+    theorySlides: [
+      {
+        id: 'u8_l4_s1',
+        badge: 'Zona Arcade Pro · Acción Perimetral',
+        title: 'Invasores del Spam: Defensa Anti-Botnet',
+        icon: 'rocket_launch',
+        standardRef: 'SOC Perimetral',
+        content:
+          'Muévete con ← / → (o botones táctiles) y dispara pulsos cian con [Espacio] / ⚡ DISPARAR contra la formación de RANSOM, BOTNET y PHISH antes de que superen tus barreras.',
+        trapExample:
+          'Permanecer quieto bajo disparos rojos hasta destruir por completo tus escudos Firewall.',
+        safeExample:
+          'Moverte lateralmente aprovechando la cobertura parcial de las 2 barreras cálidas de Arena Ocre.',
+        suriTip:
+          'Elimina primero las columnas laterales para reducir la velocidad de avance hacia abajo.',
+      },
+    ],
+  },
+  {
+    id: 'chest_08',
+    unitId: 'unit_08',
+    order: 5,
+    title: 'Cofre Leyenda Arcade',
+    subtitle: 'Recompensa de Arcade Acción & Ingenio (+250 Bits)',
+    type: 'reward_chest',
+    status: 'locked',
+    stars: 0,
+    icon: 'workspace_premium',
+    lanePosition: 'center',
+    expReward: 0,
+    estimatedMinutes: 1,
+    isClaimed: false,
+    bitsReward: 250,
+  },
+];
+
 export const ALL_BASE_NODES: LearningNode[] = [
   ...UNIT_1_NODES,
   ...UNIT_2_NODES,
@@ -1395,6 +1590,7 @@ export const ALL_BASE_NODES: LearningNode[] = [
   ...UNIT_5_NODES,
   ...UNIT_6_NODES,
   ...UNIT_7_NODES,
+  ...UNIT_8_NODES,
 ];
 
 // Keep MODULE_1_BASE_NODES export for backward compatibility
@@ -3305,6 +3501,187 @@ export const LESSON_EXERCISES_MAP: Record<string, Exercise[]> = {
       },
     },
   ],
+
+  // ---------------------------------------------------------------------------
+  // CURSO 8: ZONA ARCADE PRO — ACCIÓN & INGENIO
+  // ---------------------------------------------------------------------------
+  'arcade-wordsearch-1': [
+    {
+      id: 'ex_arcade_wordsearch_01',
+      type: 'cyber_wordsearch',
+      title: 'Sopa de Letras Centinela',
+      instruction: 'Encuentra los 5 términos de ciberseguridad escondidos en la matriz:',
+      suriPrompt: 'Toca o arrastra horizontal/verticalmente sobre la matriz para marcar cada concepto.',
+      suriPoseInitial: 'idea',
+      grid: [
+        'FIREWALL',
+        'TMVQZDXS',
+        'RBACKUPM',
+        'OXZVNLQW',
+        'JDTOKENZ',
+        'AKQMSRVX',
+        'NWZDCBYQ',
+        'PHISHING',
+      ],
+      targets: [
+        {
+          word: 'FIREWALL',
+          startRow: 0,
+          startCol: 0,
+          endRow: 0,
+          endCol: 7,
+          clue: 'Barrera perimetral que filtra paquetes de red (fila superior).',
+          explanation: 'El Firewall inspecciona puertos y bloquea tráfico no autorizado.',
+        },
+        {
+          word: 'PHISHING',
+          startRow: 7,
+          startCol: 0,
+          endRow: 7,
+          endCol: 7,
+          clue: 'Suplantación de identidad por correo o SMS (fila inferior).',
+          explanation: 'El Phishing engaña con urgencia falsa para capturar credenciales.',
+        },
+        {
+          word: 'BACKUP',
+          startRow: 2,
+          startCol: 1,
+          endRow: 2,
+          endCol: 6,
+          clue: 'Copia de seguridad 3-2-1 contra Ransomware (fila 3).',
+          explanation: 'Mantener copias inmutables offline permite recuperarse sin pagar rescates.',
+        },
+        {
+          word: 'TOKEN',
+          startRow: 4,
+          startCol: 2,
+          endRow: 4,
+          endCol: 6,
+          clue: 'Credencial o código temporal usado en autenticación MFA (fila 5).',
+          explanation: 'Un token FIDO2 o TOTP protege incluso si filtran tu contraseña.',
+        },
+        {
+          word: 'TROJAN',
+          startRow: 1,
+          startCol: 0,
+          endRow: 6,
+          endCol: 0,
+          clue: 'Malware disfrazado de archivo o programa inofensivo (primera columna).',
+          explanation: 'El Troyano entra fingiendo ser útil para abrir puertas traseras C2.',
+        },
+      ],
+      maxHints: 2,
+      feedback: {
+        empathy: 'Dominar los conceptos clave hace mucho más rápido el diagnóstico ante incidentes.',
+        technicalIndicator: 'FIREWALL, BACKUP, TOKEN, TROJAN y PHISHING cubren perímetro, malware y defensa.',
+        preventiveTip: 'Combina Firewall activo, tokens MFA y copias 3-2-1 en todas tus cuentas críticas.',
+      },
+    },
+  ],
+
+  'arcade-minesweeper-1': [
+    {
+      id: 'ex_arcade_minesweeper_01',
+      type: 'cyber_minesweeper',
+      title: 'Buscaminas de Malware',
+      instruction: 'Audita todas las celdas seguras deduciendo dónde están las 5 amenazas:',
+      suriPrompt: 'Usa los números adyacentes para marcar las cargas ocultas sin detonarlas.',
+      suriPoseInitial: 'shield',
+      gridSize: 6,
+      mineCount: 5,
+      maxShields: 2,
+      threatLabels: [
+        'Troyano Bancario',
+        'Ransomware SMB',
+        'Keylogger Oculto',
+        'Spyware Móvil',
+        'Rootkit Kernel',
+      ],
+      feedback: {
+        empathy: 'Interpretar pistas numéricas evita abrir adjuntos o sectores riesgosos a ciegas.',
+        technicalIndicator: 'La auditoría basada en evidencia reduce falsas alarmas y ejecuciones accidentales.',
+        preventiveTip: 'Antes de hacer clic en un archivo sospechoso, analiza su contexto y origen real.',
+      },
+    },
+  ],
+
+  'arcade-breakout-1': [
+    {
+      id: 'ex_arcade_breakout_01',
+      type: 'cyber_breakout',
+      title: 'Rompe-Malware Arcade',
+      instruction: 'Rebota el pulso cian de Suri y destruye las 3 filas de bloques infectados:',
+      suriPrompt: 'Desliza la barra de Arena Ocre o usa ← / → para no dejar caer el pulso.',
+      suriPoseInitial: 'cool',
+      cols: 5,
+      maxShields: 3,
+      ballSpeed: 230,
+      rows: [
+        {
+          label: 'RANSOM',
+          hp: 2,
+          colorHex: '#EF4444',
+          tip: 'Ransomware contenido con aislamiento y respaldo 3-2-1.',
+        },
+        {
+          label: 'SPYWARE',
+          hp: 1,
+          colorHex: '#D97706',
+          tip: 'Permisos abusivos auditados y bloqueados a tiempo.',
+        },
+        {
+          label: 'PHISH',
+          hp: 1,
+          colorHex: '#E1A653',
+          tip: 'Correos falsos neutralizados inspeccionando SPF y dominios.',
+        },
+      ],
+      feedback: {
+        empathy: 'La defensa continua requiere constancia frente a amenazas persistentes.',
+        technicalIndicator: 'Las cargas críticas (Ransomware) exigen doble capa de contención.',
+        preventiveTip: 'No descuides ningún vector: correo, permisos móviles y copias de respaldo.',
+      },
+    },
+  ],
+
+  'arcade-invaders-1': [
+    {
+      id: 'ex_arcade_invaders_01',
+      type: 'cyber_invaders',
+      title: 'Invasores del Spam',
+      instruction: 'Defiende las barreras Firewall eliminando toda la formación invasora:',
+      suriPrompt: 'Usa ← / → para esquivar y [Espacio] o ⚡ DISPARAR para neutralizar amenazas.',
+      suriPoseInitial: 'running',
+      rows: 3,
+      cols: 4,
+      maxShields: 3,
+      invaderTypes: [
+        {
+          label: 'RANSOM',
+          colorHex: '#EF4444',
+          points: 150,
+          tip: 'Amenaza de cifrado detenida antes del perímetro.',
+        },
+        {
+          label: 'BOTNET',
+          colorHex: '#D97706',
+          points: 120,
+          tip: 'Nodo zombi bloqueado en el filtro perimetral.',
+        },
+        {
+          label: 'PHISH',
+          colorHex: '#E1A653',
+          points: 100,
+          tip: 'Campaña de suplantación rechazada por el escudo.',
+        },
+      ],
+      feedback: {
+        empathy: 'Los ataques automatizados llegan en oleadas coordinadas contra todo el perímetro.',
+        technicalIndicator: 'Combinar barreras Firewall con respuesta activa evita que el tráfico hostil llegue al servidor.',
+        preventiveTip: 'Mantén activos el filtro antispam, MFA y reglas perimetrales estrictas.',
+      },
+    },
+  ],
 };
 
 // Legacy aliases for backward compatibility
@@ -3458,6 +3835,7 @@ export function buildAllLearningUnits(
   const u5 = buildDynamicUnitNodes(UNIT_5_NODES, completedSet, claimedSet, lessonStars);
   const u6 = buildDynamicUnitNodes(UNIT_6_NODES, completedSet, claimedSet, lessonStars);
   const u7 = buildDynamicUnitNodes(UNIT_7_NODES, completedSet, claimedSet, lessonStars);
+  const u8 = buildDynamicUnitNodes(UNIT_8_NODES, completedSet, claimedSet, lessonStars);
 
   return [
     {
@@ -3536,6 +3914,17 @@ export function buildAllLearningUnits(
       progressPercentage: u7.progressPercentage,
       nodes: u7.nodes,
       theoryGuide: UNIT_THEORY_GUIDES.unit_07,
+    },
+    {
+      id: 'unit_08',
+      unitNumber: 8,
+      title: 'Curso 8: Zona Arcade Pro — Acción & Ingenio',
+      description: 'Sopa de Letras Centinela, Buscaminas de Malware, Rompe-Malware Arcade e Invasores del Spam.',
+      moduleBadge: 'Módulo 8 · Arcade Acción & Ingenio',
+      icon: 'rocket_launch',
+      progressPercentage: u8.progressPercentage,
+      nodes: u8.nodes,
+      theoryGuide: UNIT_THEORY_GUIDES.unit_08,
     },
   ];
 }

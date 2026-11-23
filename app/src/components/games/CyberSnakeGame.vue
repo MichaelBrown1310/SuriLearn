@@ -46,6 +46,28 @@ const suriPose = ref<SuriPose>('idle');
 const suriReactionKey = ref<number>(0);
 
 let loopTimer: ReturnType<typeof setTimeout> | null = null;
+let touchStartX = 0;
+let touchStartY = 0;
+
+function handleTouchStart(e: TouchEvent) {
+  if (e.touches.length === 0) return;
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}
+
+function handleTouchEnd(e: TouchEvent) {
+  if (!isStarted.value || isPaused.value || isFinished.value || props.disabled || e.changedTouches.length === 0) {
+    return;
+  }
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    setDirection(dx > 0 ? 1 : -1, 0);
+  } else {
+    setDirection(0, dy > 0 ? 1 : -1);
+  }
+}
 
 const totalCells = computed(() => gridSize.value * gridSize.value);
 
@@ -353,8 +375,12 @@ onUnmounted(() => {
         </button>
       </div>
 
-      <!-- 12x12 Snake Arena Board -->
-      <div class="relative w-full max-w-[360px] mx-auto aspect-square bg-[#0d1117] rounded-2xl p-1.5 border-2 border-primary/40 shadow-inner overflow-hidden">
+      <!-- 12x12 Snake Arena Board (Carbón cálido SuriLearn + Swipe táctil) -->
+      <div
+        class="relative w-full max-w-[360px] mx-auto aspect-square bg-[#161311] rounded-2xl p-1.5 border-2 border-[#E1A653]/45 shadow-inner overflow-hidden"
+        @touchstart.passive="handleTouchStart"
+        @touchend.passive="handleTouchEnd"
+      >
         <div
           class="w-full h-full grid gap-[2px]"
           :style="{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }"
@@ -372,7 +398,7 @@ onUnmounted(() => {
                     ? 'bg-emerald-500 text-white animate-pulse ring-1 ring-emerald-200'
                     : trapAt(cellCoord(n).x, cellCoord(n).y)
                       ? 'bg-rose-600 text-white ring-1 ring-rose-300'
-                      : 'bg-white/[0.04]',
+                      : 'bg-[#2B241F]/65',
             ]"
             :title="
               isSafeCell(cellCoord(n).x, cellCoord(n).y)
